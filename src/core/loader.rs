@@ -138,3 +138,69 @@ pub fn load_resources<P: AsRef<Path>>(
 
     Ok(resources)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::resource::Resource;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_scan_and_load_resources() -> Result<()> {
+        let dir = tempdir()?;
+        let plugins_path = dir.path().join("plugins");
+        
+        // 1. 샘플 구조 생성
+        let cmd_dir = plugins_path.join("plugin_a/commands");
+        let skill_dir = plugins_path.join("plugin_b/skills/my_skill");
+        fs::create_dir_all(&cmd_dir)?;
+        fs::create_dir_all(&skill_dir)?;
+
+        // Command: md + json
+        fs::write(cmd_dir.join("foo.md"), "# Foo Content")?;
+        fs::write(cmd_dir.join("foo.json"), "{\"key\": \"val\"}")?;
+        // Exclude 대상
+        fs::write(cmd_dir.join("test.tmp"), "temp")?;
+        
+        // Skill: METADATA.json + md
+        fs::write(skill_dir.join("METADATA.json"), "{\"desc\": \"skill\"}")?;
+        fs::write(skill_dir.join("logic.md"), "prompt")?;
+
+        // 2. 스캔 테스트
+        let exclude = vec!["*.tmp".to_string()];
+        let files = scan_plugins(&plugins_path, &exclude)?;
+        // foo.md, foo.json, METADATA.json, logic.md 총 4개 (test.tmp 제외)
+        assert_eq!(files.len(), 4);
+
+        // 3. 로드 테스트
+        let resources = load_resources(&plugins_path, files)?;
+        assert_eq!(resources.len(), 2);
+
+        let mut found_foo = false;
+        let mut found_skill = false;
+
+        for res in resources {
+            match res {
+                Resource::Command(d) if d.name == "foo" => {
+                    assert_eq!(d.plugin, "plugin_a");
+                    assert_eq!(d.content, "# Foo Content");
+                    assert_eq!(d.metadata["key"], "val");
+                    found_foo = true;
+                }
+                Resource::Skill(d) if d.name == "my_skill" => {
+                    assert_eq!(d.plugin, "plugin_b");
+                    assert_eq!(d.metadata["desc"], "skill");
+                    assert!(d.content.contains("prompt"));
+                    found_skill = true;
+                }
+                _ => {}
+            }
+        }
+
+        assert!(found_foo);
+        assert!(found_skill);
+
+        Ok(())
+    }
+}

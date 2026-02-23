@@ -4,7 +4,6 @@ use std::path::Path;
 use tempfile::tempdir;
 
 #[test]
-#[allow(deprecated)]
 fn test_e2e_build_gemini_cli() {
     let temp_dir = tempdir().unwrap();
     let root = temp_dir.path();
@@ -24,7 +23,7 @@ resources:
     fs::write(root.join("agb.yaml"), config).unwrap();
 
     // Run build
-    let mut cmd = Command::cargo_bin("agb").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo_bin!("agb"));
     cmd.arg("build").arg("--config").arg(root.join("agb.yaml"));
     cmd.assert().success();
 
@@ -41,7 +40,6 @@ resources:
 }
 
 #[test]
-#[allow(deprecated)]
 fn test_e2e_build_claude_code() {
     let temp_dir = tempdir().unwrap();
     let root = temp_dir.path();
@@ -56,7 +54,7 @@ resources:
 "#;
     fs::write(root.join("agb.yaml"), config).unwrap();
 
-    let mut cmd = Command::cargo_bin("agb").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo_bin!("agb"));
     cmd.arg("build").arg("--config").arg(root.join("agb.yaml"));
     cmd.assert().success();
 
@@ -67,7 +65,6 @@ resources:
 }
 
 #[test]
-#[allow(deprecated)]
 fn test_e2e_build_opencode() {
     let temp_dir = tempdir().unwrap();
     let root = temp_dir.path();
@@ -82,7 +79,7 @@ resources:
 "#;
     fs::write(root.join("agb.yaml"), config).unwrap();
 
-    let mut cmd = Command::cargo_bin("agb").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo_bin!("agb"));
     cmd.arg("build").arg("--config").arg(root.join("agb.yaml"));
     cmd.assert().success();
 

@@ -4,6 +4,16 @@
 
 set -e
 
+# Find project root by looking for Cargo.toml
+while [ ! -f "Cargo.toml" ] && [ "$PWD" != "/" ]; do
+    cd ..
+done
+
+if [ ! -f "Cargo.toml" ]; then
+    echo "Error: Project root not found (Cargo.toml not found)." >&2
+    exit 1
+fi
+
 BINARY_NAME="agb"
 INSTALL_DIR="$HOME/.local/bin"
 TARGET_PATH="$INSTALL_DIR/$BINARY_NAME"

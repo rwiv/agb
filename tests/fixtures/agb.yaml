@@ -5,8 +5,5 @@ exclude:
 resources:
   commands:
     - plugin_a:foo
-    - plugin_b:bar
-  agents:
-    - plugin_a:researcher
   skills:
     - plugin_c:python_expert

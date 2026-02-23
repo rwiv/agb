@@ -14,12 +14,16 @@
 - `factory.rs`: 타겟에 맞는 변환기를 생성하는 `get_transformer` 팩토리 함수 제공.
 - `mod.rs`: 각 변환기 및 팩토리 모듈 선언과 핵심 타입 re-export.
 - `gemini.rs`: Gemini-cli (TOML 기반) 변환기 구현.
-- `claude.rs`: Claude-code (Markdown 기반) 변환기 구현.
+- `claude.rs`: Claude-code (Frontmatter Markdown) 변환기 구현.
+- `opencode.rs`: OpenCode (Frontmatter Markdown) 변환기 구현.
 
 ## 주요 구성 요소
 
 ### 1. `Transformer` Trait (`base.rs`)
 모든 변환기가 구현해야 하는 인터페이스입니다.
+
+- **Gemini**: JSON 메타데이터를 TOML의 탑레벨 키로, Markdown 본문을 `prompt` 필드로 변환합니다.
+- **Claude / OpenCode**: JSON 메타데이터를 YAML Frontmatter로 변환하고 Markdown 본문과 결합합니다.
 
 ```rust
 pub trait Transformer {
@@ -33,8 +37,8 @@ pub trait Transformer {
 
 ## 새로운 에이전트 추가 방법
 
-1. `src/transformers/` 내에 새로운 모듈을 생성합니다 (예: `opencode.rs`).
+1. `src/transformers/` 내에 새로운 모듈을 생성합니다.
 2. `base::Transformer` 트레이트를 구현하는 구조체를 정의합니다.
-3. `src/transformers/mod.rs`에서 새 모듈을 선언(`pub mod opencode;`)합니다.
+3. `src/transformers/mod.rs`에서 새 모듈을 선언합니다.
 4. `src/transformers/factory.rs`의 `get_transformer` 함수에 해당 에이전트 분기를 추가합니다.
 5. `src/config.rs`의 `BuildTarget` 열거형에 새로운 에이전트 이름을 등록합니다.

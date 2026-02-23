@@ -75,8 +75,6 @@ pub struct Config {
 
 ## 5. Acceptance Criteria (검증 체크리스트)
 
-이 태스크의 성공 여부는 작성된 테스트 코드를 통해 검증합니다.
-
 1. `tests/fixtures/agb.yaml`의 모든 필드(target, exclude, resources)가 Rust 구조체로 유실 없이 매핑되는가?
 2. `target` 값이 `gemini-cli`, `claude-code`, `opencode` 중 하나가 아닐 때 적절한 에러를 반환하는가?
 3. `exclude`나 `resources` 내의 리스트가 비어있거나 생략되었을 때(Optional) 에러 없이 기본값(None 또는 빈 Vec)으로 처리되는가?

@@ -37,12 +37,20 @@ pub fn scan_plugins<P: AsRef<Path>>(root: P, exclude_patterns: &[String]) -> Res
         }
 
         let relative_path = path.strip_prefix(root).unwrap_or(path);
-        
+
         // PRD Constraint: 플러그인 내부에는 에이전트 전용 메인 메모리 파일이 존재할 수 없습니다.
-        if let Some(file_name) = path.file_name().and_then(|s| s.to_str()) {
-            if file_name == "GEMINI.md" || file_name == "CLAUDE.md" || file_name == "OPENCODE.md" {
-                anyhow::bail!("Forbidden file '{}' found in plugin: {:?}", file_name, path);
-            }
+        let is_forbidden = path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .map(|s| matches!(s, "GEMINI.md" | "CLAUDE.md" | "OPENCODE.md"))
+            .unwrap_or(false);
+
+        if is_forbidden {
+            anyhow::bail!(
+                "Forbidden file '{}' found in plugin: {:?}",
+                path.file_name().unwrap().to_string_lossy(),
+                path
+            );
         }
 
         let mut is_excluded = false;
@@ -66,11 +74,13 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
     let root = root.as_ref();
     let mut resources = Vec::new();
 
-    // 파일들을 타입별/플러그인별/이름별로 그룹화하기 위한 맵
     // Key: (plugin_name, resource_type, resource_name)
+    type ResourceKey = (String, String, String);
     // Value: (md_path, json_path)
-    let mut groups: HashMap<(String, String, String), (Option<PathBuf>, Option<PathBuf>)> =
-        HashMap::new();
+    type ResourcePaths = (Option<PathBuf>, Option<PathBuf>);
+
+    // 파일들을 타입별/플러그인별/이름별로 그룹화하기 위한 맵
+    let mut groups: HashMap<ResourceKey, ResourcePaths> = HashMap::new();
 
     for path in files {
         let relative = path.strip_prefix(root).unwrap_or(&path);
@@ -230,6 +240,11 @@ mod tests {
 
         let result = scan_plugins(&plugins_path, &[]);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Forbidden file 'GEMINI.md'"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Forbidden file 'GEMINI.md'")
+        );
     }
 }

@@ -1,10 +1,10 @@
 mod config;
 mod core;
-mod transformers;
 mod emitter;
+mod transformers;
 
-use clap::{Parser, Subcommand};
 use anyhow::Context;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "agb")]
@@ -31,7 +31,7 @@ fn main() -> anyhow::Result<()> {
         Commands::Build { config } => {
             let config_path = std::path::Path::new(config);
             let root_dir = config_path.parent().unwrap_or(std::path::Path::new("."));
-            
+
             println!("[1/5] Loading config: {}", config);
             let cfg = config::load_config(config)?;
 
@@ -39,18 +39,24 @@ fn main() -> anyhow::Result<()> {
             println!("[2/5] Scanning and loading resources...");
             let plugins_dir = root_dir.join("plugins");
             let exclude = cfg.exclude.unwrap_or_default();
-            
+
             let files = core::loader::scan_plugins(&plugins_dir, &exclude)?;
             let all_resources = core::loader::load_resources(&plugins_dir, files)?;
-            
+
             // 2. Registry 구축 및 agb.yaml에 명시된 리소스 필터링
             println!("[3/5] Validating and registering resources...");
             let mut registry = core::registry::Registry::new();
-            
+
             let mut target_identifiers = std::collections::HashSet::new();
-            if let Some(cmds) = &cfg.resources.commands { target_identifiers.extend(cmds); }
-            if let Some(agents) = &cfg.resources.agents { target_identifiers.extend(agents); }
-            if let Some(skills) = &cfg.resources.skills { target_identifiers.extend(skills); }
+            if let Some(cmds) = &cfg.resources.commands {
+                target_identifiers.extend(cmds);
+            }
+            if let Some(agents) = &cfg.resources.agents {
+                target_identifiers.extend(agents);
+            }
+            if let Some(skills) = &cfg.resources.skills {
+                target_identifiers.extend(skills);
+            }
 
             for res in all_resources {
                 let identifier = format!("{}:{}", res.plugin(), res.name());
@@ -60,12 +66,16 @@ fn main() -> anyhow::Result<()> {
             }
 
             // 3. Transformation
-            println!("[4/5] Transforming resources for target: {:?}...", cfg.target);
+            println!(
+                "[4/5] Transforming resources for target: {:?}...",
+                cfg.target
+            );
             let transformer = transformers::get_transformer(&cfg.target);
             let mut transformed_files = Vec::new();
 
             for res in registry.all_resources() {
-                let transformed = transformer.transform(res)
+                let transformed = transformer
+                    .transform(res)
                     .with_context(|| format!("Failed to transform resource: {}", res.name()))?;
                 transformed_files.push(transformed);
             }
@@ -73,7 +83,10 @@ fn main() -> anyhow::Result<()> {
             // AGENTS.md 처리 (Root System Prompt)
             let mut agents_md_path = root_dir.join("AGENTS.md");
             if !agents_md_path.exists() {
-                agents_md_path = root_dir.parent().unwrap_or(std::path::Path::new(".")).join("AGENTS.md");
+                agents_md_path = root_dir
+                    .parent()
+                    .unwrap_or(std::path::Path::new("."))
+                    .join("AGENTS.md");
             }
             if !agents_md_path.exists() {
                 agents_md_path = std::path::PathBuf::from("AGENTS.md");

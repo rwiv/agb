@@ -17,7 +17,9 @@ fn test_build_default_config() {
     cmd.arg("build")
         .assert()
         .success()
-        .stdout(predicate::str::contains("[1/5] Loading config: tests/fixtures/agb.yaml"))
+        .stdout(predicate::str::contains(
+            "[1/5] Loading config: tests/fixtures/agb.yaml",
+        ))
         .stdout(predicate::str::contains("Build successful!"));
 }
 

@@ -1,25 +1,23 @@
 use crate::config::BuildTarget;
 use crate::transformers::base::Transformer;
-use crate::transformers::gemini::GeminiTransformer;
 use crate::transformers::claude::ClaudeTransformer;
+use crate::transformers::gemini::GeminiTransformer;
+use crate::transformers::opencode::OpenCodeTransformer;
 
 /// 타겟 에이전트에 맞는 Transformer 인스턴스를 반환합니다.
 pub fn get_transformer(target: &BuildTarget) -> Box<dyn Transformer> {
     match target {
         BuildTarget::GeminiCli => Box::new(GeminiTransformer),
         BuildTarget::ClaudeCode => Box::new(ClaudeTransformer),
-        BuildTarget::OpenCode => {
-            // TODO: Phase 5에서 구현 예정
-            unimplemented!("OpenCode transformer is not implemented yet")
-        }
+        BuildTarget::OpenCode => Box::new(OpenCodeTransformer),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
     use crate::config::BuildTarget;
+    use std::path::PathBuf;
 
     #[test]
     fn test_transformer_factory_filenames() {

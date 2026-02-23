@@ -1,8 +1,8 @@
-use std::path::PathBuf;
-use anyhow::{Result, anyhow};
 use crate::core::resource::Resource;
-use crate::transformers::{Transformer, TransformedFile};
+use crate::transformers::{TransformedFile, Transformer};
+use anyhow::{Result, anyhow};
 use serde_json::Value;
+use std::path::PathBuf;
 use toml::Table;
 
 pub struct GeminiTransformer;
@@ -18,19 +18,29 @@ impl Transformer for GeminiTransformer {
         // 1. JSON Metadata를 TOML Value로 변환 후 Table로 캐스팅
         let json_value = &data.metadata;
         let toml_value = json_to_toml(json_value)?;
-        
+
         let mut table = match toml_value {
             toml::Value::Table(t) => t,
-            toml::Value::Datetime(_) | toml::Value::String(_) | toml::Value::Integer(_) | toml::Value::Float(_) | toml::Value::Boolean(_) | toml::Value::Array(_) => {
-                return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
-            },
+            toml::Value::Datetime(_)
+            | toml::Value::String(_)
+            | toml::Value::Integer(_)
+            | toml::Value::Float(_)
+            | toml::Value::Boolean(_)
+            | toml::Value::Array(_) => {
+                return Err(anyhow!(
+                    "Metadata must be a JSON object for Gemini conversion"
+                ));
+            }
         };
 
         // Metadata가 Null인 경우(json_to_toml에서 처리됨) 빈 테이블이 아닐 수 있으므로 명시적 확인 필요할 수 있으나
         // json_to_toml 구현에 따라 다름.
 
         // 2. Markdown content를 'prompt' 필드에 추가
-        table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));
+        table.insert(
+            "prompt".to_string(),
+            toml::Value::String(data.content.clone()),
+        );
 
         // 3. TOML 직렬화
         let content = toml::to_string_pretty(&table)?;
@@ -38,7 +48,9 @@ impl Transformer for GeminiTransformer {
         // 4. 경로 설정
         let path = if matches!(resource, Resource::Skill(_)) {
             // Skills는 보통 디렉터리 구조를 가짐: skills/[name]/[name].toml
-            PathBuf::from(folder).join(&data.name).join(format!("{}.toml", data.name))
+            PathBuf::from(folder)
+                .join(&data.name)
+                .join(format!("{}.toml", data.name))
         } else {
             // Commands/Agents: commands/[name].toml
             PathBuf::from(folder).join(format!("{}.toml", data.name))
@@ -108,11 +120,20 @@ mod tests {
 
         let result = transformer.transform(&resource).unwrap();
         assert_eq!(result.path, PathBuf::from("commands/test-cmd.toml"));
-        
+
         let toml_val: Table = toml::from_str(&result.content).unwrap();
-        assert_eq!(toml_val.get("model").unwrap().as_str().unwrap(), "gemini-1.5-pro");
-        assert_eq!(toml_val.get("description").unwrap().as_str().unwrap(), "A test command");
-        assert_eq!(toml_val.get("prompt").unwrap().as_str().unwrap(), "Hello World");
+        assert_eq!(
+            toml_val.get("model").unwrap().as_str().unwrap(),
+            "gemini-1.5-pro"
+        );
+        assert_eq!(
+            toml_val.get("description").unwrap().as_str().unwrap(),
+            "A test command"
+        );
+        assert_eq!(
+            toml_val.get("prompt").unwrap().as_str().unwrap(),
+            "Hello World"
+        );
     }
 
     #[test]
@@ -128,7 +149,10 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.toml"));
+        assert_eq!(
+            result.path,
+            PathBuf::from("skills/test-skill/test-skill.toml")
+        );
         assert!(result.content.contains("prompt = \"Skill Content\""));
         assert!(result.content.contains("type = \"expert\""));
     }
@@ -138,7 +162,7 @@ mod tests {
         let transformer = GeminiTransformer;
         let content = "# Global Instructions\nDo this and that.";
         let result = transformer.transform_root_prompt(content).unwrap();
-        
+
         assert_eq!(result.path, PathBuf::from("GEMINI.md"));
         assert_eq!(result.content, content);
     }

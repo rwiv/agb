@@ -32,10 +32,6 @@ impl Registry {
         Ok(())
     }
 
-    pub fn get(&self, name: &str) -> Option<&Resource> {
-        self.resources.get(name)
-    }
-
     pub fn all_resources(&self) -> Vec<&Resource> {
         self.resources.values().collect()
     }

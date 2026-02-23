@@ -1,9 +1,8 @@
 pub mod base;
-pub mod gemini;
 pub mod claude;
 pub mod factory;
+pub mod gemini;
+pub mod opencode;
 
-pub use base::{Transformer, TransformedFile, TransformerError};
-pub use gemini::GeminiTransformer;
-pub use claude::ClaudeTransformer;
+pub use base::{TransformedFile, Transformer};
 pub use factory::get_transformer;

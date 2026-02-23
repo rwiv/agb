@@ -11,37 +11,23 @@
   - `docs/specs/TECH_SPEC.md` (Transformer 트레이트 설계 확인)
   - `src/core/resource.rs` (Resource 모델 구조 확인)
 - **생성 및 수정할 파일:**
-  - `src/transformers/mod.rs` (신규 생성: 트레이트 및 공통 모델 정의)
+  - `src/transformers/base.rs` (신규 생성: 트레이트 및 공통 모델 정의)
+  - `src/transformers/mod.rs` (수정: 모듈 구조 재편 및 base 노출)
 
 ## 3. Instructions (세부 지침)
 
-### Step 1: `TransformedFile` 구조체 정의
+### Step 1: `base.rs`에 핵심 인터페이스 정의
 
-변환된 파일의 경로와 내용을 담는 구조체를 정의하세요.
+`src/transformers/base.rs` 파일을 생성하고, 에이전트별 변환 로직을 추상화하는 공통 인터페이스를 설계하세요.
 
-- `path`: `PathBuf` 형식 (결과물이 저장될 상대 경로, 예: `commands/foo.toml`)
-- `content`: `String` 형식 (변환이 완료된 파일의 실제 내용)
+- **`TransformedFile` 구조체**: 빌드 결과물의 경로(`path`)와 내용(`content`)을 담습니다.
+- **`Transformer` 트레이트**: `transform`과 `transform_root_prompt` 메서드를 정의합니다.
+- **`TransformerError` 열거형**: `thiserror`를 사용하여 변환 중 발생할 수 있는 에러(메타데이터 누락 등)를 정의합니다.
 
-### Step 2: `Transformer` 트레이트 정의
+### Step 2: `mod.rs` 리팩토링 및 팩토리 함수 작성
 
-`TECH_SPEC.md`의 설계를 바탕으로 아래 인터페이스를 구현하세요.
-
-```rust
-use anyhow::Result;
-use crate::core::resource::Resource;
-
-pub trait Transformer {
-    /// 개별 리소스(Command, Agent, Skill)를 타겟 포맷으로 변환합니다.
-    fn transform(&self, resource: &Resource) -> Result<TransformedFile>;
-    
-    /// 전역 지침(AGENTS.md)을 타겟 규격의 메인 메모리 파일로 변환합니다.
-    fn transform_root_prompt(&self, content: &str) -> Result<TransformedFile>;
-}
-```
-
-### Step 3: 에러 타입 정의 (선택 사항)
-
-- 변환 과정에서 발생할 수 있는 특수한 에러(예: 지원하지 않는 리소스 타입 등)를 `thiserror`를 사용하여 정의하는 것을 고려하세요.
+- `src/transformers/mod.rs`에서 `base` 모듈을 선언하고 필요한 타입을 `pub use`로 재노출합니다.
+- `get_transformer` 함수를 작성하여 `BuildTarget`에 따라 적절한 변환기 인스턴스(`Box<dyn Transformer>`)를 반환하도록 구현합니다.
 
 ## 4. Constraints (제약 사항 및 금지 행동)
 

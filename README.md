@@ -23,27 +23,30 @@
 
 ## 프로젝트 구조
 
+`agb`는 소스 데이터(Source)와 빌드 결과물(Output)이 위치하는 곳을 분리하여 관리합니다.
+
+- **Source 디렉터리 (리소스 저장소)**: `plugins/`와 `AGENTS.md`가 위치합니다.
+- **Output 디렉터리 (에이전트 워크스페이스)**: `agb.yaml`이 위치하며, 빌드 결과물이 생성됩니다.
+
 ```text
-/
-├── AGENTS.md               # 전역 시스템 프롬프트 (Root System Prompt)
-├── tests/
-│   └── fixtures/
-│       ├── agb.yaml        # 빌드 설정 파일 (필수)
-│       └── plugins/        # 리소스 플러그인 저장소
-│           └── [plugin_name]/
-│               ├── commands/       # 커스텀 커맨드 (.md, .json)
-│               ├── agents/         # 서브 에이전트 설정 (.md, .json)
-│               └── skills/         # 스킬 세트 (디렉터리 단위)
-│                   └── [skill_name]/
-│                       ├── METADATA.json
-│                       └── ...
+[Output Workspace]/
+└── agb.yaml        # 빌드 설정 파일 (소스 절대 경로 포함)
+
+[Source Repository]/
+├── AGENTS.md       # 전역 시스템 프롬프트
+└── plugins/        # 리소스 플러그인 저장소
+    └── [plugin_name]/
+        ├── commands/
+        ├── agents/
+        └── skills/
 ```
 
 ## 설정 방법 (`agb.yaml`)
 
-빌드 대상 디렉터리 루트에 `agb.yaml` 파일을 작성하여 빌드 타겟과 포함할 리소스를 정의합니다.
+에이전트 워크스페이스 루트에 `agb.yaml` 파일을 작성하여 빌드 타겟과 포함할 리소스를 정의합니다.
 
 ```yaml
+source: /Users/path/to/source_repo # 소스 리소스의 절대 경로 (필수)
 target: gemini-cli # 지원: gemini-cli, claude-code, opencode
 exclude:
   - "*.kor.md"

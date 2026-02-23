@@ -8,9 +8,10 @@
 
 ### 2.1 agb.yaml (설정 파일)
 
-빌드 대상 디렉터리의 `tests/fixtures/` 내에 존재해야 하며, YAML 형식으로 작성됩니다.
+빌드 결과물이 생성될 디렉터리에 존재해야 하며, YAML 형식으로 작성됩니다. `source` 필드는 리소스 데이터가 있는 절대 경로를 가리킵니다.
 
 ```yaml
+source: /absolute/path/to/source_resources # 필수: 소스 리소스 절대 경로
 target: gemini-cli # 지원: gemini-cli, claude-code, opencode
 exclude:
   - "*.kor.md"
@@ -27,24 +28,23 @@ resources:
 
 ### 2.2 소스 디렉터리 구조 (Source)
 
+`source` 경로가 가리키는 곳의 구조는 다음과 같습니다. (빌드 설정인 `agb.yaml`은 포함하지 않습니다.)
+
 ```text
-/
+[source_path]/
 ├── AGENTS.md (Root System Prompt)
-├── tests/
-│   └── fixtures/
-│       ├── agb.yaml
-│       └── plugins/
-│           └── [plugin_name]/
-│               ├── commands/
-│               │   ├── [name].md
-│               │   └── [name].json
-│               ├── agents/
-│               │   ├── [name].md
-│               │   └── [name].json
-│               └── skills/
-│                   └── [skill_name]/
-│                       ├── METADATA.json
-│                       └── ... (기타 파일들)
+└── plugins/
+    └── [plugin_name]/
+        ├── commands/
+        │   ├── [name].md
+        │   └── [name].json
+        ├── agents/
+        │   ├── [name].md
+        │   └── [name].json
+        └── skills/
+            └── [skill_name]/
+                ├── METADATA.json
+                └── ... (기타 파일들)
 ```
 
 ## 3. 핵심 로직 설계

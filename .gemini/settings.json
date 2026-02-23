@@ -1,0 +1,8 @@
+{
+  "tools": {
+    "sandbox": "sandbox-exec"
+  },
+  "experimental": {
+    "enableAgents": true
+  }
+}

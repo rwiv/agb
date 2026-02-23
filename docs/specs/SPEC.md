@@ -8,7 +8,7 @@
 
 ### 2.1 agb.yaml (설정 파일)
 
-빌드 대상 디렉터리의 루트에 반드시 존재해야 하며, YAML 형식으로 작성됩니다.
+빌드 대상 디렉터리의 `tests/fixtures/` 내에 존재해야 하며, YAML 형식으로 작성됩니다.
 
 ```yaml
 target: gemini-cli # 지원: gemini-cli, claude-code, opencode
@@ -29,8 +29,10 @@ resources:
 
 ```text
 /
-├── agb.yaml
 ├── AGENTS.md (Root System Prompt)
+├── tests/
+│   └── fixtures/
+│       └── agb.yaml
 └── plugins/
     └── [plugin_name]/
         ├── commands/

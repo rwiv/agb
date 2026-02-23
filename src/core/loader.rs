@@ -8,10 +8,7 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 /// 플러그인 디렉터리를 탐색하여 유효한 파일 경로 리스트를 반환합니다.
-pub fn scan_plugins<P: AsRef<Path>>(
-    root: P,
-    exclude_patterns: &[String],
-) -> Result<Vec<PathBuf>> {
+pub fn scan_plugins<P: AsRef<Path>>(root: P, exclude_patterns: &[String]) -> Result<Vec<PathBuf>> {
     let root = root.as_ref();
     if !root.exists() {
         anyhow::bail!("Plugins directory not found: {:?}", root);
@@ -57,35 +54,38 @@ pub fn scan_plugins<P: AsRef<Path>>(
 }
 
 /// 스캔된 파일들을 Resource 객체들로 로드합니다.
-pub fn load_resources<P: AsRef<Path>>(
-    root: P,
-    files: Vec<PathBuf>,
-) -> Result<Vec<Resource>> {
+pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Vec<Resource>> {
     let root = root.as_ref();
     let mut resources = Vec::new();
-    
+
     // 파일들을 타입별/플러그인별/이름별로 그룹화하기 위한 맵
     // Key: (plugin_name, resource_type, resource_name)
     // Value: (md_path, json_path)
-    let mut groups: HashMap<(String, String, String), (Option<PathBuf>, Option<PathBuf>)> = HashMap::new();
+    let mut groups: HashMap<(String, String, String), (Option<PathBuf>, Option<PathBuf>)> =
+        HashMap::new();
 
     for path in files {
         let relative = path.strip_prefix(root).unwrap_or(&path);
-        let components: Vec<_> = relative.components().map(|c| c.as_os_str().to_string_lossy().into_owned()).collect();
-        
+        let components: Vec<_> = relative
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy().into_owned())
+            .collect();
+
         if components.len() < 3 {
             continue; // [plugin]/[type]/[name] 구조가 아니면 무시
         }
 
         let plugin = components[0].clone();
         let r_type = components[1].clone();
-        
+
         if r_type == "skills" {
             // Skill 특수 처리: [plugin]/skills/[skill_name]/...
             if components.len() >= 4 {
                 let skill_name = components[2].clone();
                 let file_name = components[3].clone();
-                let entry = groups.entry((plugin, r_type, skill_name)).or_insert((None, None));
+                let entry = groups
+                    .entry((plugin, r_type, skill_name))
+                    .or_insert((None, None));
                 if file_name == "METADATA.json" {
                     entry.1 = Some(path);
                 } else if file_name.ends_with(".md") {
@@ -96,9 +96,15 @@ pub fn load_resources<P: AsRef<Path>>(
         } else if r_type == "commands" || r_type == "agents" {
             // Command/Agent 처리: [plugin]/[type]/[name].{md,json}
             let file_stem = path.file_stem().unwrap().to_string_lossy().into_owned();
-            let extension = path.extension().unwrap_or_default().to_string_lossy().into_owned();
-            
-            let entry = groups.entry((plugin, r_type, file_stem)).or_insert((None, None));
+            let extension = path
+                .extension()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned();
+
+            let entry = groups
+                .entry((plugin, r_type, file_stem))
+                .or_insert((None, None));
             if extension == "md" {
                 entry.0 = Some(path);
             } else if extension == "json" {
@@ -116,7 +122,9 @@ pub fn load_resources<P: AsRef<Path>>(
 
         let metadata = if let Some(p) = json_path {
             let json_str = fs::read_to_string(p)?;
-            serde_json::from_str(&json_str).with_context(|| format!("Failed to parse JSON for resource: {}/{}", r_type, name))?
+            serde_json::from_str(&json_str).with_context(|| {
+                format!("Failed to parse JSON for resource: {}/{}", r_type, name)
+            })?
         } else {
             Value::Null
         };
@@ -150,7 +158,7 @@ mod tests {
     fn test_scan_and_load_resources() -> Result<()> {
         let dir = tempdir()?;
         let plugins_path = dir.path().join("plugins");
-        
+
         // 1. 샘플 구조 생성
         let cmd_dir = plugins_path.join("plugin_a/commands");
         let skill_dir = plugins_path.join("plugin_b/skills/my_skill");
@@ -162,7 +170,7 @@ mod tests {
         fs::write(cmd_dir.join("foo.json"), "{\"key\": \"val\"}")?;
         // Exclude 대상
         fs::write(cmd_dir.join("test.tmp"), "temp")?;
-        
+
         // Skill: METADATA.json + md
         fs::write(skill_dir.join("METADATA.json"), "{\"desc\": \"skill\"}")?;
         fs::write(skill_dir.join("logic.md"), "prompt")?;

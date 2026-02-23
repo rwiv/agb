@@ -1,5 +1,5 @@
 use crate::core::resource::Resource;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -14,11 +14,11 @@ impl Registry {
         Self::default()
     }
 
-    /// 리소스를 레지스트리에 등록합니다. 
+    /// 리소스를 레지스트리에 등록합니다.
     /// 이름이 중복될 경우 에러를 반환합니다.
     pub fn register(&mut self, resource: Resource) -> Result<()> {
         let name = resource.name().to_string();
-        
+
         if let Some(existing) = self.resources.get(&name) {
             return Err(anyhow!(
                 "Conflict detected: Resource '{}' is defined in both '{}' and '{}'.",
@@ -68,8 +68,13 @@ mod tests {
 
         assert!(registry.register(res1).is_ok());
         let result = registry.register(res2);
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Conflict detected"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Conflict detected")
+        );
     }
 }

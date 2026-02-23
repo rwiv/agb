@@ -1,0 +1,5 @@
+description = "Python Expert Skill"
+prompt = """
+# Python Expert Prompt
+"""
+version = "1.0.0"

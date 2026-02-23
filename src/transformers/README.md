@@ -11,7 +11,8 @@
 ## 모듈 구조
 
 - `base.rs`: `Transformer` 트레이트 및 `TransformedFile` 등 공통 인터페이스와 데이터 모델 정의.
-- `mod.rs`: 각 변환기 모듈 선언 및 타겟에 맞는 변환기를 생성하는 `get_transformer` 팩토리 함수 제공.
+- `factory.rs`: 타겟에 맞는 변환기를 생성하는 `get_transformer` 팩토리 함수 제공.
+- `mod.rs`: 각 변환기 및 팩토리 모듈 선언과 핵심 타입 re-export.
 - `gemini.rs`: Gemini-cli (TOML 기반) 변환기 구현.
 - `claude.rs`: Claude-code (Markdown 기반) 변환기 구현.
 
@@ -34,5 +35,6 @@ pub trait Transformer {
 
 1. `src/transformers/` 내에 새로운 모듈을 생성합니다 (예: `opencode.rs`).
 2. `base::Transformer` 트레이트를 구현하는 구조체를 정의합니다.
-3. `src/transformers/mod.rs`에서 새 모듈을 선언(`pub mod opencode;`)하고 `get_transformer` 함수에 해당 에이전트 분기를 추가합니다.
-4. `src/config.rs`의 `BuildTarget` 열거형에 새로운 에이전트 이름을 등록합니다.
+3. `src/transformers/mod.rs`에서 새 모듈을 선언(`pub mod opencode;`)합니다.
+4. `src/transformers/factory.rs`의 `get_transformer` 함수에 해당 에이전트 분기를 추가합니다.
+5. `src/config.rs`의 `BuildTarget` 열거형에 새로운 에이전트 이름을 등록합니다.

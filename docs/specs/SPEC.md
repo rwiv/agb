@@ -32,26 +32,26 @@ resources:
 ├── AGENTS.md (Root System Prompt)
 ├── tests/
 │   └── fixtures/
-│       └── agb.yaml
-└── plugins/
-    └── [plugin_name]/
-        ├── commands/
-        │   ├── [name].md
-        │   └── [name].json
-        ├── agents/
-        │   ├── [name].md
-        │   └── [name].json
-        └── skills/
-            └── [skill_name]/
-                ├── METADATA.json
-                └── ... (기타 파일들)
+│       ├── agb.yaml
+│       └── plugins/
+│           └── [plugin_name]/
+│               ├── commands/
+│               │   ├── [name].md
+│               │   └── [name].json
+│               ├── agents/
+│               │   ├── [name].md
+│               │   └── [name].json
+│               └── skills/
+│                   └── [skill_name]/
+│                       ├── METADATA.json
+│                       └── ... (기타 파일들)
 ```
 
 ## 3. 핵심 로직 설계
 
 ### 3.1 리소스 로딩 및 필터링
 
-1. **Glob 필터링**: `agb.yaml`의 `exclude` 패턴을 사용하여 `plugins/` 내의 파일을 스캔할 때 무시합니다.
+1. **Glob 필터링**: `agb.yaml`의 `exclude` 패턴을 사용하여 `tests/fixtures/plugins/` 내의 파일을 스캔할 때 무시합니다.
 2. **네임스페이스 관리**: `[plugin_name]:[resource_name]` 형식을 사용하여 소스를 식별하지만, 빌드 결과물은 네임스페이스 없이 병합됩니다.
 3. **충돌 검사**: 서로 다른 플러그인에서 같은 이름의 리소스가 선택된 경우 빌드를 중단합니다.
 

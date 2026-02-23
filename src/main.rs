@@ -31,7 +31,7 @@ fn main() -> anyhow::Result<()> {
             println!("Successfully loaded config: {:?}", cfg);
 
             // Phase 2: Core Loader & Registry
-            let plugins_dir = "plugins";
+            let plugins_dir = "tests/fixtures/plugins";
             let exclude = cfg.exclude.unwrap_or_default();
             
             // 1. 모든 플러그인 파일 스캔

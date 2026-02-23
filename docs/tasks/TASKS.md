@@ -12,7 +12,7 @@
 
 ## Phase 2: 코어 리소스 로더 (Core Loader)
 *   **Task 2.1: 플러그인 디렉터리 스캔 및 필터링**
-    *   *성공 기준:* `exclude` 패턴을 적용하여 `plugins/` 내의 파일들을 재귀적으로 탐색하고 대상 목록을 추출한다.
+    *   *성공 기준:* `exclude` 패턴을 적용하여 `tests/fixtures/plugins/` 내의 파일들을 재귀적으로 탐색하고 대상 목록을 추출한다.
 *   **Task 2.2: 리소스(Markdown/JSON) 로딩 및 유효성 검사**
     *   *성공 기준:* Markdown 내용과 JSON 메타데이터를 하나의 `Resource` 객체로 병합하여 메모리에 로드한다.
 *   **Task 2.3: 리소스 레지스트리 구축 및 이름 충돌 관리**

@@ -14,7 +14,7 @@
 
 ## 주요 기능
 
-- **플러그인 기반 리소스 관리:** `plugins/` 디렉터리 내에 독립적인 기능 단위로 Commands, Agents, Skills를 구성합니다.
+- **플러그인 기반 리소스 관리:** `tests/fixtures/plugins/` 디렉터리 내에 독립적인 기능 단위로 Commands, Agents, Skills를 구성합니다.
 - **명시적 빌드 제어:** `agb.yaml`에 선언된 리소스만 선택적으로 빌드에 포함합니다.
 - **에이전트별 포맷 변환:**
   - **Gemini-cli:** 마크다운 커맨드를 TOML 규격으로 자동 변환합니다.
@@ -25,16 +25,18 @@
 
 ```text
 /
-├── agb.yaml                # 빌드 설정 파일 (필수)
 ├── AGENTS.md               # 전역 시스템 프롬프트 (Root System Prompt)
-└── plugins/                # 리소스 플러그인 저장소
-    └── [plugin_name]/
-        ├── commands/       # 커스텀 커맨드 (.md, .json)
-        ├── agents/         # 서브 에이전트 설정 (.md, .json)
-        └── skills/         # 스킬 세트 (디렉터리 단위)
-            └── [skill_name]/
-                ├── METADATA.json
-                └── ...
+├── tests/
+│   └── fixtures/
+│       ├── agb.yaml        # 빌드 설정 파일 (필수)
+│       └── plugins/        # 리소스 플러그인 저장소
+│           └── [plugin_name]/
+│               ├── commands/       # 커스텀 커맨드 (.md, .json)
+│               ├── agents/         # 서브 에이전트 설정 (.md, .json)
+│               └── skills/         # 스킬 세트 (디렉터리 단위)
+│                   └── [skill_name]/
+│                       ├── METADATA.json
+│                       └── ...
 ```
 
 ## 설정 방법 (`agb.yaml`)

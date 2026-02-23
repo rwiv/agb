@@ -7,7 +7,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-/// plugins 디렉터리를 탐색하여 유효한 파일 경로 리스트를 반환합니다.
+/// 플러그인 디렉터리를 탐색하여 유효한 파일 경로 리스트를 반환합니다.
 pub fn scan_plugins<P: AsRef<Path>>(
     root: P,
     exclude_patterns: &[String],
@@ -81,7 +81,7 @@ pub fn load_resources<P: AsRef<Path>>(
         let r_type = components[1].clone();
         
         if r_type == "skills" {
-            // Skill 특수 처리: plugins/[plugin]/skills/[skill_name]/...
+            // Skill 특수 처리: [plugin]/skills/[skill_name]/...
             if components.len() >= 4 {
                 let skill_name = components[2].clone();
                 let file_name = components[3].clone();
@@ -94,7 +94,7 @@ pub fn load_resources<P: AsRef<Path>>(
                 }
             }
         } else if r_type == "commands" || r_type == "agents" {
-            // Command/Agent 처리: plugins/[plugin]/[type]/[name].{md,json}
+            // Command/Agent 처리: [plugin]/[type]/[name].{md,json}
             let file_stem = path.file_stem().unwrap().to_string_lossy().into_owned();
             let extension = path.extension().unwrap_or_default().to_string_lossy().into_owned();
             

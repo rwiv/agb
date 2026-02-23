@@ -1,5 +1,6 @@
 mod config;
 mod core;
+mod transformers;
 
 use clap::{Parser, Subcommand};
 

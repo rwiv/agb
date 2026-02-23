@@ -37,6 +37,14 @@ pub fn scan_plugins<P: AsRef<Path>>(root: P, exclude_patterns: &[String]) -> Res
         }
 
         let relative_path = path.strip_prefix(root).unwrap_or(path);
+        
+        // PRD Constraint: 플러그인 내부에는 에이전트 전용 메인 메모리 파일이 존재할 수 없습니다.
+        if let Some(file_name) = path.file_name().and_then(|s| s.to_str()) {
+            if file_name == "GEMINI.md" || file_name == "CLAUDE.md" || file_name == "OPENCODE.md" {
+                anyhow::bail!("Forbidden file '{}' found in plugin: {:?}", file_name, path);
+            }
+        }
+
         let mut is_excluded = false;
         for pattern in &patterns {
             if pattern.matches_path(relative_path) {
@@ -210,5 +218,18 @@ mod tests {
         assert!(found_skill);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_forbidden_files_in_plugins() {
+        let dir = tempdir().unwrap();
+        let plugins_path = dir.path().join("plugins");
+        let forbidden_path = plugins_path.join("plugin_a/GEMINI.md");
+        fs::create_dir_all(forbidden_path.parent().unwrap()).unwrap();
+        fs::write(&forbidden_path, "forbidden").unwrap();
+
+        let result = scan_plugins(&plugins_path, &[]);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Forbidden file 'GEMINI.md'"));
     }
 }

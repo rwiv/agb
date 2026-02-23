@@ -23,7 +23,7 @@
 
 ### 5.1 플러그인 기반 리소스 관리
 
-- `tests/fixtures/plugins/` 디렉터리 내에 독립적인 기능 단위로 리소스(Commands, Agents, Skills)를 구성합니다.
+- `source` 경로 하위의 `plugins/` 디렉터리 내에 독립적인 기능 단위로 리소스(Commands, Agents, Skills)를 구성합니다.
 - 각 리소스는 내용(Markdown)과 메타데이터(JSON)로 분리되어 관리됩니다.
 
 ### 5.2 명시적 빌드 제어 (`agb.yaml`)

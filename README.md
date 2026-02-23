@@ -14,7 +14,7 @@
 
 ## 주요 기능
 
-- **플러그인 기반 리소스 관리:** `tests/fixtures/plugins/` 디렉터리 내에 독립적인 기능 단위로 Commands, Agents, Skills를 구성합니다.
+- **플러그인 기반 리소스 관리:** 소스 디렉터리의 `plugins/` 내에 독립적인 기능 단위로 Commands, Agents, Skills를 구성합니다.
 - **명시적 빌드 제어:** `agb.yaml`에 선언된 리소스만 선택적으로 빌드에 포함합니다.
 - **에이전트별 포맷 변환:**
   - **Gemini-cli:** 마크다운 커맨드를 TOML 규격으로 자동 변환합니다.

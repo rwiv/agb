@@ -1,4 +1,4 @@
-use crate::config::BuildTarget;
+use crate::builder::config::BuildTarget;
 use crate::transformers::base::Transformer;
 use crate::transformers::claude::ClaudeTransformer;
 use crate::transformers::gemini::GeminiTransformer;
@@ -16,7 +16,7 @@ pub fn get_transformer(target: &BuildTarget) -> Box<dyn Transformer> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::BuildTarget;
+    use crate::builder::config::BuildTarget;
     use std::path::PathBuf;
 
     #[test]

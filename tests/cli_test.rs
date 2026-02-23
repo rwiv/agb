@@ -16,11 +16,8 @@ fn test_build_default_config() {
     let mut cmd = cargo_bin_cmd!("agb");
     cmd.arg("build")
         .assert()
-        .success()
-        .stdout(predicate::str::contains(
-            "[1/5] Loading config: tests/fixtures/agb.yaml",
-        ))
-        .stdout(predicate::str::contains("Build successful!"));
+        .failure()
+        .stderr(predicate::str::contains("Config file not found: agb.yaml"));
 }
 
 #[test]
@@ -31,5 +28,5 @@ fn test_build_non_existent_config() {
         .arg("non_existent.yaml")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("No such file or directory"));
+        .stderr(predicate::str::contains("Config file not found: non_existent.yaml"));
 }

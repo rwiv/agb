@@ -30,14 +30,19 @@ fn main() -> anyhow::Result<()> {
     match &cli.command {
         Commands::Build { config } => {
             let config_path = std::path::Path::new(config);
-            let root_dir = config_path.parent().unwrap_or(std::path::Path::new("."));
+            let output_dir = config_path.parent().unwrap_or(std::path::Path::new("."));
 
             println!("[1/5] Loading config: {}", config);
             let cfg = config::load_config(config)?;
 
+            let source_dir = std::path::Path::new(&cfg.source);
+            if !source_dir.exists() {
+                anyhow::bail!("Source directory does not exist: {}", cfg.source);
+            }
+
             // 1. 모든 플러그인 파일 스캔
-            println!("[2/5] Scanning and loading resources...");
-            let plugins_dir = root_dir.join("plugins");
+            println!("[2/5] Scanning and loading resources from {}...", source_dir.display());
+            let plugins_dir = source_dir.join("plugins");
             let exclude = cfg.exclude.unwrap_or_default();
 
             let files = core::loader::scan_plugins(&plugins_dir, &exclude)?;
@@ -81,16 +86,7 @@ fn main() -> anyhow::Result<()> {
             }
 
             // AGENTS.md 처리 (Root System Prompt)
-            let mut agents_md_path = root_dir.join("AGENTS.md");
-            if !agents_md_path.exists() {
-                agents_md_path = root_dir
-                    .parent()
-                    .unwrap_or(std::path::Path::new("."))
-                    .join("AGENTS.md");
-            }
-            if !agents_md_path.exists() {
-                agents_md_path = std::path::PathBuf::from("AGENTS.md");
-            }
+            let agents_md_path = source_dir.join("AGENTS.md");
 
             if agents_md_path.exists() {
                 println!("  - Found root system prompt: {}", agents_md_path.display());
@@ -100,8 +96,8 @@ fn main() -> anyhow::Result<()> {
             }
 
             // 4. Emission
-            println!("[5/5] Emitting files to {}...", root_dir.display());
-            let emitter = emitter::Emitter::new(root_dir);
+            println!("[5/5] Emitting files to {}...", output_dir.display());
+            let emitter = emitter::Emitter::new(output_dir);
             emitter.clean()?;
             emitter.emit(&transformed_files)?;
 

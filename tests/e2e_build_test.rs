@@ -12,14 +12,18 @@ fn test_e2e_build_gemini_cli() {
     setup_fixtures(root);
 
     // Create agb.yaml
-    let config = r#"
+    let config = format!(
+        r#"
+source: {}
 target: gemini-cli
 resources:
   commands:
     - plugin_a:foo
   skills:
     - plugin_c:python_expert
-"#;
+"#,
+        root.display()
+    );
     fs::write(root.join("agb.yaml"), config).unwrap();
 
     // Run build
@@ -46,12 +50,16 @@ fn test_e2e_build_claude_code() {
 
     setup_fixtures(root);
 
-    let config = r#"
+    let config = format!(
+        r#"
+source: {}
 target: claude-code
 resources:
   commands:
     - plugin_a:foo
-"#;
+"#,
+        root.display()
+    );
     fs::write(root.join("agb.yaml"), config).unwrap();
 
     let mut cmd = Command::new(assert_cmd::cargo_bin!("agb"));
@@ -71,12 +79,16 @@ fn test_e2e_build_opencode() {
 
     setup_fixtures(root);
 
-    let config = r#"
+    let config = format!(
+        r#"
+source: {}
 target: opencode
 resources:
   commands:
     - plugin_a:foo
-"#;
+"#,
+        root.display()
+    );
     fs::write(root.join("agb.yaml"), config).unwrap();
 
     let mut cmd = Command::new(assert_cmd::cargo_bin!("agb"));

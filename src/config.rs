@@ -21,6 +21,7 @@ pub struct Resources {
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Config {
+    pub source: String,
     pub target: BuildTarget,
     pub exclude: Option<Vec<String>>,
     pub resources: Resources,
@@ -45,6 +46,7 @@ mod tests {
     #[test]
     fn test_full_config_parsing() {
         let yaml = r#"
+source: /absolute/path/to/source
 target: gemini-cli
 exclude:
   - "*.tmp"
@@ -57,6 +59,7 @@ resources:
     - p1:skill1
 "#;
         let config = parse_config(yaml).unwrap();
+        assert_eq!(config.source, "/absolute/path/to/source");
         assert_eq!(config.target, BuildTarget::GeminiCli);
         assert_eq!(config.exclude.unwrap(), vec!["*.tmp"]);
         let res = config.resources;
@@ -67,7 +70,7 @@ resources:
 
     #[test]
     fn test_invalid_target() {
-        let yaml = "target: unknown-agent\nresources: {}";
+        let yaml = "source: /src\ntarget: unknown-agent\nresources: {}";
         let result = parse_config(yaml);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("unknown variant"));
@@ -76,12 +79,14 @@ resources:
     #[test]
     fn test_optional_fields_missing() {
         let yaml = r#"
+source: /src
 target: claude-code
 resources:
   commands:
     - p1:cmd1
 "#;
         let config = parse_config(yaml).unwrap();
+        assert_eq!(config.source, "/src");
         assert_eq!(config.target, BuildTarget::ClaudeCode);
         assert!(config.exclude.is_none());
         assert!(config.resources.agents.is_none());
@@ -91,7 +96,7 @@ resources:
 
     #[test]
     fn test_missing_required_target() {
-        let yaml = "resources: {}";
+        let yaml = "source: /src\nresources: {}";
         let result = parse_config(yaml);
         assert!(result.is_err());
         assert!(
@@ -99,6 +104,19 @@ resources:
                 .unwrap_err()
                 .to_string()
                 .contains("missing field `target`")
+        );
+    }
+
+    #[test]
+    fn test_missing_required_source() {
+        let yaml = "target: gemini-cli\nresources: {}";
+        let result = parse_config(yaml);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("missing field `source`")
         );
     }
 }

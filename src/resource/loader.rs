@@ -73,14 +73,21 @@ pub fn scan_plugins<P: AsRef<Path>>(root: P, exclude_patterns: &[String]) -> Res
 /// 스캔된 파일들을 Resource 객체들로 로드합니다.
 pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Vec<Resource>> {
     let root = root.as_ref();
-    let mut resources = Vec::new();
+    let groups = group_files_by_resource(root, files)?;
 
-    // Key: (plugin_name, resource_type, resource_name)
-    type ResourceKey = (String, String, String);
-    // Value: (md_path, metadata_path)
-    type ResourcePaths = (Option<PathBuf>, Option<PathBuf>);
+    groups
+        .into_iter()
+        .map(|(key, paths)| parse_resource(key, paths))
+        .collect()
+}
 
-    // 파일들을 타입별/플러그인별/이름별로 그룹화하기 위한 맵
+// Key: (plugin_name, resource_type, resource_name)
+type ResourceKey = (String, String, String);
+// Value: (md_path, metadata_path)
+type ResourcePaths = (Option<PathBuf>, Option<PathBuf>);
+
+/// 파일들을 타입별/플러그인별/이름별로 그룹화합니다.
+fn group_files_by_resource(root: &Path, files: Vec<PathBuf>) -> Result<HashMap<ResourceKey, ResourcePaths>> {
     let mut groups: HashMap<ResourceKey, ResourcePaths> = HashMap::new();
 
     for path in files {
@@ -145,44 +152,48 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
         }
     }
 
-    for ((plugin, r_type, name), (md_path, metadata_path)) in groups {
-        let content = if let Some(p) = md_path {
-            fs::read_to_string(p)?
+    Ok(groups)
+}
+
+/// 그룹화된 파일 경로들로부터 Resource 객체를 생성합니다.
+fn parse_resource(key: ResourceKey, paths: ResourcePaths) -> Result<Resource> {
+    let (plugin, r_type, name) = key;
+    let (md_path, metadata_path) = paths;
+
+    let content = if let Some(p) = md_path {
+        fs::read_to_string(p)?
+    } else {
+        String::new()
+    };
+
+    let metadata = if let Some(p) = metadata_path {
+        let meta_str = fs::read_to_string(&p)?;
+        let ext = p.extension().unwrap_or_default().to_string_lossy();
+        if ext == "json" {
+            serde_json::from_str(&meta_str)
+                .with_context(|| format!("Failed to parse JSON for resource: {}/{}", r_type, name))?
         } else {
-            String::new()
-        };
-
-        let metadata = if let Some(p) = metadata_path {
-            let meta_str = fs::read_to_string(&p)?;
-            let ext = p.extension().unwrap_or_default().to_string_lossy();
-            if ext == "json" {
-                serde_json::from_str(&meta_str)
-                    .with_context(|| format!("Failed to parse JSON for resource: {}/{}", r_type, name))?
-            } else {
-                // yaml or yml
-                serde_yaml::from_str(&meta_str)
-                    .with_context(|| format!("Failed to parse YAML for resource: {}/{}", r_type, name))?
-            }
-        } else {
-            Value::Null
-        };
-
-        let data = ResourceData {
-            name: name.clone(),
-            plugin: plugin.clone(),
-            content,
-            metadata,
-        };
-
-        match r_type.as_str() {
-            "commands" => resources.push(Resource::Command(data)),
-            "agents" => resources.push(Resource::Agent(data)),
-            "skills" => resources.push(Resource::Skill(data)),
-            _ => {}
+            // yaml or yml
+            serde_yaml::from_str(&meta_str)
+                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", r_type, name))?
         }
-    }
+    } else {
+        Value::Null
+    };
 
-    Ok(resources)
+    let data = ResourceData {
+        name: name.clone(),
+        plugin: plugin.clone(),
+        content,
+        metadata,
+    };
+
+    match r_type.as_str() {
+        "commands" => Ok(Resource::Command(data)),
+        "agents" => Ok(Resource::Agent(data)),
+        "skills" => Ok(Resource::Skill(data)),
+        _ => anyhow::bail!("Unknown resource type: {}", r_type),
+    }
 }
 
 #[cfg(test)]

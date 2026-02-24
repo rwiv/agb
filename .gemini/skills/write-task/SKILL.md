@@ -10,6 +10,9 @@ description: task 작성 시 읽으시오
 - 문서 작성만 수행하시오. 구현은 사용자의 허가가 떨어진 이후에 수행해야한다.
 
 ## 참고 자료
-- `PLAN.md`: @docs/tasks/feature-1/PLAN.md
-- `<task-name>.md`: @docs/tasks/feature-1/phase-1/TASK-1-2.md
+- `PLAN.md`
+    - @docs/tasks/feature-1/PLAN.md
+    - @docs/tasks/refactor-3/PLAN.md
+- `<task-name>.md`
+    - @docs/tasks/feature-1/phase-1/TASK-1-2.md
 

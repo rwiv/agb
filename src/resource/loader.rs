@@ -322,4 +322,57 @@ mod tests {
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Forbidden file 'GEMINI.md'"));
     }
+
+    #[test]
+    fn test_group_files_by_resource_logic() -> Result<()> {
+        let root = Path::new("/root");
+        let files = vec![
+            PathBuf::from("/root/p1/commands/foo.md"),
+            PathBuf::from("/root/p1/commands/foo.json"),
+            PathBuf::from("/root/p2/skills/task/task.yaml"),
+            PathBuf::from("/root/p2/skills/task/logic.md"),
+            PathBuf::from("/root/p1/agents/bot.md"),
+        ];
+
+        let groups = group_files_by_resource(root, files)?;
+
+        // p1:commands:foo -> (Some(foo.md), Some(foo.json))
+        let foo_key = ("p1".to_string(), "commands".to_string(), "foo".to_string());
+        let (foo_md, foo_meta) = groups.get(&foo_key).unwrap();
+        assert!(foo_md.as_ref().unwrap().ends_with("foo.md"));
+        assert!(foo_meta.as_ref().unwrap().ends_with("foo.json"));
+
+        // p2:skills:task -> (Some(logic.md), Some(task.yaml))
+        let task_key = ("p2".to_string(), "skills".to_string(), "task".to_string());
+        let (task_md, task_meta) = groups.get(&task_key).unwrap();
+        assert!(task_md.as_ref().unwrap().ends_with("logic.md"));
+        assert!(task_meta.as_ref().unwrap().ends_with("task.yaml"));
+
+        // p1:agents:bot -> (Some(bot.md), None)
+        let bot_key = ("p1".to_string(), "agents".to_string(), "bot".to_string());
+        let (bot_md, bot_meta) = groups.get(&bot_key).unwrap();
+        assert!(bot_md.as_ref().unwrap().ends_with("bot.md"));
+        assert!(bot_meta.is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_resource_invalid_json() -> Result<()> {
+        let dir = tempdir()?;
+        let json_path = dir.path().join("bad.json");
+        fs::write(&json_path, "{ invalid json }")?;
+
+        let key = ("p1".to_string(), "commands".to_string(), "bad".to_string());
+        let paths = (None, Some(json_path));
+
+        let result = parse_resource(key, paths);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        // 에러 메시지에 리소스 정보가 포함되어 있는지 확인
+        assert!(err_msg.contains("Failed to parse JSON"));
+        assert!(err_msg.contains("commands/bad"));
+
+        Ok(())
+    }
 }

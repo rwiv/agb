@@ -1,6 +1,6 @@
 # Master Task List: agb (Agents Builder)
 
-이 문서는 `agb` 프로젝트의 전체 개발 여정을 관리합니다. 각 테스크는 독립적인 `docs/tasks/phase-X/TASK-X-Y.md` 문서에 상세 가이드를 가집니다.
+이 문서는 `agb` 프로젝트의 전체 개발 여정을 관리합니다. 각 테스크는 독립적인 `docs/tasks/main/phase-X/TASK-X-Y.md` 문서에 상세 가이드를 가집니다.
 
 ## Phase 1: 기반 설정 및 CLI 환경 구축 (CLI & Config)
 *   **Task 1.1: 프로젝트 초기화 및 의존성 설정**
@@ -37,11 +37,3 @@
     *   *성공 기준:* `target: claude-code` 설정 시 Claude 규격에 최적화된 마크다운 결과물을 생성한다.
 *   **Task 5.2: OpenCode용 변환기 구현 및 최종 검증**
     *   *성공 기준:* 모든 지원 타겟에 대해 샘플 플러그인을 활용한 엔드투엔드(E2E) 빌드 테스트를 통과한다.
-
-## Phase 6: 소스 및 출력 경로 분리 (Source-Output Decoupling)
-*   **Task 6.1: `agb.yaml` 모델 확장 및 `source` 필드 추가**
-    *   *성공 기준:* `agb.yaml`에 절대 경로 `source` 필드를 추가하고, 이를 Rust `Config` 구조체로 정확히 파싱한다.
-*   **Task 6.2: 소스 로딩 및 파일 출력 경로 분리 로직 구현**
-    *   *성공 기준:* 리소스 스캔 및 로딩은 `source` 경로에서 수행하고, 파일 생성(`Emitter`)은 `agb.yaml`이 위치한 디렉터리에서 수행한다.
-*   **Task 6.3: 경로 분리 아키텍처 통합 및 최종 검증**
-    *   *성공 기준:* 소스 디렉터리와 빌드 결과물 디렉터리가 다른 환경에서 `agb build` 명령이 성공적으로 작동함을 테스트로 증명한다.

@@ -41,8 +41,19 @@ impl ResourceLoader {
         })
     }
 
+    /// 리소스를 로드합니다.
+    pub fn load(&self) -> Result<Vec<Resource>> {
+        let files = self.scan()?;
+        let groups = self.resolver.resolve(&self.root, files)?;
+
+        groups
+            .into_iter()
+            .map(|(key, paths)| self.parse_resource(key, paths))
+            .collect()
+    }
+
     /// 플러그인 디렉터리를 스캔하여 유효한 파일 경로 목록을 반환합니다.
-    pub fn scan(&self) -> Result<Vec<PathBuf>> {
+    fn scan(&self) -> Result<Vec<PathBuf>> {
         let mut files = Vec::new();
 
         for entry in WalkDir::new(&self.root).into_iter().filter_map(|e| e.ok()) {
@@ -53,17 +64,6 @@ impl ResourceLoader {
         }
 
         Ok(files)
-    }
-
-    /// 리소스를 로드합니다.
-    pub fn load(&self) -> Result<Vec<Resource>> {
-        let files = self.scan()?;
-        let groups = self.resolver.resolve(&self.root, files)?;
-
-        groups
-            .into_iter()
-            .map(|(key, paths)| self.parse_resource(key, paths))
-            .collect()
     }
 
     /// 그룹화된 파일 경로들로부터 Resource 객체를 생성합니다.

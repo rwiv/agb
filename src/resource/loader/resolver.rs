@@ -66,6 +66,11 @@ impl ResourcePathResolver {
             let skill_name = components[2].clone();
             let file_name = components[3].clone();
 
+            let key = ResourceKey {
+                plugin: plugin.clone(),
+                r_type: r_type.clone(),
+                name: skill_name.clone(),
+            };
             let entry = groups.entry(key).or_default();
 
             let is_metadata = (file_name == format!("{}.json", skill_name))
@@ -101,6 +106,11 @@ impl ResourcePathResolver {
         let file_stem = path.file_stem().unwrap().to_string_lossy().into_owned();
         let extension = path.extension().unwrap_or_default().to_string_lossy().into_owned();
 
+        let key = ResourceKey {
+            plugin: plugin.clone(),
+            r_type,
+            name: file_stem.clone(),
+        };
         let entry = groups.entry(key).or_default();
 
         if extension == "md" {

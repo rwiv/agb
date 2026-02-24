@@ -36,6 +36,23 @@
 - **Clean**: 빌드 시작 전, 출력 디렉터리에서 이전 빌드 결과물(`commands/`, `agents/`, `skills/`, `GEMINI.md` 등)을 안전하게 삭제하여 환경을 초기화합니다.
 - **Emit**: `TransformedFile` 목록을 받아 지정된 경로에 실제 파일을 생성합니다.
 
+## 리소스 구성 상세
+
+### Commands & Agents
+파일 기반으로 관리되며, 이름이 같은 `.md` 파일과 메타데이터 파일이 한 쌍입니다.
+
+- **본문 (`.md`)**: 에이전트에게 전달될 프롬프트 전문.
+- **메타데이터 (`.json`, `.yaml`, `.yml`)**: `name`, `description`, `model`, `temperature` 등 에이전트별 설정 값.
+  - *참고: Gemini-cli 빌드 시 메타데이터의 모든 필드는 TOML의 최상위 키로 변환되며, 마크다운 본문은 `prompt` 필드로 삽입됩니다.*
+
+### Skills
+폴더 기반으로 관리되며, 특정 기능을 수행하기 위한 여러 파일의 집합입니다.
+
+- **구조**: `skills/[skill_name]/`
+  - `METADATA.yaml`: 스킬의 속성을 정의하는 필수 파일. (JSON/YML 지원)
+  - `[any_name].md`: 스킬의 핵심 프롬프트.
+  - 기타 보조 파일들.
+
 ## 데이터 흐름 (Data Flow)
 
 1. **Scan**: `loader`가 플러그인 디렉터리에서 유효한 파일 목록을 추출합니다.

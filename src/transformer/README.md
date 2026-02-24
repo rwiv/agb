@@ -1,6 +1,6 @@
-# Transformers Module
+# Transformer Module
 
-`transformers` 모듈은 `agb`의 내부 리소스 모델(`Resource`)을 각 에이전트(Gemini, Claude 등)의 규격에 맞는 물리적 파일 형식으로 변환하는 역할을 담당합니다.
+`transformer` 모듈은 `agb`의 내부 리소스 모델(`Resource`)을 각 에이전트(Gemini, Claude 등)의 규격에 맞는 물리적 파일 형식으로 변환하는 역할을 담당합니다.
 
 ## 핵심 역할
 
@@ -38,8 +38,8 @@ pub trait Transformer {
 
 ## 새로운 에이전트 추가 방법
 
-1. `src/transformers/providers/` 내에 새로운 모듈을 생성합니다.
+1. `src/transformer/providers/` 내에 새로운 모듈을 생성합니다.
 2. `base::Transformer` 트레이트를 구현하는 구조체를 정의합니다.
-3. `src/transformers/providers/mod.rs`에서 새 모듈을 선언합니다.
-4. `src/transformers/factory.rs`의 `get_transformer` 함수에 해당 에이전트 분기를 추가하고 새 구조체를 임포트합니다.
+3. `src/transformer/providers/mod.rs`에서 새 모듈을 선언합니다.
+4. `src/transformer/factory.rs`의 `get_transformer` 함수에 해당 에이전트 분기를 추가하고 새 구조체를 임포트합니다.
 5. `src/builder/config.rs`의 `BuildTarget` 열거형에 새로운 에이전트 이름을 등록합니다.

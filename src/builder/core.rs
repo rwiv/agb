@@ -1,6 +1,6 @@
 use super::config;
 use crate::resource;
-use crate::transformers;
+use crate::transformer;
 use anyhow::Context;
 use std::path::{Path, PathBuf};
 
@@ -68,7 +68,7 @@ impl Builder {
 
         // 3. Transformation
         println!("[4/5] Transforming resources for target: {:?}...", cfg.target);
-        let transformer = transformers::get_transformer(&cfg.target);
+        let transformer = transformer::get_transformer(&cfg.target);
         let mut transformed_files = Vec::new();
 
         for res in registry.all_resources() {

@@ -1,6 +1,6 @@
 mod builder;
 mod resource;
-mod transformers;
+mod transformer;
 mod utils;
 
 use builder::Builder;

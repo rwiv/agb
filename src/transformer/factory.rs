@@ -1,8 +1,8 @@
 use crate::builder::config::BuildTarget;
-use crate::transformers::base::Transformer;
-use crate::transformers::providers::claude::ClaudeTransformer;
-use crate::transformers::providers::gemini::GeminiTransformer;
-use crate::transformers::providers::opencode::OpenCodeTransformer;
+use crate::transformer::base::Transformer;
+use crate::transformer::providers::claude::ClaudeTransformer;
+use crate::transformer::providers::gemini::GeminiTransformer;
+use crate::transformer::providers::opencode::OpenCodeTransformer;
 
 /// 타겟 에이전트에 맞는 Transformer 인스턴스를 반환합니다.
 pub fn get_transformer(target: &BuildTarget) -> Box<dyn Transformer> {

@@ -24,10 +24,10 @@
 1. **Load Config**: `agb.yaml`을 읽어 빌드 컨텍스트를 생성합니다. 이때 `source` 경로의 물결표(`~`)는 시스템 홈 디렉터리로 확장됩니다. (`builder/config.rs`)
 2. **Scan & Load**: 소스 경로의 플러그인을 스캔하고 `Resource` 객체로 로드합니다. 메타데이터는 JSON과 YAML 형식을 모두 지원합니다. (`resource/loader.rs`)
 3. **Validate & Register**: 리소스 이름 충돌 및 중복된 메타데이터 포맷을 검증하고 레지스트리에 등록합니다. (`resource/registry.rs`)
-4. **Transform**: 선택된 타겟에 맞는 `Transformer`가 리소스를 변환합니다. (`transformers/`)
+4. **Transform**: 선택된 타겟에 맞는 `Transformer`가 리소스를 변환합니다. (`transformer/`)
 5. **Emit**: 기존 결과물을 정리하고 변환된 파일을 물리적 경로에 작성합니다. (`resource/emitter.rs`)
 
-### 2.2 핵심 트레이트: `Transformer` (`src/transformers/base.rs`)
+### 2.2 핵심 트레이트: `Transformer` (`src/transformer/base.rs`)
 
 새로운 에이전트 지원을 위해 아래와 같은 인터페이스를 제공합니다.
 
@@ -48,13 +48,13 @@ pub trait Transformer {
 | `src/main.rs` | CLI 엔트리포인트 및 실행 제어 | - |
 | `src/builder/` | 빌드 파이프라인 오케스트레이션 및 설정 관리 | [README.md](../../src/builder/README.md) |
 | `src/resource/` | 리소스 데이터 모델, 스캔, 레지스트리 및 배포(Emitter) | [README.md](../../src/resource/README.md) |
-| `src/transformers/` | 에이전트별 포맷 변환 로직 (Gemini, Claude 등) | [README.md](../../src/transformers/README.md) |
+| `src/transformer/` | 에이전트별 포맷 변환 로직 (Gemini, Claude 등) | [README.md](../../src/transformer/README.md) |
 | `src/utils/` | 공통 유틸리티 (FS 조작 등) | - |
 
 ### 3.1 세부 파일 구성
 - **builder**: `core.rs` (프로세스 제어), `config.rs` (agb.yaml 파싱)
 - **resource**: `types.rs` (모델, `TransformedFile` 포함), `loader.rs` (스캔), `registry.rs` (중복 검증), `emitter.rs` (출력 로직)
-- **transformers**: 
+- **transformer**: 
   - `base.rs` (트레이트), `factory.rs` (생성기)
   - `providers/`: `gemini.rs`, `claude.rs`, `opencode.rs` (구현체)
 - **utils**: `fs.rs` (파일 시스템 유틸리티)

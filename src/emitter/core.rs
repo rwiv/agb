@@ -23,7 +23,7 @@ impl Emitter {
             "skills",
             "GEMINI.md",
             "CLAUDE.md",
-            "OPENCODE.md",
+            "AGENTS.md",
         ];
 
         for target in targets {

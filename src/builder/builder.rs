@@ -99,10 +99,7 @@ impl Builder {
         emitter.clean()?;
         emitter.emit(&transformed_files)?;
 
-        println!(
-            "
-Build successful!"
-        );
+        println!("Build successful!");
         println!("  - Target: {:?}", cfg.target);
         println!("  - Resources: {} total", registry.len());
         println!("  - Files generated: {}", transformed_files.len());

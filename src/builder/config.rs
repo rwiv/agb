@@ -35,7 +35,8 @@ pub fn load_config<P: AsRef<Path>>(path: P) -> anyhow::Result<Config> {
 
 /// 문자열로부터 Config 구조체를 파싱합니다. (테스트 용이성을 위해 분리)
 pub fn parse_config(content: &str) -> anyhow::Result<Config> {
-    let config: Config = serde_yaml::from_str(content)?;
+    let mut config: Config = serde_yaml::from_str(content)?;
+    config.source = shellexpand::tilde(&config.source).into_owned();
     Ok(config)
 }
 
@@ -108,5 +109,21 @@ resources:
         let result = parse_config(yaml);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("missing field `source`"));
+    }
+
+    #[test]
+    fn test_path_expansion() {
+        // '~' 문자가 포함된 경로가 확장되는지 확인
+        // 실제 홈 디렉터리 경로는 환경마다 다르므로, '~'가 그대로 남아있지 않은지 확인
+        let yaml = r#"
+source: ~/agb-source
+target: gemini-cli
+resources: {}
+"#;
+        let config = parse_config(yaml).unwrap();
+        assert_ne!(config.source, "~/agb-source");
+        assert!(config.source.contains("agb-source"));
+        // 절대 경로 형식이 되어야 함 (Unix 기준 / 또는 Windows 기준 \ 혹은 드라이브 문자)
+        assert!(config.source.starts_with('/') || config.source.contains(':') || config.source.starts_with('\\'));
     }
 }

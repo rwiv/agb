@@ -77,7 +77,7 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
 
     // Key: (plugin_name, resource_type, resource_name)
     type ResourceKey = (String, String, String);
-    // Value: (md_path, json_path)
+    // Value: (md_path, metadata_path)
     type ResourcePaths = (Option<PathBuf>, Option<PathBuf>);
 
     // 파일들을 타입별/플러그인별/이름별로 그룹화하기 위한 맵
@@ -103,7 +103,13 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
                 let skill_name = components[2].clone();
                 let file_name = components[3].clone();
                 let entry = groups.entry((plugin, r_type, skill_name)).or_insert((None, None));
-                if file_name == "METADATA.json" {
+                if file_name == "METADATA.json" || file_name == "METADATA.yaml" || file_name == "METADATA.yml" {
+                    if entry.1.is_some() {
+                        anyhow::bail!(
+                            "Conflict: Multiple metadata formats found for skill '{}' in plugin '{}'",
+                            components[2], components[0]
+                        );
+                    }
                     entry.1 = Some(path);
                 } else if file_name.ends_with(".md") {
                     // 메인 마크다운 파일 (보통 skill_name.md 또는 README.md)
@@ -111,30 +117,43 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
                 }
             }
         } else if r_type == "commands" || r_type == "agents" {
-            // Command/Agent 처리: [plugin]/[type]/[name].{md,json}
+            // Command/Agent 처리: [plugin]/[type]/[name].{md,json,yaml,yml}
             let file_stem = path.file_stem().unwrap().to_string_lossy().into_owned();
             let extension = path.extension().unwrap_or_default().to_string_lossy().into_owned();
 
             let entry = groups.entry((plugin, r_type, file_stem)).or_insert((None, None));
             if extension == "md" {
                 entry.0 = Some(path);
-            } else if extension == "json" {
+            } else if extension == "json" || extension == "yaml" || extension == "yml" {
+                if entry.1.is_some() {
+                    anyhow::bail!(
+                        "Conflict: Multiple metadata formats found for resource '{}' in plugin '{}'",
+                        path.file_stem().unwrap().to_string_lossy(), components[0]
+                    );
+                }
                 entry.1 = Some(path);
             }
         }
     }
 
-    for ((plugin, r_type, name), (md_path, json_path)) in groups {
+    for ((plugin, r_type, name), (md_path, metadata_path)) in groups {
         let content = if let Some(p) = md_path {
             fs::read_to_string(p)?
         } else {
             String::new()
         };
 
-        let metadata = if let Some(p) = json_path {
-            let json_str = fs::read_to_string(p)?;
-            serde_json::from_str(&json_str)
-                .with_context(|| format!("Failed to parse JSON for resource: {}/{}", r_type, name))?
+        let metadata = if let Some(p) = metadata_path {
+            let meta_str = fs::read_to_string(&p)?;
+            let ext = p.extension().unwrap_or_default().to_string_lossy();
+            if ext == "json" {
+                serde_json::from_str(&meta_str)
+                    .with_context(|| format!("Failed to parse JSON for resource: {}/{}", r_type, name))?
+            } else {
+                // yaml or yml
+                serde_yaml::from_str(&meta_str)
+                    .with_context(|| format!("Failed to parse YAML for resource: {}/{}", r_type, name))?
+            }
         } else {
             Value::Null
         };
@@ -217,6 +236,51 @@ mod tests {
 
         assert!(found_foo);
         assert!(found_skill);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_yaml_metadata_loading() -> Result<()> {
+        let dir = tempdir()?;
+        let plugins_path = dir.path().join("plugins");
+        let cmd_dir = plugins_path.join("plugin_a/commands");
+        fs::create_dir_all(&cmd_dir)?;
+
+        fs::write(cmd_dir.join("bar.md"), "content")?;
+        fs::write(cmd_dir.join("bar.yaml"), "key: yaml_val\nnum: 123")?;
+
+        let files = scan_plugins(&plugins_path, &[])?;
+        let resources = load_resources(&plugins_path, files)?;
+
+        assert_eq!(resources.len(), 1);
+        if let Resource::Command(d) = &resources[0] {
+            assert_eq!(d.name, "bar");
+            assert_eq!(d.metadata["key"], "yaml_val");
+            assert_eq!(d.metadata["num"], 123);
+        } else {
+            panic!("Expected Command resource");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_metadata_conflict_error() -> Result<()> {
+        let dir = tempdir()?;
+        let plugins_path = dir.path().join("plugins");
+        let cmd_dir = plugins_path.join("plugin_a/commands");
+        fs::create_dir_all(&cmd_dir)?;
+
+        fs::write(cmd_dir.join("conflict.md"), "content")?;
+        fs::write(cmd_dir.join("conflict.json"), "{\"fmt\": \"json\"}")?;
+        fs::write(cmd_dir.join("conflict.yaml"), "fmt: yaml")?;
+
+        let files = scan_plugins(&plugins_path, &[])?;
+        let result = load_resources(&plugins_path, files);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Multiple metadata formats found"));
 
         Ok(())
     }

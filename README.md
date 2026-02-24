@@ -51,26 +51,26 @@
 
 `agb` 리소스는 마크다운 본문과 메타데이터(JSON 또는 YAML) 파일이 한 쌍으로 구성됩니다.
 
-### Command 예시
+### Agent (Sub-agent) 예시
 
-`plugins/my_plugin/commands/greet.md`:
+`plugins/my_plugin/agents/researcher.md`:
 ```markdown
-Hello! How can I help you today?
+You are a professional researcher. Analyze the given topic deeply.
 ```
 
-`plugins/my_plugin/commands/greet.yaml`:
+`plugins/my_plugin/agents/researcher.yaml`:
 ```yaml
-name: greet
-description: A simple greeting command
-model: gemini-2.0-flash
+name: researcher
+description: Expert research sub-agent. Use this for in-depth analysis of complex technical topics or when academic research is required.
+model: gemini-3.0-pro
 ```
 
-빌드 시(Gemini-cli 타겟), 위 파일들은 `commands/greet.toml`로 병합됩니다:
+빌드 시(Gemini-cli 타겟), 위 파일들은 `agents/researcher.toml`로 병합됩니다:
 ```toml
-name = "greet"
-description = "A simple greeting command"
-model = "gemini-2.0-flash"
-prompt = "Hello! How can I help you today?"
+name = "researcher"
+description = "Expert research sub-agent. Use this for in-depth analysis of complex technical topics or when academic research is required."
+model = "gemini-3.0-pro"
+prompt = "You are a professional researcher. Analyze the given topic deeply."
 ```
 
 ## 설정 방법 (`agb.yaml`)

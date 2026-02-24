@@ -42,8 +42,20 @@
 파일 기반으로 관리되며, 이름이 같은 `.md` 파일과 메타데이터 파일이 한 쌍입니다.
 
 - **본문 (`.md`)**: 에이전트에게 전달될 프롬프트 전문.
-- **메타데이터 (`.json`, `.yaml`, `.yml`)**: `name`, `description`, `model`, `temperature` 등 에이전트별 설정 값.
+- **메타데이터 (`.yaml`, `.yml`, `.json`)**: `name`, `description`, `model` 등 에이전트별 설정 값.
   - *참고: Gemini-cli 빌드 시 메타데이터의 모든 필드는 TOML의 최상위 키로 변환되며, 마크다운 본문은 `prompt` 필드로 삽입됩니다.*
+
+**작성 예시 (Agent):**
+- `agents/researcher.md`
+  ```markdown
+  You are a professional researcher. Analyze the given topic deeply and provide a structured report with citations.
+  ```
+- `agents/researcher.yaml`
+  ```yaml
+  name: researcher
+  description: Expert research sub-agent. Use this for in-depth analysis of complex technical topics or when academic research is required.
+  model: gemini-3.0-pro
+  ```
 
 ### Skills
 폴더 기반으로 관리되며, 특정 기능을 수행하기 위한 여러 파일의 집합입니다.

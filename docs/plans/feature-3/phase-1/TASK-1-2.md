@@ -1,17 +1,13 @@
-# TASK-1-2: 시스템 문서 업데이트
+# TASK-1-2: `source` 필드 경로 확장 구현
 
 ## 목표
-프로젝트의 전반적인 기술 문서와 `README.md`에서 스킬 메타데이터에 대한 설명을 실제 구현과 일치하도록 업데이트합니다.
+- `agb.yaml`의 `source` 경로에서 `~` 기호를 절대 경로로 확장.
 
-## 작업 상세
+## 작업 내용
+1. `src/builder/config.rs`의 `parse_config` 또는 `load_config` 함수 수정.
+2. `shellexpand::tilde`를 사용하여 `config.source` 값 업데이트.
+3. 관련 단위 테스트 추가:
+   - `~/test` -> `/Users/user/test` 변환 확인.
 
-1. **`README.md` 수정**:
-   - `skills/` 디렉터리 구조 예시에서 `METADATA.json`을 `[skill_name].json`으로 변경.
-2. **`docs/specs/SYSTEM_SPEC.md` 수정**:
-   - `2.2 소스 디렉터리 구조` 섹션에서 `METADATA.json/yaml/yml`을 `[skill_name].json/yaml/yml`로 수정.
-3. **`src/resource/README.md` 수정**:
-   - `skills/` 리소스 구성 상세 섹션에서 `METADATA.yaml` 관련 설명을 `[skill_name].yaml`로 변경.
-
-## 검증 계획
-- 문서 내 모든 `METADATA` 언급이 적절하게 수정되었는지 수동 검토.
-- `grep`을 통해 더 이상 스킬 설정 파일로 `METADATA`가 언급되지 않는지 확인.
+## 성공 기준
+- `agb.yaml`에 `source: ~/path` 기입 시 로더가 실제 절대 경로에서 리소스를 찾음.

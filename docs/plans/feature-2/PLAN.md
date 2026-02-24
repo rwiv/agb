@@ -1,15 +1,9 @@
-# Plan: Path Expansion & YAML Metadata
+# Plan: Source-Output Decoupling
 
-## 개요
-`agb`의 사용성을 높이기 위해 홈 디렉터리 경로 확장 기능과 YAML 메타데이터 지원 기능을 구현합니다.
-
-## Phase 1: 환경 설정 및 경로 확장
-- [ ] TASK-1-1: 의존성 추가 및 기본 환경 설정 (`shellexpand`) @docs/tasks/feature-2/phase-1/TASK-1-1.md
-- [ ] TASK-1-2: `source` 필드 경로 확장 구현 (`config.rs`) @docs/tasks/feature-2/phase-1/TASK-1-2.md
-
-## Phase 2: YAML 메타데이터 및 하이브리드 지원
-- [ ] TASK-2-1: YAML 확장자 스캔 지원 (`loader.rs`) @docs/tasks/feature-2/phase-2/TASK-2-1.md
-- [ ] TASK-2-2: 확장자별 메타데이터 파싱 및 충돌 감지 로직 구현 @docs/tasks/feature-2/phase-2/TASK-2-2.md
-
-## Phase 3: 검증 및 테스트
-- [ ] TASK-3-1: 통합 테스트 및 예외 케이스 검증 @docs/tasks/feature-2/phase-3/TASK-3-1.md
+## Phase 1: 소스 및 출력 경로 분리
+*   **Task 1.1: `agb.yaml` 모델 확장 및 `source` 필드 추가**
+    *   *성공 기준:* `agb.yaml`에 절대 경로 `source` 필드를 추가하고, 이를 Rust `Config` 구조체로 정확히 파싱한다.
+*   **Task 1.2: 소스 로딩 및 파일 출력 경로 분리 로직 구현**
+    *   *성공 기준:* 리소스 스캔 및 로딩은 `source` 경로에서 수행하고, 파일 생성(`Emitter`)은 `agb.yaml`이 위치한 디렉터리에서 수행한다.
+*   **Task 1.3: 경로 분리 아키텍처 통합 및 최종 검증**
+    *   *성공 기준:* 소스 디렉터리와 빌드 결과물 디렉터리가 다른 환경에서 `agb build` 명령이 성공적으로 작동함을 테스트로 증명한다.

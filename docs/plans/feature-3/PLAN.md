@@ -1,14 +1,15 @@
-# Plan: Skill Metadata Renaming (Domain-specific Naming)
+# Plan: Path Expansion & YAML Metadata
 
-스킬(Skill) 리소스의 메타데이터 파일명을 고정된 `METADATA.yaml`에서 스킬 이름과 일치하는 `[skill_name].yaml` 방식으로 변경하여, 미래의 표준 규격(agentskills.io 등)과의 충돌을 방지하고 일관성을 확보합니다.
+## 개요
+`agb`의 사용성을 높이기 위해 홈 디렉터리 경로 확장 기능과 YAML 메타데이터 지원 기능을 구현합니다.
 
-## Phase 1: Core Logic & Documentation
+## Phase 1: 환경 설정 및 경로 확장
+- [ ] TASK-1-1: 의존성 추가 및 기본 환경 설정 (`shellexpand`) @docs/tasks/feature-2/phase-1/TASK-1-1.md
+- [ ] TASK-1-2: `source` 필드 경로 확장 구현 (`config.rs`) @docs/tasks/feature-2/phase-1/TASK-1-2.md
 
-- [ ] **TASK-1-1: Resource Loader 로직 수정**
-  - `src/resource/loader.rs`에서 스킬 폴더 탐색 시 폴더명과 동일한 이름의 메타데이터 파일(`.json`, `.yaml`, `.yml`)을 찾도록 수정.
-  - 기존 `METADATA.*` 로직 제거.
-- [ ] **TASK-1-2: 시스템 문서 업데이트**
-  - `README.md`, `docs/specs/SYSTEM_SPEC.md`, `src/resource/README.md` 등에서 변경된 명명 규칙 반영.
-- [ ] **TASK-1-3: 테스트 코드 및 검증**
-  - `src/resource/loader.rs` 내 유닛 테스트 수정.
-  - `tests/e2e_build_test.rs` 및 테스트용 피처(`tests/fixtures`) 업데이트 및 전체 빌드 검증.
+## Phase 2: YAML 메타데이터 및 하이브리드 지원
+- [ ] TASK-2-1: YAML 확장자 스캔 지원 (`loader.rs`) @docs/tasks/feature-2/phase-2/TASK-2-1.md
+- [ ] TASK-2-2: 확장자별 메타데이터 파싱 및 충돌 감지 로직 구현 @docs/tasks/feature-2/phase-2/TASK-2-2.md
+
+## Phase 3: 검증 및 테스트
+- [ ] TASK-3-1: 통합 테스트 및 예외 케이스 검증 @docs/tasks/feature-2/phase-3/TASK-3-1.md

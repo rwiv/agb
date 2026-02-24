@@ -51,7 +51,7 @@
 
 `agb` 리소스는 마크다운 본문과 메타데이터(JSON 또는 YAML) 파일이 한 쌍으로 구성됩니다.
 
-### Agent (Sub-agent) 예시
+### Subagent 예시
 
 `plugins/my_plugin/agents/researcher.md`:
 ```markdown
@@ -107,8 +107,3 @@ agb build
 # 특정 설정 파일 지정
 agb build --config custom-agb.yaml
 ```
-
-## 개발 환경
-
-- **Language:** Rust (Edition 2024)
-- **Main Dependencies:** `clap`, `serde`, `toml`, `walkdir`, `glob`

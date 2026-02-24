@@ -1,4 +1,4 @@
-use crate::core::resource::Resource;
+use crate::resource::resource::Resource;
 use crate::transformers::base::{TransformedFile, Transformer};
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
@@ -63,7 +63,7 @@ impl Transformer for OpenCodeTransformer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::resource::ResourceData;
+    use crate::resource::resource::ResourceData;
     use serde_json::json;
 
     #[test]

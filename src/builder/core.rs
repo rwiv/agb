@@ -1,5 +1,5 @@
 use super::config;
-use crate::core;
+use crate::resource;
 use crate::emitter;
 use crate::transformers;
 use anyhow::Context;
@@ -42,12 +42,12 @@ impl Builder {
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let exclude = cfg.exclude.unwrap_or_default();
 
-        let files = core::loader::scan_plugins(&plugins_dir, &exclude)?;
-        let all_resources = core::loader::load_resources(&plugins_dir, files)?;
+        let files = resource::loader::scan_plugins(&plugins_dir, &exclude)?;
+        let all_resources = resource::loader::load_resources(&plugins_dir, files)?;
 
         // 2. Registry 구축 및 agb.yaml에 명시된 리소스 필터링
         println!("[3/5] Validating and registering resources...");
-        let mut registry = core::registry::Registry::new();
+        let mut registry = resource::registry::Registry::new();
 
         let mut target_identifiers = std::collections::HashSet::new();
         if let Some(cmds) = &cfg.resources.commands {

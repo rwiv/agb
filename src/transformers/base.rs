@@ -1,4 +1,4 @@
-use crate::core::resource::Resource;
+use crate::resource::resource::Resource;
 use anyhow::Result;
 use std::path::PathBuf;
 

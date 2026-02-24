@@ -1,4 +1,4 @@
-use crate::core::resource::Resource;
+use crate::resource::resource::Resource;
 use crate::transformers::{TransformedFile, Transformer};
 use anyhow::{Result, anyhow};
 use serde_json::Value;
@@ -97,7 +97,7 @@ fn json_to_toml(value: &serde_json::Value) -> Result<toml::Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::resource::ResourceData;
+    use crate::resource::resource::ResourceData;
     use serde_json::json;
 
     #[test]

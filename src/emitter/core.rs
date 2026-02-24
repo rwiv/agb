@@ -1,4 +1,3 @@
-use crate::emitter::fs_utils;
 use crate::transformers::TransformedFile;
 use anyhow::{Context, Result};
 use std::fs;
@@ -38,7 +37,7 @@ impl Emitter {
             let full_path = self.output_path.join(&file.path);
 
             // 디렉터리 생성 확인
-            fs_utils::ensure_dir(&full_path)?;
+            crate::utils::fs::ensure_dir(&full_path)?;
 
             // 파일 쓰기
             fs::write(&full_path, &file.content).with_context(|| format!("Failed to write file: {:?}", full_path))?;

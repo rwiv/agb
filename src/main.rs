@@ -1,7 +1,8 @@
 mod builder;
-mod core;
+mod resource;
 mod emitter;
 mod transformers;
+mod utils;
 
 use builder::Builder;
 use clap::{Parser, Subcommand};

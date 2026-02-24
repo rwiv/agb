@@ -1,42 +1,52 @@
 # Transformer Module
 
-`transformer` 모듈은 `agb`의 내부 리소스 모델(`Resource`)을 각 에이전트(Gemini, Claude 등)의 규격에 맞는 물리적 파일 형식으로 변환하는 역할을 담당합니다.
+`transformer` 모듈은 `agb`의 내부 리소스 모델(`Resource`)을 각 에이전트(Gemini, Claude, OpenCode)의 규격에 맞는 물리적 파일 형식으로 변환하는 역할을 담당합니다.
 
 ## 핵심 역할
 
 1. **포맷 변환**: JSON 메타데이터와 Markdown 컨텐츠를 타겟 에이전트가 이해할 수 있는 형식(예: TOML, Frontmatter Markdown)으로 변환합니다.
-2. **경로 결정**: 각 리소스가 타겟 에이전트의 파일 시스템 구조에서 어디에 위치해야 하는지 정의합니다.
-3. **전역 지침 처리**: 루트의 `AGENTS.md`를 각 에이전트의 메인 메모리 파일(예: `GEMINI.md`)로 변환합니다.
+2. **경로 결정**: 각 리소스가 타겟 에이전트의 파일 시스템 구조에서 어디에 위치해야 하는지 정의합니다. (예: `commands/foo.toml`)
+3. **전역 지침 처리**: 루트의 `AGENTS.md`를 각 에이전트의 메인 메모리 파일(Gemini: `GEMINI.md`, Claude/OpenCode: `CLAUDE.md`)로 변환합니다.
 
 ## 모듈 구조
 
-- `mod.rs`: `Transformer` 트레이트, `TransformerFactory` 팩토리 객체 정의 및 핵심 타입 re-export.
-- `gemini.rs`: Gemini-cli (TOML 기반) 변환기 구현.
-- `claude.rs`: Claude-code (Frontmatter Markdown) 변환기 구현.
-- `opencode.rs`: OpenCode (Frontmatter Markdown) 변환기 구현.
+- `mod.rs`: `Transformer` 트레이트 및 `TransformerFactory` 정의.
+- `gemini.rs`: Gemini-cli (TOML 기반) 변환기.
+- `claude.rs`: Claude-code (Frontmatter Markdown) 변환기.
+- `opencode.rs`: OpenCode (Claude-code와 유사한 Markdown) 변환기.
 
 ## 주요 구성 요소
 
-### 1. `Transformer` Trait (`mod.rs`)
-모든 변환기가 구현해야 하는 인터페이스입니다. 변환 결과물은 `crate::resource::TransformedFile` 구조체에 담깁니다.
-
-- **Gemini**: JSON 메타데이터를 TOML의 탑레벨 키로, Markdown 본문을 `prompt` 필드로 변환합니다.
-- **Claude / OpenCode**: JSON 메타데이터를 YAML Frontmatter로 변환하고 Markdown 본문과 결합합니다.
+### 1. `Transformer` Trait
+모든 변환기가 구현해야 하는 인터페이스입니다.
 
 ```rust
 pub trait Transformer {
     /// 리소스를 타겟 포맷으로 변환
     fn transform(&self, resource: &Resource) -> Result<TransformedFile>;
     
-    /// 전역 지침을 타겟 규격으로 변환
+    /// 전역 지침(AGENTS.md)을 타겟 규격으로 변환
     fn transform_root_prompt(&self, content: &str) -> Result<TransformedFile>;
 }
 ```
 
+### 2. `TransformerFactory`
+`BuildTarget` 열거형을 기반으로 적절한 `Transformer` 구현체를 동적으로 생성(Boxed trait object)하여 반환합니다.
+
+## 타겟별 특이사항
+
+- **Gemini-cli**: 
+  - 메타데이터 -> TOML Key-Value 매핑
+  - 본문 -> TOML `prompt` 필드로 삽입
+  - 결과 파일: `commands/*.toml`, `agents/*.toml`, `skills/*.toml`, `GEMINI.md`
+- **Claude-code / OpenCode**: 
+  - 메타데이터 -> YAML Frontmatter
+  - 본문 -> 마크다운 본문 결합
+  - 결과 파일: `commands/*.md`, `agents/*.md`, `skills/*.md`, `CLAUDE.md`
+
 ## 새로운 에이전트 추가 방법
 
 1. `src/transformer/` 내에 새로운 모듈을 생성합니다 (예: `new_agent.rs`).
-2. `Transformer` 트레이트를 구현하는 구조체를 정의합니다.
-3. `src/transformer/mod.rs`에서 새 모듈을 선언합니다 (`pub mod new_agent;`).
-4. `TransformerFactory::create` 함수에 해당 에이전트 분기를 추가하고 새 구조체를 반환하도록 수정합니다.
-5. `src/builder/config.rs`의 `BuildTarget` 열거형에 새로운 에이전트 이름을 등록합니다.
+2. `Transformer` 트레이트를 구현합니다.
+3. `TransformerFactory::create` 함수에 해당 에이전트 분기를 추가합니다.
+4. `src/builder/config.rs`의 `BuildTarget` 열거형에 새로운 에이전트 이름을 등록합니다.

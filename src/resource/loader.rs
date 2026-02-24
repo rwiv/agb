@@ -102,18 +102,25 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
             if components.len() >= 4 {
                 let skill_name = components[2].clone();
                 let file_name = components[3].clone();
-                let entry = groups.entry((plugin, r_type, skill_name)).or_insert((None, None));
-                if file_name == "METADATA.json" || file_name == "METADATA.yaml" || file_name == "METADATA.yml" {
+                let entry = groups
+                    .entry((plugin, r_type, skill_name.clone()))
+                    .or_insert((None, None));
+
+                let is_metadata = (file_name == format!("{}.json", skill_name))
+                    || (file_name == format!("{}.yaml", skill_name))
+                    || (file_name == format!("{}.yml", skill_name));
+
+                if is_metadata {
                     if entry.1.is_some() {
                         anyhow::bail!(
                             "Conflict: Multiple metadata formats found for skill '{}' in plugin '{}'",
-                            components[2],
+                            skill_name,
                             components[0]
                         );
                     }
                     entry.1 = Some(path);
                 } else if file_name.ends_with(".md") {
-                    // 메인 마크다운 파일 (보통 skill_name.md 또는 README.md)
+                    // 메인 마크다운 파일 (관례상 SKILL.md 또는 README.md 권장)
                     entry.0 = Some(path);
                 }
             }
@@ -201,14 +208,14 @@ mod tests {
         // Exclude 대상
         fs::write(cmd_dir.join("test.tmp"), "temp")?;
 
-        // Skill: METADATA.json + md
-        fs::write(skill_dir.join("METADATA.json"), "{\"desc\": \"skill\"}")?;
+        // Skill: [skill_name].json + md
+        fs::write(skill_dir.join("my_skill.json"), "{\"desc\": \"skill\"}")?;
         fs::write(skill_dir.join("logic.md"), "prompt")?;
 
         // 2. 스캔 테스트
         let exclude = vec!["*.tmp".to_string()];
         let files = scan_plugins(&plugins_path, &exclude)?;
-        // foo.md, foo.json, METADATA.json, logic.md 총 4개 (test.tmp 제외)
+        // foo.md, foo.json, my_skill.json, logic.md 총 4개 (test.tmp 제외)
         assert_eq!(files.len(), 4);
 
         // 3. 로드 테스트

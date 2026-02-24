@@ -43,7 +43,7 @@ resources:
         │   └── [name].json/yaml/yml
         └── skills/
             └── [skill_name]/
-                ├── METADATA.json/yaml/yml
+                ├── [skill_name].json/yaml/yml
                 └── ... (기타 파일들)
 ```
 

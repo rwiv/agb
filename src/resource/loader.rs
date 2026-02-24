@@ -107,7 +107,8 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
                     if entry.1.is_some() {
                         anyhow::bail!(
                             "Conflict: Multiple metadata formats found for skill '{}' in plugin '{}'",
-                            components[2], components[0]
+                            components[2],
+                            components[0]
                         );
                     }
                     entry.1 = Some(path);
@@ -128,7 +129,8 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
                 if entry.1.is_some() {
                     anyhow::bail!(
                         "Conflict: Multiple metadata formats found for resource '{}' in plugin '{}'",
-                        path.file_stem().unwrap().to_string_lossy(), components[0]
+                        path.file_stem().unwrap().to_string_lossy(),
+                        components[0]
                     );
                 }
                 entry.1 = Some(path);
@@ -280,7 +282,12 @@ mod tests {
         let result = load_resources(&plugins_path, files);
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Multiple metadata formats found"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Multiple metadata formats found")
+        );
 
         Ok(())
     }

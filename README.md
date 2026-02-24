@@ -43,10 +43,10 @@
 
 ## 설정 방법 (`agb.yaml`)
 
-에이전트 워크스페이스 루트에 `agb.yaml` 파일을 작성하여 빌드 타겟과 포함할 리소스를 정의합니다.
+에이전트 워크스페이스 루트에 `agb.yaml` 파일을 작성하여 빌드 타겟과 포함할 리소스를 정의합니다. `source` 필드는 물결표(`~`)를 통한 경로 확장을 지원합니다.
 
 ```yaml
-source: /Users/path/to/source_repo # 소스 리소스의 절대 경로 (필수)
+source: ~/projects/agb-resources # 소스 리소스 경로 (필수)
 target: gemini-cli # 지원: gemini-cli, claude-code, opencode
 exclude:
   - "*.kor.md"

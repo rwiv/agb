@@ -11,7 +11,7 @@
   - `name`: 리소스 식별자 (파일명 또는 폴더명)
   - `plugin`: 해당 리소스가 속한 플러그인 이름
   - `content`: 마크다운 형식의 본문 내용
-  - `metadata`: JSON 형식의 추가 설정 (모델명, 설명 등)
+  - `metadata`: JSON 또는 YAML 형식의 추가 설정 (내부적으로는 `serde_json::Value`로 통합 관리)
 - **TransformedFile**:
   - 변환기(Transformer)에 의해 처리된 최종 결과물 데이터를 담는 구조체입니다.
   - `path`: 파일이 저장될 상대 경로 (`PathBuf`)
@@ -22,8 +22,9 @@
 - **`scan_plugins`**: `agb.yaml`에 명시된 `source` 경로 하위의 플러그인 루트 디렉터리를 탐색하며, `exclude` 패턴(Glob)에 해당하는 파일을 필터링합니다.
   - **PRD 제약 사항**: 플러그인 내부에는 에이전트 전용 메인 메모리 파일(`GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`)이 존재할 수 없으며, 발견 시 빌드가 중단됩니다.
 - **`load_resources`**: 파일 경로 구조를 분석하여 관련 있는 파일들을 하나의 리소스로 병합합니다.
-  - `commands/`, `agents/`: 동일한 이름을 가진 `.md`와 `.json` 파일을 하나의 리소스로 결합합니다.
-  - `skills/`: 특정 폴더 내의 `METADATA.json`과 마크다운 파일들을 기반으로 스킬 리소스를 생성합니다.
+  - `commands/`, `agents/`: 동일한 이름을 가진 `.md`와 메타데이터(`.json`, `.yaml`, `.yml`) 파일을 하나의 리소스로 결합합니다.
+  - `skills/`: 특정 폴더 내의 `METADATA.{json,yaml,yml}`과 마크다운 파일들을 기반으로 스킬 리소스를 생성합니다.
+  - **포맷 충돌 검증**: 동일한 리소스에 대해 두 종류 이상의 메타데이터 포맷이 발견될 경우(예: `foo.json`과 `foo.yaml`이 공존), 빌드 에러를 발생시킵니다.
 
 ### 3. 레지스트리 (`registry.rs`)
 로드된 모든 리소스를 중앙에서 관리하고 유효성을 검증합니다.

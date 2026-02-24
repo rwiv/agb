@@ -8,10 +8,10 @@
 
 ### 2.1 agb.yaml (설정 파일)
 
-빌드 결과물이 생성될 디렉터리에 존재해야 하며, YAML 형식으로 작성됩니다. `source` 필드는 리소스 데이터가 있는 절대 경로를 가리킵니다.
+빌드 결과물이 생성될 디렉터리에 존재해야 하며, YAML 형식으로 작성됩니다. `source` 필드는 리소스 데이터가 있는 경로를 가리키며, 물결표(`~`)를 통한 홈 디렉터리 확장을 지원합니다.
 
 ```yaml
-source: /absolute/path/to/source_resources # 필수: 소스 리소스 절대 경로
+source: ~/projects/agb-resources # 필수: 소스 리소스 경로 (절대 경로 또는 ~ 사용 가능)
 target: gemini-cli # 지원: gemini-cli, claude-code, opencode
 exclude:
   - "*.kor.md"
@@ -28,7 +28,7 @@ resources:
 
 ### 2.2 소스 디렉터리 구조 (Source)
 
-`source` 경로가 가리키는 곳의 구조는 다음과 같습니다. (빌드 설정인 `agb.yaml`은 포함하지 않습니다.)
+`source` 경로가 가리키는 곳의 구조는 다음과 같습니다. 메타데이터는 JSON(`.json`) 외에도 YAML(`.yaml`, `.yml`) 형식을 지원합니다.
 
 ```text
 [source_path]/
@@ -37,13 +37,13 @@ resources:
     └── [plugin_name]/
         ├── commands/
         │   ├── [name].md
-        │   └── [name].json
+        │   └── [name].json/yaml/yml
         ├── agents/
         │   ├── [name].md
-        │   └── [name].json
+        │   └── [name].json/yaml/yml
         └── skills/
             └── [skill_name]/
-                ├── METADATA.json
+                ├── METADATA.json/yaml/yml
                 └── ... (기타 파일들)
 ```
 
@@ -59,9 +59,9 @@ resources:
 
 - **Gemini-cli**:
   - Markdown 내용을 `commands/[name].toml`의 `prompt` 필드로 삽입.
-  - JSON 메타데이터의 필드(model, description 등)를 TOML 필드로 매핑.
+  - JSON/YAML 메타데이터의 필드(model, description 등)를 TOML 필드로 매핑.
 - **Claude-code / OpenCode**:
-  - Markdown과 JSON 메타데이터를 결합한 단일 마크다운 파일로 빌드 (메타데이터는 필요 시 Frontmatter로 변환).
+  - Markdown과 메타데이터를 결합한 단일 마크다운 파일로 빌드 (메타데이터는 필요 시 Frontmatter로 변환).
 
 ### 3.3 빌드 실행 (Execution)
 
@@ -81,4 +81,5 @@ resources:
 
 - `agb.yaml` 미존재 시 에러 메시지 출력 후 종료.
 - 리소스 이름 중복 시 충돌하는 플러그인 이름을 포함한 에러 메시지 출력.
-- 필수 메타데이터(`JSON`) 누락 시 경고 또는 에러 처리.
+- 동일 리소스에 대해 여러 메타데이터 포맷(JSON, YAML 등)이 공존할 경우 충돌 에러 발생.
+- 필수 메타데이터 누락 시 에러 처리.

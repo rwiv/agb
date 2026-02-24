@@ -6,12 +6,13 @@
 - **CLI 프레임워크:** `clap` (v4.5, derive 기능 사용)
 - **직렬화/역직렬화:**
   - `serde`: 데이터 모델링 공통
-  - `serde_yaml`: `agb.yaml` 파싱
+  - `serde_yaml`: `agb.yaml` 파싱 및 리소스 메타데이터(`*.yaml`, `*.yml`) 파싱
   - `serde_json`: 리소스 메타데이터(`*.json`) 파싱
   - `toml`: Gemini-cli용 결과물 생성
 - **파일 시스템 및 유틸리티:**
   - `walkdir`: 플러그인 디렉터리 재귀 탐색
   - `glob`: `agb.yaml`의 exclude 패턴 매칭
+  - `shellexpand`: 경로 내 물결표(`~`) 확장 지원
   - `anyhow`: 애플리케이션 레벨 에러 처리
   - `thiserror`: 라이브러리/코어 레벨 커스텀 에러 정의
 
@@ -20,9 +21,9 @@
 `agb`는 **파이프라인 아키텍처**를 따르며, `builder` 모듈이 전체 공정을 오케스트레이션합니다. 각 단계는 독립적인 모듈로 분리되어 있으며, 에이전트별 변환 로직은 `Transformer` 트레이트를 통해 확장 가능하도록 설계되었습니다.
 
 ### 2.1 데이터 흐름 (Data Flow)
-1. **Load Config**: `agb.yaml`을 읽어 빌드 컨텍스트를 생성합니다. (`builder/config.rs`)
-2. **Scan & Load**: 소스 경로의 플러그인을 스캔하고 `Resource` 객체로 로드합니다. (`resource/loader.rs`)
-3. **Validate & Register**: 리소스 이름 충돌을 검증하고 레지스트리에 등록합니다. (`resource/registry.rs`)
+1. **Load Config**: `agb.yaml`을 읽어 빌드 컨텍스트를 생성합니다. 이때 `source` 경로의 물결표(`~`)는 시스템 홈 디렉터리로 확장됩니다. (`builder/config.rs`)
+2. **Scan & Load**: 소스 경로의 플러그인을 스캔하고 `Resource` 객체로 로드합니다. 메타데이터는 JSON과 YAML 형식을 모두 지원합니다. (`resource/loader.rs`)
+3. **Validate & Register**: 리소스 이름 충돌 및 중복된 메타데이터 포맷을 검증하고 레지스트리에 등록합니다. (`resource/registry.rs`)
 4. **Transform**: 선택된 타겟에 맞는 `Transformer`가 리소스를 변환합니다. (`transformers/`)
 5. **Emit**: 기존 결과물을 정리하고 변환된 파일을 물리적 경로에 작성합니다. (`resource/emitter.rs`)
 

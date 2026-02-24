@@ -1,5 +1,4 @@
-use crate::resource::TransformedFile;
-use crate::resource::resource::Resource;
+use crate::resource::{Resource, TransformedFile};
 use crate::transformers::Transformer;
 use anyhow::{Result, anyhow};
 use serde_json::Value;
@@ -31,9 +30,6 @@ impl Transformer for GeminiTransformer {
                 return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
             }
         };
-
-        // Metadata가 Null인 경우(json_to_toml에서 처리됨) 빈 테이블이 아닐 수 있으므로 명시적 확인 필요할 수 있으나
-        // json_to_toml 구현에 따라 다름.
 
         // 2. Markdown content를 'prompt' 필드에 추가
         table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));

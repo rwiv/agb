@@ -1,4 +1,4 @@
-use crate::resource::resource::{Resource, TransformedFile};
+use crate::resource::{Resource, TransformedFile};
 use anyhow::Result;
 
 /// 에이전트별 리소스 변환 인터페이스

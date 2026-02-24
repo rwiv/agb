@@ -1,5 +1,4 @@
 use super::config;
-use crate::emitter;
 use crate::resource;
 use crate::transformers;
 use anyhow::Context;
@@ -91,7 +90,7 @@ impl Builder {
 
         // 4. Emission
         println!("[5/5] Emitting files to {}...", self.output_dir.display());
-        let emitter = emitter::Emitter::new(&self.output_dir);
+        let emitter = resource::Emitter::new(&self.output_dir);
         emitter.clean()?;
         emitter.emit(&transformed_files)?;
 

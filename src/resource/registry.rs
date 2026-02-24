@@ -1,4 +1,4 @@
-use crate::resource::resource::Resource;
+use super::Resource;
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 
@@ -44,7 +44,7 @@ impl Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::resource::{Resource, ResourceData};
+    use crate::resource::resource::ResourceData;
     use serde_json::Value;
 
     fn mock_resource(name: &str, plugin: &str) -> Resource {

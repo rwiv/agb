@@ -6,6 +6,6 @@ prompt = """
 - 문서 작성만 수행하시오. 구현은 사용자의 허가가 떨어진 이후에 수행해야한다.
 
 ## 참고 자료
-- TASKS.md: @docs/tasks/main/TASKS.md
-- <task-name>.md: @docs/tasks/main/phase-1/TASK-1-2.md
+- TASKS.md: @docs/tasks/feature-1/TASKS.md
+- <task-name>.md: @docs/tasks/feature-1/phase-1/TASK-1-2.md
 """

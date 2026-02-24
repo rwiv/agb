@@ -1,5 +1,4 @@
-use crate::resource::TransformedFile;
-use crate::resource::resource::Resource;
+use crate::resource::{Resource, TransformedFile};
 use crate::transformers::base::Transformer;
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};

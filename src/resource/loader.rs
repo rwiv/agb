@@ -1,4 +1,5 @@
-use crate::resource::resource::{Resource, ResourceData};
+use super::Resource;
+use crate::resource::resource::ResourceData;
 use anyhow::{Context, Result};
 use glob::Pattern;
 use serde_json::Value;
@@ -159,7 +160,6 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::resource::Resource;
     use std::fs;
     use tempfile::tempdir;
 

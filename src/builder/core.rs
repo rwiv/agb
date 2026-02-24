@@ -1,6 +1,6 @@
 use super::config;
-use crate::resource;
 use crate::emitter;
+use crate::resource;
 use crate::transformers;
 use anyhow::Context;
 use std::path::{Path, PathBuf};

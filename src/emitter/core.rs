@@ -1,4 +1,4 @@
-use crate::transformers::TransformedFile;
+use crate::resource::TransformedFile;
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::PathBuf;

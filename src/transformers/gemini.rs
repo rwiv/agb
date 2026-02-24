@@ -1,5 +1,6 @@
+use crate::resource::TransformedFile;
 use crate::resource::resource::Resource;
-use crate::transformers::{TransformedFile, Transformer};
+use crate::transformers::Transformer;
 use anyhow::{Result, anyhow};
 use serde_json::Value;
 use std::path::PathBuf;

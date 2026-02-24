@@ -1,14 +1,5 @@
-use crate::resource::resource::Resource;
+use crate::resource::resource::{Resource, TransformedFile};
 use anyhow::Result;
-use std::path::PathBuf;
-
-/// 변환된 파일의 경로와 내용을 담는 구조체
-pub struct TransformedFile {
-    /// 결과물이 저장될 상대 경로 (예: commands/foo.toml)
-    pub path: PathBuf,
-    /// 변환이 완료된 파일의 실제 내용
-    pub content: String,
-}
 
 /// 에이전트별 리소스 변환 인터페이스
 pub trait Transformer {

@@ -1,5 +1,6 @@
+use crate::resource::TransformedFile;
 use crate::resource::resource::Resource;
-use crate::transformers::base::{TransformedFile, Transformer};
+use crate::transformers::base::Transformer;
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

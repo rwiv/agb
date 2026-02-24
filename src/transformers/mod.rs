@@ -4,5 +4,5 @@ pub mod factory;
 pub mod gemini;
 pub mod opencode;
 
-pub use base::{TransformedFile, Transformer};
+pub use base::Transformer;
 pub use factory::get_transformer;

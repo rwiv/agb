@@ -94,7 +94,7 @@ fn json_to_toml(value: &serde_json::Value) -> Result<toml::Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::types::ResourceData;
+    use crate::resource::ResourceData;
     use serde_json::json;
 
     #[test]

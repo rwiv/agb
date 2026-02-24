@@ -2,8 +2,7 @@ pub mod filter;
 pub mod parser;
 pub mod resolver;
 
-use crate::resource::Resource;
-use crate::resource::types::ResourceData;
+use crate::resource::{Resource, ResourceData};
 use anyhow::Result;
 use serde_json::Value;
 use std::fs;

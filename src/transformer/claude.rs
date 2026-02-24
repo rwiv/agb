@@ -66,7 +66,7 @@ impl Transformer for ClaudeTransformer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::types::ResourceData;
+    use crate::resource::ResourceData;
     use serde_json::json;
 
     #[test]

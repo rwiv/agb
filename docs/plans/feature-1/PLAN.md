@@ -1,4 +1,4 @@
-# Master Task List: agb (Agents Builder)
+# Plan: Main Features
 
 이 문서는 `agb` 프로젝트의 전체 개발 여정을 관리합니다. 각 테스크는 독립적인 `docs/tasks/feature-1/phase-X/TASK-X-Y.md` 문서에 상세 가이드를 가집니다.
 

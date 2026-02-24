@@ -1,4 +1,4 @@
-# Master Task List: Skill Metadata Renaming (Domain-specific Naming)
+# Plan: Skill Metadata Renaming (Domain-specific Naming)
 
 스킬(Skill) 리소스의 메타데이터 파일명을 고정된 `METADATA.yaml`에서 스킬 이름과 일치하는 `[skill_name].yaml` 방식으로 변경하여, 미래의 표준 규격(agentskills.io 등)과의 충돌을 방지하고 일관성을 확보합니다.
 

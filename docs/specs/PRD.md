@@ -1,4 +1,4 @@
-# PRD: agb (Agents Builder)
+# PRD
 
 ## 1. 프로젝트 개요
 

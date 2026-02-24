@@ -1,4 +1,4 @@
-# Master Task List: 모듈 의존성 단순화 및 resource 통합 리팩토링
+# Plan: 모듈 의존성 단순화 및 resource 통합 리팩토링
 
 이 문서는 `emitter` 모듈을 `resource` 모듈로 통합하고, `TransformedFile` 모델의 위치를 조정하여 프로젝트의 의존성 구조를 최적화하는 리팩토링 여정을 관리합니다.
 

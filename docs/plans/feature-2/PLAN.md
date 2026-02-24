@@ -1,4 +1,4 @@
-# Master Task List: Path Expansion & YAML Metadata
+# Plan: Path Expansion & YAML Metadata
 
 ## 개요
 `agb`의 사용성을 높이기 위해 홈 디렉터리 경로 확장 기능과 YAML 메타데이터 지원 기능을 구현합니다.

@@ -1,8 +1,6 @@
-# Master Task List: agb (Agents Builder)
+# Plan: Source-Output Decoupling
 
-각 테스크는 독립적인 `docs/tasks/fix-1/phase-X/TASK-X-Y.md` 문서에 상세 가이드를 가집니다.
-
-## Phase 1: 소스 및 출력 경로 분리 (Source-Output Decoupling)
+## Phase 1: 소스 및 출력 경로 분리
 *   **Task 1.1: `agb.yaml` 모델 확장 및 `source` 필드 추가**
     *   *성공 기준:* `agb.yaml`에 절대 경로 `source` 필드를 추가하고, 이를 Rust `Config` 구조체로 정확히 파싱한다.
 *   **Task 1.2: 소스 로딩 및 파일 출력 경로 분리 로직 구현**

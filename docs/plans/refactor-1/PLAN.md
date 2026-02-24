@@ -1,4 +1,4 @@
-# Master Task List: agb Refactoring (Structure & Naming)
+# Plan: agb Refactoring (Structure & Naming)
 
 이 마스터 리스트는 프로젝트의 아키텍처 정제 및 모듈 네이밍 개선을 위한 태스크를 관리합니다.
 

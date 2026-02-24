@@ -1,4 +1,4 @@
-# Technical Specification: agb (Agents Builder)
+# Technical Specification
 
 ## 1. 시스템 개요
 

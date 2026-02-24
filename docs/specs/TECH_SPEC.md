@@ -1,4 +1,4 @@
-# Technical Specification: agb (Agents Builder)
+# Technical Specification
 
 ## 1. 기술 스택 (Technical Stack)
 

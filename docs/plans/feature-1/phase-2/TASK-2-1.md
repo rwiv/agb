@@ -9,7 +9,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/SPEC.md` (디렉터리 구조 및 exclude 규칙 확인)
-  - `docs/specs/TECH_SPEC.md` (`walkdir`, `glob` 라이브러리 활용 가이드)
+  - `docs/specs/SPEC.md` (`walkdir`, `glob` 라이브러리 활용 가이드)
   - `src/config.rs` (`Config` 구조체의 `exclude` 필드 정의)
 - **생성 및 수정할 파일:**
   - `src/core/loader.rs` (신규 생성: 디렉터리 스캔 및 파일 필터링 로직)

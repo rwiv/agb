@@ -24,7 +24,19 @@
 ### 5.1 플러그인 기반 리소스 관리
 
 - `source` 경로 하위의 `plugins/` 디렉터리 내에 독립적인 기능 단위로 리소스(Commands, Agents, Skills)를 구성합니다.
-- 각 리소스는 내용(Markdown)과 메타데이터(JSON)로 분리되어 관리됩니다.
+- 각 리소스는 내용(Markdown)과 메타데이터(JSON/YAML)로 분리되어 관리됩니다.
+
+#### 작성 예시 (Subagent):
+- `plugins/my_plugin/agents/researcher.md`:
+  ```markdown
+  You are a professional researcher. Analyze the given topic deeply.
+  ```
+- `plugins/my_plugin/agents/researcher.yaml`:
+  ```yaml
+  name: researcher
+  description: Expert research sub-agent.
+  model: gemini-3.0-pro
+  ```
 
 ### 5.2 명시적 빌드 제어 (`agb.yaml`)
 

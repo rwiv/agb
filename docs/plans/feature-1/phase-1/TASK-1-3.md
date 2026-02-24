@@ -10,7 +10,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/SPEC.md` (CLI 요구 사항 확인)
-  - `docs/specs/TECH_SPEC.md` (`clap` 사용 및 모듈 구조 확인)
+  - `docs/specs/SPEC.md` (`clap` 사용 및 모듈 구조 확인)
 - **수정할 파일:**
   - `src/main.rs` (CLI 엔트리포인트 및 커맨드 핸들링)
 - **생성할 파일:**

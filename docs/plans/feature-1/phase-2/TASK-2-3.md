@@ -9,7 +9,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/SPEC.md` (네임스페이스 관리 및 충돌 검사 규칙)
-  - `docs/specs/TECH_SPEC.md` (Registry 설계 및 에러 처리 전략)
+  - `docs/specs/SPEC.md` (Registry 설계 및 에러 처리 전략)
 - **생성 및 수정할 파일:**
   - `src/core/registry.rs` (신규 생성: 리소스 저장소 및 충돌 관리 로직)
   - `src/core/mod.rs` (수정: registry 모듈 선언)

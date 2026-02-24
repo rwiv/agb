@@ -6,7 +6,7 @@
 
 ## 2. Context & Files (작업 범위)
 - **읽기 전용 (참고용):**
-    - `docs/specs/TECH_SPEC.md` (기술 스택 및 라이브러리 목록 확인)
+    - `docs/specs/SPEC.md` (기술 스택 및 라이브러리 목록 확인)
 - **수정할 파일:**
     - `Cargo.toml`
     - `src/main.rs` (기본 뼈대 확인)
@@ -14,7 +14,7 @@
 ## 3. Instructions (세부 지침)
 
 ### Step 1: `Cargo.toml` 의존성 추가
-`TECH_SPEC.md`에서 정의한 라이브러리들을 `[dependencies]` 섹션에 추가하세요. 각 라이브러리의 최신 안정 버전을 사용하거나 적절한 버전을 지정하세요.
+`SPEC.md`에서 정의한 라이브러리들을 `[dependencies]` 섹션에 추가하세요. 각 라이브러리의 최신 안정 버전을 사용하거나 적절한 버전을 지정하세요.
 
 필요한 라이브러리 목록:
 - `clap`: CLI 명령어 및 인자 파싱 (v4, `derive` 기능 포함)

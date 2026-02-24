@@ -9,7 +9,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/SPEC.md` (빌드 실행 및 Clean 단계 정의 확인)
-  - `docs/specs/TECH_SPEC.md` (Emitter 모듈 구조 및 에러 처리 전략 확인)
+  - `docs/specs/SPEC.md` (Emitter 모듈 구조 및 에러 처리 전략 확인)
 - **생성 및 수정할 파일:**
   - `src/emitter/mod.rs` (신규 생성: Emitter 트레이트 및 구조체 정의)
   - `src/emitter/fs_utils.rs` (신규 생성: 파일 시스템 조작 유틸리티)

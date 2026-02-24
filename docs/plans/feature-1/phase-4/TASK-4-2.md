@@ -8,7 +8,7 @@
 ## 2. Context & Files (작업 범위)
 
 - **읽기 전용 (참고용):**
-  - `docs/specs/TECH_SPEC.md` (시스템 아키텍처 및 데이터 흐름 확인)
+  - `docs/specs/SPEC.md` (시스템 아키텍처 및 데이터 흐름 확인)
 - **수정할 파일:**
   - `src/main.rs` (빌드 파이프라인 오케스트레이션)
   - `src/core/mod.rs` (필요 시 통합 로직 추상화)

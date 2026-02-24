@@ -9,7 +9,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/SPEC.md` (Gemini-cli 변환 규칙 확인)
-  - `docs/specs/TECH_SPEC.md` (사용 라이브러리 `toml` 확인)
+  - `docs/specs/SPEC.md` (사용 라이브러리 `toml` 확인)
 - **생성 및 수정할 파일:**
   - `src/transformers/gemini.rs` (신규 생성: Gemini 전용 변환기 구현)
   - `src/transformers/mod.rs` (수정: `GeminiTransformer` 노출 및 팩토리 메서드 추가 가능성)

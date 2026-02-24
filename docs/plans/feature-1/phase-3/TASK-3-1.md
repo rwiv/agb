@@ -8,7 +8,7 @@
 ## 2. Context & Files (작업 범위)
 
 - **읽기 전용 (참고용):**
-  - `docs/specs/TECH_SPEC.md` (Transformer 트레이트 설계 확인)
+  - `docs/specs/SPEC.md` (Transformer 트레이트 설계 확인)
   - `src/core/types.rs` (Resource 모델 구조 확인)
 - **생성 및 수정할 파일:**
   - `src/transformers/base.rs` (신규 생성: 트레이트 및 공통 모델 정의)
@@ -36,7 +36,7 @@
 
 ## 5. Acceptance Criteria (검증 체크리스트)
 
-1. `Transformer` 트레이트가 `TECH_SPEC.md`에 명시된 메서드 시그니처를 정확히 포함하고 있는가?
+1. `Transformer` 트레이트가 `SPEC.md`에 명시된 메서드 시그니처를 정확히 포함하고 있는가?
 2. `TransformedFile` 구조체가 파일 경로와 내용을 모두 포함하고 있는가?
 3. `src/transformers/mod.rs` 파일이 에러 없이 컴파일되는가?
 4. `Resource` 객체를 인자로 받아 `Result<TransformedFile>`을 반환하는 구조가 확립되었는가?

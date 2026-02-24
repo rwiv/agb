@@ -9,7 +9,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/SPEC.md` (리소스 소스 구조 및 메타데이터 정의 확인)
-  - `docs/specs/TECH_SPEC.md` (`Resource` 데이터 모델 및 `serde_json` 활용)
+  - `docs/specs/SPEC.md` (`Resource` 데이터 모델 및 `serde_json` 활용)
 - **생성 및 수정할 파일:**
   - `src/core/types.rs` (신규 생성: Resource, Command, Agent, Skill 데이터 모델)
   - `src/core/loader.rs` (수정: 파일 로딩 및 Resource 객체 생성 로직 추가)
@@ -19,7 +19,7 @@
 
 ### Step 1: 리소스 데이터 모델 정의 (`src/core/types.rs`)
 
-`TECH_SPEC.md` 설계를 바탕으로 데이터 구조를 정의하세요.
+`SPEC.md` 설계를 바탕으로 데이터 구조를 정의하세요.
 
 - **Resource Enum:** `Command`, `Agent`, `Skill` 타입을 구분할 수 있어야 합니다.
 - **공통 필드:** 각 리소스는 `name` (파일명 기준), `content` (Markdown 문자열), `metadata` (`serde_json::Value`)를 포함해야 합니다.

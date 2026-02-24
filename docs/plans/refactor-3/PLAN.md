@@ -6,7 +6,7 @@
 ## 2. 주요 작업 내용
 - `src/transformers/` 디렉토리를 `src/transformer/`로 이름 변경.
 - 모든 소스 코드(`src/main.rs`, `src/builder/core.rs` 등) 내의 모듈 참조 경로 수정.
-- 기술 사양서(`TECH_SPEC.md`) 및 모든 `README.md` 내의 모듈 경로 정보 업데이트.
+- 기술 사양서(`SPEC.md`) 및 모든 `README.md` 내의 모듈 경로 정보 업데이트.
 - 빌드 및 테스트를 통한 최종 검증.
 
 ## 3. 마일스톤 (Milestones)
@@ -16,7 +16,7 @@
 - [ ] TASK 1-2: 소스 코드 내 모든 `transformers` 참조를 `transformer`로 업데이트
 
 ### Phase 2: 문서 및 구성 업데이트
-- [ ] TASK 2-1: `docs/specs/TECH_SPEC.md` 내의 모듈 경로 및 설명 업데이트
+- [ ] TASK 2-1: `docs/specs/SPEC.md` 내의 모듈 경로 및 설명 업데이트
 - [ ] TASK 2-2: `src/transformer/README.md` 및 프로젝트 루트 `README.md` 업데이트
 
 ### Phase 3: 빌드 및 테스트 검증

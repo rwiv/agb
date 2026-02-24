@@ -9,7 +9,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/SPEC.md` (agb.yaml 구조 및 필드 정의 확인)
-  - `docs/specs/TECH_SPEC.md` (사용 라이브러리 및 모듈 구조 확인)
+  - `docs/specs/SPEC.md` (사용 라이브러리 및 모듈 구조 확인)
 - **생성 및 수정할 파일:**
   - `src/config.rs` (신규 생성: 설정 데이터 모델 및 로드 로직)
   - `src/main.rs` (수정: CLI 실행 시 설정 파일 로드 테스트)

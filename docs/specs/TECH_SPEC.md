@@ -52,7 +52,7 @@ pub trait Transformer {
 
 ### 3.1 세부 파일 구성
 - **builder**: `core.rs` (프로세스 제어), `config.rs` (agb.yaml 파싱)
-- **resource**: `resource.rs` (모델, `TransformedFile` 포함), `loader.rs` (스캔), `registry.rs` (중복 검증), `emitter.rs` (출력 로직)
+- **resource**: `types.rs` (모델, `TransformedFile` 포함), `loader.rs` (스캔), `registry.rs` (중복 검증), `emitter.rs` (출력 로직)
 - **transformers**: 
   - `base.rs` (트레이트), `factory.rs` (생성기)
   - `providers/`: `gemini.rs`, `claude.rs`, `opencode.rs` (구현체)

@@ -1,5 +1,5 @@
 use super::Resource;
-use crate::resource::resource::ResourceData;
+use crate::resource::types::ResourceData;
 use anyhow::{Context, Result};
 use glob::Pattern;
 use serde_json::Value;

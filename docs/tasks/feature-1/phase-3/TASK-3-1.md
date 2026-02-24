@@ -9,7 +9,7 @@
 
 - **읽기 전용 (참고용):**
   - `docs/specs/TECH_SPEC.md` (Transformer 트레이트 설계 확인)
-  - `src/core/resource.rs` (Resource 모델 구조 확인)
+  - `src/core/types.rs` (Resource 모델 구조 확인)
 - **생성 및 수정할 파일:**
   - `src/transformers/base.rs` (신규 생성: 트레이트 및 공통 모델 정의)
   - `src/transformers/mod.rs` (수정: 모듈 구조 재편 및 base 노출)

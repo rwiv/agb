@@ -11,13 +11,13 @@
   - `docs/specs/SPEC.md` (리소스 소스 구조 및 메타데이터 정의 확인)
   - `docs/specs/TECH_SPEC.md` (`Resource` 데이터 모델 및 `serde_json` 활용)
 - **생성 및 수정할 파일:**
-  - `src/core/resource.rs` (신규 생성: Resource, Command, Agent, Skill 데이터 모델)
+  - `src/core/types.rs` (신규 생성: Resource, Command, Agent, Skill 데이터 모델)
   - `src/core/loader.rs` (수정: 파일 로딩 및 Resource 객체 생성 로직 추가)
   - `src/core/mod.rs` (수정: resource 모듈 선언)
 
 ## 3. Instructions (세부 지침)
 
-### Step 1: 리소스 데이터 모델 정의 (`src/core/resource.rs`)
+### Step 1: 리소스 데이터 모델 정의 (`src/core/types.rs`)
 
 `TECH_SPEC.md` 설계를 바탕으로 데이터 구조를 정의하세요.
 

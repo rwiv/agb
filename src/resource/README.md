@@ -4,7 +4,7 @@
 
 ## 주요 구성 요소
 
-### 1. 리소스 모델 (`resource.rs`)
+### 1. 리소스 모델 (`types.rs`)
 에이전트 워크플로우를 구성하는 핵심 데이터를 정의합니다.
 - **Resource Enum**: `Command`, `Agent`, `Skill` 타입을 지원하며, 각 타입은 공통된 `ResourceData`를 가집니다.
 - **ResourceData**: 

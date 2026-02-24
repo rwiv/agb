@@ -1,7 +1,7 @@
 pub mod emitter;
 pub mod loader;
 pub mod registry;
-pub mod resource;
+pub mod types;
 
 pub use emitter::Emitter;
-pub use resource::{Resource, TransformedFile};
+pub use types::{Resource, TransformedFile};

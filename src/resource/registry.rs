@@ -44,7 +44,7 @@ impl Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::resource::ResourceData;
+    use crate::resource::types::ResourceData;
     use serde_json::Value;
 
     fn mock_resource(name: &str, plugin: &str) -> Resource {

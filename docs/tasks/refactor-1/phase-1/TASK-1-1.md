@@ -27,7 +27,7 @@
 ### Step 3: 프로젝트 전체의 참조 수정
 코드 내의 모든 `crate::core` 참조를 `crate::resource`로 일괄 업데이트합니다.
 - `use crate::core::resource::Resource;` -> `use crate::resource::resource::Resource;`
-- (참고: `src/resource/resource.rs` 파일명도 구조에 따라 `src/resource/model.rs` 등으로 변경을 검토할 수 있으나, 본 태스크에서는 모듈명 변경에 집중합니다.)
+- (참고: `src/resource/types.rs` 파일명도 구조에 따라 `src/resource/model.rs` 등으로 변경을 검토할 수 있으나, 본 태스크에서는 모듈명 변경에 집중합니다.)
 
 ### Step 4: 문서 업데이트
 `src/resource/README.md` 및 파일 내의 주석에서 `core`로 언급된 부분을 `resource`로 수정합니다.

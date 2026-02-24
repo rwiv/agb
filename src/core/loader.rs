@@ -101,9 +101,7 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
             if components.len() >= 4 {
                 let skill_name = components[2].clone();
                 let file_name = components[3].clone();
-                let entry = groups
-                    .entry((plugin, r_type, skill_name))
-                    .or_insert((None, None));
+                let entry = groups.entry((plugin, r_type, skill_name)).or_insert((None, None));
                 if file_name == "METADATA.json" {
                     entry.1 = Some(path);
                 } else if file_name.ends_with(".md") {
@@ -114,15 +112,9 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
         } else if r_type == "commands" || r_type == "agents" {
             // Command/Agent 처리: [plugin]/[type]/[name].{md,json}
             let file_stem = path.file_stem().unwrap().to_string_lossy().into_owned();
-            let extension = path
-                .extension()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .into_owned();
+            let extension = path.extension().unwrap_or_default().to_string_lossy().into_owned();
 
-            let entry = groups
-                .entry((plugin, r_type, file_stem))
-                .or_insert((None, None));
+            let entry = groups.entry((plugin, r_type, file_stem)).or_insert((None, None));
             if extension == "md" {
                 entry.0 = Some(path);
             } else if extension == "json" {
@@ -140,9 +132,8 @@ pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Ve
 
         let metadata = if let Some(p) = json_path {
             let json_str = fs::read_to_string(p)?;
-            serde_json::from_str(&json_str).with_context(|| {
-                format!("Failed to parse JSON for resource: {}/{}", r_type, name)
-            })?
+            serde_json::from_str(&json_str)
+                .with_context(|| format!("Failed to parse JSON for resource: {}/{}", r_type, name))?
         } else {
             Value::Null
         };
@@ -240,11 +231,6 @@ mod tests {
 
         let result = scan_plugins(&plugins_path, &[]);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Forbidden file 'GEMINI.md'")
-        );
+        assert!(result.unwrap_err().to_string().contains("Forbidden file 'GEMINI.md'"));
     }
 }

@@ -66,11 +66,6 @@ mod tests {
         let result = registry.register(res2);
 
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Conflict detected")
-        );
+        assert!(result.unwrap_err().to_string().contains("Conflict detected"));
     }
 }

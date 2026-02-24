@@ -27,9 +27,7 @@ impl Transformer for GeminiTransformer {
             | toml::Value::Float(_)
             | toml::Value::Boolean(_)
             | toml::Value::Array(_) => {
-                return Err(anyhow!(
-                    "Metadata must be a JSON object for Gemini conversion"
-                ));
+                return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
             }
         };
 
@@ -37,10 +35,7 @@ impl Transformer for GeminiTransformer {
         // json_to_toml 구현에 따라 다름.
 
         // 2. Markdown content를 'prompt' 필드에 추가
-        table.insert(
-            "prompt".to_string(),
-            toml::Value::String(data.content.clone()),
-        );
+        table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));
 
         // 3. TOML 직렬화
         let content = toml::to_string_pretty(&table)?;
@@ -122,18 +117,9 @@ mod tests {
         assert_eq!(result.path, PathBuf::from("commands/test-cmd.toml"));
 
         let toml_val: Table = toml::from_str(&result.content).unwrap();
-        assert_eq!(
-            toml_val.get("model").unwrap().as_str().unwrap(),
-            "gemini-1.5-pro"
-        );
-        assert_eq!(
-            toml_val.get("description").unwrap().as_str().unwrap(),
-            "A test command"
-        );
-        assert_eq!(
-            toml_val.get("prompt").unwrap().as_str().unwrap(),
-            "Hello World"
-        );
+        assert_eq!(toml_val.get("model").unwrap().as_str().unwrap(), "gemini-1.5-pro");
+        assert_eq!(toml_val.get("description").unwrap().as_str().unwrap(), "A test command");
+        assert_eq!(toml_val.get("prompt").unwrap().as_str().unwrap(), "Hello World");
     }
 
     #[test]
@@ -149,10 +135,7 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(
-            result.path,
-            PathBuf::from("skills/test-skill/test-skill.toml")
-        );
+        assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.toml"));
         assert!(result.content.contains("prompt = \"Skill Content\""));
         assert!(result.content.contains("type = \"expert\""));
     }

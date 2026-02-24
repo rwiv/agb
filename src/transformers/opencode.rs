@@ -24,15 +24,11 @@ impl Transformer for OpenCodeTransformer {
         let metadata_obj = match data.metadata.as_object() {
             Some(obj) => obj.clone(),
             None => {
-                return Err(anyhow!(
-                    "Metadata must be a JSON object for OpenCode conversion"
-                ));
+                return Err(anyhow!("Metadata must be a JSON object for OpenCode conversion"));
             }
         };
 
-        let frontmatter = OpenCodeFrontmatter {
-            metadata: metadata_obj,
-        };
+        let frontmatter = OpenCodeFrontmatter { metadata: metadata_obj };
 
         // 2. Frontmatter를 YAML로 직렬화
         let yaml_frontmatter = serde_yaml::to_string(&frontmatter)?;
@@ -48,9 +44,7 @@ impl Transformer for OpenCodeTransformer {
 
         // 4. 경로 설정 (.md 확장자)
         let path = if matches!(resource, Resource::Skill(_)) {
-            PathBuf::from(folder)
-                .join(&data.name)
-                .join(format!("{}.md", data.name))
+            PathBuf::from(folder).join(&data.name).join(format!("{}.md", data.name))
         } else {
             PathBuf::from(folder).join(format!("{}.md", data.name))
         };

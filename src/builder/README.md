@@ -5,16 +5,13 @@
 
 ## 주요 구성 요소
 
-### 1. Module Entry (`mod.rs`)
-모듈의 진입점으로, 서브모듈(`builder`, `config`)을 선언하고 외부에서 사용하기 편리하도록 `Builder` 구조체를 리익스포트(Re-export)합니다.
-
-### 2. Builder (`builder.rs`)
+### 1. Builder (`builder.rs`)
 빌드 프로세스의 실제 실행 로직을 담고 있습니다. `Builder` 구조체는 다음과 같은 역할을 수행합니다:
 - 빌드 환경(설정 파일 경로, 출력 디렉토리) 초기화
 - 5단계 빌드 프로세스 실행 (`run()` 메서드)
 - 각 단계별 상태 및 결과 로깅
 
-### 3. Config (`config.rs`)
+### 2. Config (`config.rs`)
 빌드 설정을 정의하고 관리합니다:
 - `agb.yaml` 파일의 역직렬화(Deserialization) 및 구조화
 - 빌드 대상 플랫폼(`BuildTarget`), 소스 경로, 제외 패턴, 대상 리소스 목록 정의

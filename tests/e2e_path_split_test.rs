@@ -77,7 +77,7 @@ resources:
 
     let mut cmd = Command::new(assert_cmd::cargo_bin!("agb"));
     cmd.arg("build").arg("--config").arg(&config_file);
-    
+
     cmd.assert()
         .failure()
         .stderr(predicates::str::contains("Source directory does not exist"));

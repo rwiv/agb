@@ -33,10 +33,7 @@ resources:
 
     // Verify outputs
     assert!(root.join("commands/foo.toml").exists());
-    assert!(
-        root.join("skills/python_expert/python_expert.toml")
-            .exists()
-    );
+    assert!(root.join("skills/python_expert/python_expert.toml").exists());
 
     let content = fs::read_to_string(root.join("commands/foo.toml")).unwrap();
     assert!(content.contains("prompt = \"# Foo Command\""));
@@ -116,16 +113,8 @@ fn setup_fixtures(root: &Path) {
     )
     .unwrap();
 
-    fs::write(
-        plugin_c_skills.join("python_expert.md"),
-        "Python Expert Content",
-    )
-    .unwrap();
-    fs::write(
-        plugin_c_skills.join("METADATA.json"),
-        r#"{"type": "expert"}"#,
-    )
-    .unwrap();
+    fs::write(plugin_c_skills.join("python_expert.md"), "Python Expert Content").unwrap();
+    fs::write(plugin_c_skills.join("METADATA.json"), r#"{"type": "expert"}"#).unwrap();
 
     fs::write(root.join("AGENTS.md"), "# Global Instructions").unwrap();
 }

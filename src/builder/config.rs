@@ -99,12 +99,7 @@ resources:
         let yaml = "source: /src\nresources: {}";
         let result = parse_config(yaml);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("missing field `target`")
-        );
+        assert!(result.unwrap_err().to_string().contains("missing field `target`"));
     }
 
     #[test]
@@ -112,11 +107,6 @@ resources:
         let yaml = "target: gemini-cli\nresources: {}";
         let result = parse_config(yaml);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("missing field `source`")
-        );
+        assert!(result.unwrap_err().to_string().contains("missing field `source`"));
     }
 }

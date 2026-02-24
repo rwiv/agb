@@ -17,24 +17,15 @@ impl Emitter {
 
     /// 기존에 생성된 디렉터리 및 메인 메모리 파일을 삭제합니다.
     pub fn clean(&self) -> Result<()> {
-        let targets = [
-            "commands",
-            "agents",
-            "skills",
-            "GEMINI.md",
-            "CLAUDE.md",
-            "AGENTS.md",
-        ];
+        let targets = ["commands", "agents", "skills", "GEMINI.md", "CLAUDE.md", "AGENTS.md"];
 
         for target in targets {
             let path = self.output_path.join(target);
             if path.exists() {
                 if path.is_dir() {
-                    fs::remove_dir_all(&path)
-                        .with_context(|| format!("Failed to remove directory: {:?}", path))?;
+                    fs::remove_dir_all(&path).with_context(|| format!("Failed to remove directory: {:?}", path))?;
                 } else {
-                    fs::remove_file(&path)
-                        .with_context(|| format!("Failed to remove file: {:?}", path))?;
+                    fs::remove_file(&path).with_context(|| format!("Failed to remove file: {:?}", path))?;
                 }
             }
         }
@@ -50,8 +41,7 @@ impl Emitter {
             fs_utils::ensure_dir(&full_path)?;
 
             // 파일 쓰기
-            fs::write(&full_path, &file.content)
-                .with_context(|| format!("Failed to write file: {:?}", full_path))?;
+            fs::write(&full_path, &file.content).with_context(|| format!("Failed to write file: {:?}", full_path))?;
         }
         Ok(())
     }
@@ -103,10 +93,7 @@ mod tests {
 
         emitter.emit(&files)?;
 
-        assert_eq!(
-            fs::read_to_string(root.join("commands/foo.toml"))?,
-            "content1"
-        );
+        assert_eq!(fs::read_to_string(root.join("commands/foo.toml"))?, "content1");
         assert_eq!(fs::read_to_string(root.join("GEMINI.md"))?, "content2");
 
         Ok(())

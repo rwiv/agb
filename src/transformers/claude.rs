@@ -25,9 +25,7 @@ impl Transformer for ClaudeTransformer {
         let mut metadata_obj = match data.metadata.as_object() {
             Some(obj) => obj.clone(),
             None => {
-                return Err(anyhow!(
-                    "Metadata must be a JSON object for Claude conversion"
-                ));
+                return Err(anyhow!("Metadata must be a JSON object for Claude conversion"));
             }
         };
 
@@ -49,9 +47,7 @@ impl Transformer for ClaudeTransformer {
 
         // 4. 경로 설정 (.md 확장자)
         let path = if matches!(resource, Resource::Skill(_)) {
-            PathBuf::from(folder)
-                .join(&data.name)
-                .join(format!("{}.md", data.name))
+            PathBuf::from(folder).join(&data.name).join(format!("{}.md", data.name))
         } else {
             PathBuf::from(folder).join(format!("{}.md", data.name))
         };
@@ -110,10 +106,7 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(
-            result.path,
-            PathBuf::from("skills/test-skill/test-skill.md")
-        );
+        assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.md"));
         assert!(result.content.contains("description: Skill description"));
         assert!(result.content.contains("type: expert"));
         assert!(result.content.contains("Skill Content"));

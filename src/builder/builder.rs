@@ -36,10 +36,7 @@ impl Builder {
         }
 
         // 1. 모든 플러그인 파일 스캔
-        println!(
-            "[2/5] Scanning and loading resources from {}...",
-            source_dir.display()
-        );
+        println!("[2/5] Scanning and loading resources from {}...", source_dir.display());
         let plugins_dir = source_dir.join("plugins");
         let exclude = cfg.exclude.unwrap_or_default();
 
@@ -69,10 +66,7 @@ impl Builder {
         }
 
         // 3. Transformation
-        println!(
-            "[4/5] Transforming resources for target: {:?}...",
-            cfg.target
-        );
+        println!("[4/5] Transforming resources for target: {:?}...", cfg.target);
         let transformer = transformers::get_transformer(&cfg.target);
         let mut transformed_files = Vec::new();
 

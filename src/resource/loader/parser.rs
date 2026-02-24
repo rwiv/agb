@@ -13,23 +13,15 @@ impl MetadataParser {
 
     /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
     pub fn parse(&self, path: &Path, resource_type: &str, resource_name: &str) -> Result<Value> {
-        let meta_str = fs::read_to_string(path)
-            .with_context(|| format!("Failed to read metadata file: {:?}", path))?;
+        let meta_str = fs::read_to_string(path).with_context(|| format!("Failed to read metadata file: {:?}", path))?;
 
-        let extension = path
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or_default();
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
 
         match extension {
-            "json" => {
-                serde_json::from_str(&meta_str)
-                    .with_context(|| format!("Failed to parse JSON for resource: {}/{}", resource_type, resource_name))
-            }
-            "yaml" | "yml" => {
-                serde_yaml::from_str(&meta_str)
-                    .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name))
-            }
+            "json" => serde_json::from_str(&meta_str)
+                .with_context(|| format!("Failed to parse JSON for resource: {}/{}", resource_type, resource_name)),
+            "yaml" | "yml" => serde_yaml::from_str(&meta_str)
+                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name)),
             _ => anyhow::bail!(
                 "Unsupported metadata extension '{}' for resource: {}/{}",
                 extension,
@@ -62,8 +54,11 @@ mod tests {
     fn test_metadata_parser_parse_yaml() -> Result<()> {
         let dir = tempdir()?;
         let yaml_path = dir.path().join("test.yaml");
-        fs::write(&yaml_path, "key: val
-num: 123")?;
+        fs::write(
+            &yaml_path,
+            "key: val
+num: 123",
+        )?;
 
         let parser = MetadataParser::new();
         let value = parser.parse(&yaml_path, "commands", "test")?;
@@ -99,7 +94,12 @@ num: 123")?;
         let result = parser.parse(&txt_path, "commands", "test");
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Unsupported metadata extension 'txt'"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Unsupported metadata extension 'txt'")
+        );
         Ok(())
     }
 }

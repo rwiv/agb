@@ -36,13 +36,13 @@ impl Builder {
             anyhow::bail!("Source directory does not exist: {}", cfg.source);
         }
 
-        // 1. 모든 플러그인 파일 스캔
+        // 1. 모든 플러그인 파일 스캔 및 로드
         println!("[2/5] Scanning and loading resources from {}...", source_dir.display());
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let exclude = cfg.exclude.unwrap_or_default();
 
-        let files = resource::loader::scan_plugins(&plugins_dir, &exclude)?;
-        let all_resources = resource::loader::load_resources(&plugins_dir, files)?;
+        let loader = resource::ResourceLoader::new(&plugins_dir, &exclude)?;
+        let all_resources = loader.load()?;
 
         // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축
         println!("[3/5] Validating and registering resources...");
@@ -68,7 +68,7 @@ impl Builder {
 
         // 3. Transformation
         println!("[4/5] Transforming resources for target: {:?}...", cfg.target);
-        let transformer = transformer::get_transformer(&cfg.target);
+        let transformer = transformer::TransformerFactory::create(&cfg.target);
 
         let mut transformed_files = Vec::new();
         for res in registry.all_resources() {

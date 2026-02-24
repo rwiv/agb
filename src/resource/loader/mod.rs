@@ -5,32 +5,14 @@ pub mod resolver;
 use crate::resource::Resource;
 use crate::resource::types::ResourceData;
 use anyhow::Result;
+use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-use serde_json::Value;
 
 use self::filter::FileFilter;
 use self::parser::MetadataParser;
 use self::resolver::{ResourceKey, ResourcePathResolver, ResourcePaths};
-
-/// [Backward Compatibility] 기존 scan_plugins 함수를 유지합니다.
-pub fn scan_plugins<P: AsRef<Path>>(root: P, exclude_patterns: &[String]) -> Result<Vec<PathBuf>> {
-    let loader = ResourceLoader::new(root, exclude_patterns)?;
-    loader.scan()
-}
-
-/// [Backward Compatibility] 기존 load_resources 함수를 유지합니다.
-pub fn load_resources<P: AsRef<Path>>(root: P, files: Vec<PathBuf>) -> Result<Vec<Resource>> {
-    let loader = ResourceLoader::new(root.as_ref(), &[])?;
-    let resolver = ResourcePathResolver::new();
-    let groups = resolver.resolve(root.as_ref(), files)?;
-
-    groups
-        .into_iter()
-        .map(|(key, paths)| loader.parse_resource(key, paths))
-        .collect()
-}
 
 /// 플러그인 디렉터리를 탐색하고 리소스를 로드하는 객체입니다.
 pub struct ResourceLoader {
@@ -52,7 +34,12 @@ impl ResourceLoader {
         let resolver = ResourcePathResolver::new();
         let parser = MetadataParser::new();
 
-        Ok(Self { root, filter, resolver, parser })
+        Ok(Self {
+            root,
+            filter,
+            resolver,
+            parser,
+        })
     }
 
     /// 플러그인 디렉터리를 스캔하여 유효한 파일 경로 목록을 반환합니다.

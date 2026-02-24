@@ -36,11 +36,7 @@ impl FileFilter {
 
         // 2. PRD Constraint: 플러그인 내부 금지된 파일 체크
         if matches!(file_name, "GEMINI.md" | "CLAUDE.md" | "OPENCODE.md") {
-            anyhow::bail!(
-                "Forbidden file '{}' found in plugin: {:?}",
-                file_name,
-                path
-            );
+            anyhow::bail!("Forbidden file '{}' found in plugin: {:?}", file_name, path);
         }
 
         // 3. 제외 패턴 체크
@@ -58,14 +54,14 @@ impl FileFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_file_filter_is_valid() -> Result<()> {
         let dir = tempdir()?;
         let root = dir.path();
-        
+
         let filter = FileFilter::new(&["*.tmp".to_string(), "ignore/".to_string()])?;
 
         // 유효한 파일
@@ -98,7 +94,12 @@ mod tests {
             fs::write(&path, "content")?;
             let result = filter.is_valid(root, &path);
             assert!(result.is_err());
-            assert!(result.unwrap_err().to_string().contains(&format!("Forbidden file '{}'", f)));
+            assert!(
+                result
+                    .unwrap_err()
+                    .to_string()
+                    .contains(&format!("Forbidden file '{}'", f))
+            );
         }
 
         Ok(())

@@ -51,7 +51,7 @@ pub trait Transformer {
 | `src/emitter/` | 파일 시스템 출력 및 빌드 디렉터리 정리 | [README.md](../../src/emitter/README.md) |
 
 ### 3.1 세부 파일 구성
-- **builder**: `builder.rs` (프로세스 제어), `config.rs` (agb.yaml 파싱)
+- **builder**: `core.rs` (프로세스 제어), `config.rs` (agb.yaml 파싱)
 - **core**: `resource.rs` (모델), `loader.rs` (스캔), `registry.rs` (중복 검증)
 - **transformers**: `base.rs` (트레이트), `factory.rs` (생성기), `gemini.rs` 등 (구현체)
 - **emitter**: `core.rs` (출력 로직), `fs_utils.rs` (FS 유틸리티)

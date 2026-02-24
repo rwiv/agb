@@ -1,4 +1,4 @@
-pub mod builder;
 pub mod config;
+pub mod core;
 
-pub use builder::Builder;
+pub use core::Builder;

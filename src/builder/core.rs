@@ -5,6 +5,8 @@ use crate::transformers;
 use anyhow::Context;
 use std::path::{Path, PathBuf};
 
+const PLUGINS_DIR_NAME: &str = "plugins";
+
 pub struct Builder {
     config_file: String,
     output_dir: PathBuf,
@@ -37,7 +39,7 @@ impl Builder {
 
         // 1. 모든 플러그인 파일 스캔
         println!("[2/5] Scanning and loading resources from {}...", source_dir.display());
-        let plugins_dir = source_dir.join("plugins");
+        let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let exclude = cfg.exclude.unwrap_or_default();
 
         let files = core::loader::scan_plugins(&plugins_dir, &exclude)?;

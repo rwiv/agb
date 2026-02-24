@@ -1,4 +1,8 @@
-prompt = """
+---
+name: write-task
+description: task 작성 시 읽으시오
+---
+
 코드를 작성하기 이전에 task를 작성하시오.
 
 - 개별 task를 작성하기 이전에 master task list 문서가 존재하는지 체크하고, 만약 없다면 `TASKS.md` 문서를 작성하시오.
@@ -8,4 +12,4 @@ prompt = """
 ## 참고 자료
 - TASKS.md: @docs/tasks/feature-1/TASKS.md
 - <task-name>.md: @docs/tasks/feature-1/phase-1/TASK-1-2.md
-"""
+

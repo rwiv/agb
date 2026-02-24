@@ -10,7 +10,7 @@
 
 ## 모듈 구조
 
-- `base.rs`: `Transformer` 트레이트 및 `TransformedFile` 등 공통 인터페이스와 데이터 모델 정의.
+- `base.rs`: `Transformer` 트레이트 및 공통 인터페이스 정의.
 - `factory.rs`: 타겟에 맞는 변환기를 생성하는 `get_transformer` 팩토리 함수 제공.
 - `mod.rs`: 각 변환기 및 팩토리 모듈 선언과 핵심 타입 re-export.
 - `gemini.rs`: Gemini-cli (TOML 기반) 변환기 구현.
@@ -20,7 +20,7 @@
 ## 주요 구성 요소
 
 ### 1. `Transformer` Trait (`base.rs`)
-모든 변환기가 구현해야 하는 인터페이스입니다.
+모든 변환기가 구현해야 하는 인터페이스입니다. 변환 결과물은 `crate::resource::TransformedFile` 구조체에 담깁니다.
 
 - **Gemini**: JSON 메타데이터를 TOML의 탑레벨 키로, Markdown 본문을 `prompt` 필드로 변환합니다.
 - **Claude / OpenCode**: JSON 메타데이터를 YAML Frontmatter로 변환하고 Markdown 본문과 결합합니다.

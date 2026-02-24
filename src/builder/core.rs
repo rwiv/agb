@@ -44,9 +44,8 @@ impl Builder {
         let files = resource::loader::scan_plugins(&plugins_dir, &exclude)?;
         let all_resources = resource::loader::load_resources(&plugins_dir, files)?;
 
-        // 2. Registry 구축 및 agb.yaml에 명시된 리소스 필터링
+        // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축
         println!("[3/5] Validating and registering resources...");
-        let mut registry = resource::registry::Registry::new();
 
         let mut target_identifiers = std::collections::HashSet::new();
         if let Some(cmds) = &cfg.resources.commands {
@@ -59,18 +58,19 @@ impl Builder {
             target_identifiers.extend(skills);
         }
 
-        for res in all_resources {
-            let identifier = format!("{}:{}", res.plugin(), res.name());
+        let mut registry = resource::registry::Registry::new();
+        for resource in all_resources {
+            let identifier = format!("{}:{}", resource.plugin(), resource.name());
             if target_identifiers.contains(&identifier) {
-                registry.register(res)?;
+                registry.register(resource)?;
             }
         }
 
         // 3. Transformation
         println!("[4/5] Transforming resources for target: {:?}...", cfg.target);
         let transformer = transformer::get_transformer(&cfg.target);
-        let mut transformed_files = Vec::new();
 
+        let mut transformed_files = Vec::new();
         for res in registry.all_resources() {
             let transformed = transformer
                 .transform(res)
@@ -80,7 +80,6 @@ impl Builder {
 
         // AGENTS.md 처리 (Root System Prompt)
         let agents_md_path = source_dir.join("AGENTS.md");
-
         if agents_md_path.exists() {
             println!("  - Found root system prompt: {}", agents_md_path.display());
             let content = std::fs::read_to_string(&agents_md_path)?;

@@ -1,11 +1,14 @@
-pub mod providers;
+pub mod claude;
+pub mod gemini;
+pub mod opencode;
 
 use crate::builder::config::BuildTarget;
 use crate::resource::{Resource, TransformedFile};
-use crate::transformer::providers::claude::ClaudeTransformer;
-use crate::transformer::providers::gemini::GeminiTransformer;
-use crate::transformer::providers::opencode::OpenCodeTransformer;
 use anyhow::Result;
+
+use self::claude::ClaudeTransformer;
+use self::gemini::GeminiTransformer;
+use self::opencode::OpenCodeTransformer;
 
 /// 에이전트별 리소스 변환 인터페이스
 pub trait Transformer {

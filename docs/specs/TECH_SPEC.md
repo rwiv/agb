@@ -27,7 +27,7 @@
 4. **Transform**: 선택된 타겟에 맞는 `Transformer`가 리소스를 변환합니다. (`transformer/`)
 5. **Emit**: 기존 결과물을 정리하고 변환된 파일을 물리적 경로에 작성합니다. (`resource/emitter.rs`)
 
-### 2.2 핵심 트레이트: `Transformer` (`src/transformer/base.rs`)
+### 2.2 핵심 트레이트: `Transformer` (`src/transformer/mod.rs`)
 
 새로운 에이전트 지원을 위해 아래와 같은 인터페이스를 제공합니다.
 
@@ -54,9 +54,7 @@ pub trait Transformer {
 ### 3.1 세부 파일 구성
 - **builder**: `core.rs` (프로세스 제어), `config.rs` (agb.yaml 파싱)
 - **resource**: `types.rs` (모델, `TransformedFile` 포함), `loader.rs` (스캔), `registry.rs` (중복 검증), `emitter.rs` (출력 로직)
-- **transformer**: 
-  - `base.rs` (트레이트), `factory.rs` (생성기)
-  - `providers/`: `gemini.rs`, `claude.rs`, `opencode.rs` (구현체)
+- **transformer**: `mod.rs` (트레이트 및 팩토리), `gemini.rs`, `claude.rs`, `opencode.rs` (구현체)
 - **utils**: `fs.rs` (파일 시스템 유틸리티)
 
 ## 4. 상세 설계 고려 사항

@@ -34,13 +34,13 @@
 
 ### 3.2 모듈 구조 (Module Structure)
 
-| 모듈 경로 | 설명 |
-| :--- | :--- |
-| `src/main.rs` | CLI 엔트리포인트 및 실행 제어 |
-| `src/builder/` | 빌드 파이프라인 제어 및 `agb.yaml` 관리 |
-| `src/resource/` | 리소스 모델, 로딩(Loader), 등록(Registry), 출력(Emitter) |
-| `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode) |
-| `src/utils/` | 파일 시스템 조작 등 공통 유틸리티 |
+| 모듈 경로 | 설명 | 문서 (README.md) |
+| :--- | :--- | :--- |
+| `src/main.rs` | CLI 엔트리포인트 및 실행 제어 | - |
+| `src/builder/` | 빌드 파이프라인 제어 및 `agb.yaml` 관리 | [`src/builder/README.md`](../../src/builder/README.md) |
+| `src/resource/` | 리소스 모델, 로딩(Loader), 등록(Registry), 출력(Emitter) | [`src/resource/README.md`](../../src/resource/README.md) |
+| `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode) | [`src/transformer/README.md`](../../src/transformer/README.md) |
+| `src/utils/` | 파일 시스템 조작 등 공통 유틸리티 | - |
 
 ## 4. 데이터 모델 및 상세 설계
 

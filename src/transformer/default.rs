@@ -1,19 +1,19 @@
-use crate::resource::{Resource, TransformedFile};
+use crate::resource::{BuildTarget, Resource, TransformedFile};
 use crate::transformer::Transformer;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
-struct ClaudeFrontmatter {
-    description: String,
-    parameters: serde_json::Map<String, Value>,
+struct DefaultFrontmatter {
+    metadata: serde_json::Value,
 }
 
-pub struct ClaudeTransformer;
+pub struct DefaultTransformer {
+    pub target: BuildTarget,
+}
 
-impl Transformer for ClaudeTransformer {
+impl Transformer for DefaultTransformer {
     fn transform(&self, resource: &Resource) -> Result<TransformedFile> {
         let (data, folder) = match resource {
             Resource::Command(d) => (d, "commands"),
@@ -21,31 +21,13 @@ impl Transformer for ClaudeTransformer {
             Resource::Skill(d) => (d, "skills"),
         };
 
-        // 1. JSON Metadata에서 description 추출 및 parameters 구성
-        let mut metadata_obj = match data.metadata.as_object() {
-            Some(obj) => obj.clone(),
-            None => {
-                return Err(anyhow!("Metadata must be a JSON object for Claude conversion"));
-            }
+        let frontmatter = DefaultFrontmatter {
+            metadata: data.metadata.clone(),
         };
 
-        let description = metadata_obj
-            .remove("description")
-            .and_then(|v| v.as_str().map(|s| s.to_string()))
-            .unwrap_or_default();
-
-        let frontmatter = ClaudeFrontmatter {
-            description,
-            parameters: metadata_obj,
-        };
-
-        // 2. Frontmatter를 YAML로 직렬화
         let yaml_frontmatter = serde_yaml::to_string(&frontmatter)?;
-
-        // 3. 내용 결합 (Frontmatter + Markdown)
         let content = format!("---\n{}---\n\n{}", yaml_frontmatter, data.content);
 
-        // 4. 경로 설정 (.md 확장자)
         let path = if matches!(resource, Resource::Skill(_)) {
             PathBuf::from(folder).join(&data.name).join(format!("{}.md", data.name))
         } else {
@@ -56,8 +38,14 @@ impl Transformer for ClaudeTransformer {
     }
 
     fn transform_root_prompt(&self, content: &str) -> Result<TransformedFile> {
+        let filename = match self.target {
+            BuildTarget::GeminiCli => "GEMINI.md",
+            BuildTarget::ClaudeCode => "CLAUDE.md",
+            BuildTarget::OpenCode => "OPENCODE.md",
+        };
+
         Ok(TransformedFile {
-            path: PathBuf::from("CLAUDE.md"),
+            path: PathBuf::from(filename),
             content: content.to_string(),
         })
     }
@@ -70,8 +58,10 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn test_claude_command_transformation() {
-        let transformer = ClaudeTransformer;
+    fn test_default_transformation() {
+        let transformer = DefaultTransformer {
+            target: BuildTarget::ClaudeCode,
+        };
         let resource = Resource::Command(ResourceData {
             name: "test-cmd".to_string(),
             plugin: "test-plugin".to_string(),
@@ -85,16 +75,18 @@ mod tests {
         let result = transformer.transform(&resource).unwrap();
         assert_eq!(result.path, PathBuf::from("commands/test-cmd.md"));
 
+        assert!(result.content.contains("metadata:"));
         assert!(result.content.contains("description: A test command"));
-        assert!(result.content.contains("parameters:"));
         assert!(result.content.contains("model: claude-3-opus"));
         assert!(result.content.contains("# Hello World"));
         assert!(result.content.starts_with("---"));
     }
 
     #[test]
-    fn test_claude_skill_transformation() {
-        let transformer = ClaudeTransformer;
+    fn test_default_skill_transformation() {
+        let transformer = DefaultTransformer {
+            target: BuildTarget::ClaudeCode,
+        };
         let resource = Resource::Skill(ResourceData {
             name: "test-skill".to_string(),
             plugin: "test-plugin".to_string(),
@@ -107,8 +99,35 @@ mod tests {
 
         let result = transformer.transform(&resource).unwrap();
         assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.md"));
+        assert!(result.content.contains("metadata:"));
         assert!(result.content.contains("description: Skill description"));
         assert!(result.content.contains("type: expert"));
         assert!(result.content.contains("Skill Content"));
+    }
+
+    #[test]
+    fn test_default_root_prompt_transformation() {
+        let claude = DefaultTransformer {
+            target: BuildTarget::ClaudeCode,
+        };
+        let opencode = DefaultTransformer {
+            target: BuildTarget::OpenCode,
+        };
+        let gemini = DefaultTransformer {
+            target: BuildTarget::GeminiCli,
+        };
+
+        assert_eq!(
+            claude.transform_root_prompt("test").unwrap().path,
+            PathBuf::from("CLAUDE.md")
+        );
+        assert_eq!(
+            opencode.transform_root_prompt("test").unwrap().path,
+            PathBuf::from("OPENCODE.md")
+        );
+        assert_eq!(
+            gemini.transform_root_prompt("test").unwrap().path,
+            PathBuf::from("GEMINI.md")
+        );
     }
 }

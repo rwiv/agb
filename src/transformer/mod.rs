@@ -1,13 +1,11 @@
-pub mod claude;
+pub mod default;
 pub mod gemini;
-pub mod opencode;
 
 use crate::resource::{BuildTarget, Resource, TransformedFile};
 use anyhow::Result;
 
-use self::claude::ClaudeTransformer;
+use self::default::DefaultTransformer;
 use self::gemini::GeminiTransformer;
-use self::opencode::OpenCodeTransformer;
 
 /// 에이전트별 리소스 변환 인터페이스
 pub trait Transformer {
@@ -26,8 +24,8 @@ impl TransformerFactory {
     pub fn create(target: &BuildTarget) -> Box<dyn Transformer> {
         match target {
             BuildTarget::GeminiCli => Box::new(GeminiTransformer),
-            BuildTarget::ClaudeCode => Box::new(ClaudeTransformer),
-            BuildTarget::OpenCode => Box::new(OpenCodeTransformer),
+            BuildTarget::ClaudeCode => Box::new(DefaultTransformer { target: target.clone() }),
+            BuildTarget::OpenCode => Box::new(DefaultTransformer { target: target.clone() }),
         }
     }
 }

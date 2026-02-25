@@ -1,5 +1,6 @@
-use crate::resource::{Resource, TransformedFile};
+use crate::resource::{BuildTarget, Resource, TransformedFile};
 use crate::transformer::Transformer;
+use crate::transformer::default::DefaultTransformer;
 use anyhow::{Result, anyhow};
 use serde_json::Value;
 use std::path::PathBuf;
@@ -9,46 +10,37 @@ pub struct GeminiTransformer;
 
 impl Transformer for GeminiTransformer {
     fn transform(&self, resource: &Resource) -> Result<TransformedFile> {
-        let (data, folder) = match resource {
-            Resource::Command(d) => (d, "commands"),
-            Resource::Agent(d) => (d, "agents"),
-            Resource::Skill(d) => (d, "skills"),
-        };
+        match resource {
+            Resource::Command(data) => {
+                // 1. JSON Metadata를 TOML Value로 변환 후 Table로 캐스팅
+                let json_value = &data.metadata;
+                let toml_value = json_to_toml(json_value)?;
 
-        // 1. JSON Metadata를 TOML Value로 변환 후 Table로 캐스팅
-        let json_value = &data.metadata;
-        let toml_value = json_to_toml(json_value)?;
+                let mut table = match toml_value {
+                    toml::Value::Table(t) => t,
+                    _ => {
+                        return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
+                    }
+                };
 
-        let mut table = match toml_value {
-            toml::Value::Table(t) => t,
-            toml::Value::Datetime(_)
-            | toml::Value::String(_)
-            | toml::Value::Integer(_)
-            | toml::Value::Float(_)
-            | toml::Value::Boolean(_)
-            | toml::Value::Array(_) => {
-                return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
+                // 2. Markdown content를 'prompt' 필드에 추가
+                table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));
+
+                // 3. TOML 직렬화
+                let content = toml::to_string_pretty(&table)?;
+
+                // 4. 경로 설정
+                let path = PathBuf::from("commands").join(format!("{}.toml", data.name));
+
+                Ok(TransformedFile { path, content })
             }
-        };
-
-        // 2. Markdown content를 'prompt' 필드에 추가
-        table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));
-
-        // 3. TOML 직렬화
-        let content = toml::to_string_pretty(&table)?;
-
-        // 4. 경로 설정
-        let path = if matches!(resource, Resource::Skill(_)) {
-            // Skills는 보통 디렉터리 구조를 가짐: skills/[name]/[name].toml
-            PathBuf::from(folder)
-                .join(&data.name)
-                .join(format!("{}.toml", data.name))
-        } else {
-            // Commands/Agents: commands/[name].toml
-            PathBuf::from(folder).join(format!("{}.toml", data.name))
-        };
-
-        Ok(TransformedFile { path, content })
+            Resource::Agent(_) | Resource::Skill(_) => {
+                let default_transformer = DefaultTransformer {
+                    target: BuildTarget::GeminiCli,
+                };
+                default_transformer.transform(resource)
+            }
+        }
     }
 
     fn transform_root_prompt(&self, content: &str) -> Result<TransformedFile> {
@@ -132,9 +124,29 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.toml"));
-        assert!(result.content.contains("prompt = \"Skill Content\""));
-        assert!(result.content.contains("type = \"expert\""));
+        assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.md"));
+        assert!(result.content.contains("metadata:"));
+        assert!(result.content.contains("type: expert"));
+        assert!(result.content.contains("Skill Content"));
+    }
+
+    #[test]
+    fn test_gemini_agent_transformation() {
+        let transformer = GeminiTransformer;
+        let resource = Resource::Agent(ResourceData {
+            name: "test-agent".to_string(),
+            plugin: "test-plugin".to_string(),
+            content: "Agent Content".to_string(),
+            metadata: json!({
+                "model": "gemini-1.5-flash"
+            }),
+        });
+
+        let result = transformer.transform(&resource).unwrap();
+        assert_eq!(result.path, PathBuf::from("agents/test-agent.md"));
+        assert!(result.content.contains("metadata:"));
+        assert!(result.content.contains("model: gemini-1.5-flash"));
+        assert!(result.content.contains("Agent Content"));
     }
 
     #[test]

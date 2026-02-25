@@ -3,6 +3,14 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+/// 경로 분석에 필요한 정보를 담는 컨텍스트 구조체입니다.
+struct ResolveContext {
+    plugin: String,
+    r_type: String,
+    components: Vec<String>,
+    path: PathBuf,
+}
+
 /// 파일 경로를 분석하여 리소스별로 그룹화하는 객체입니다.
 pub struct ResourcePathResolver;
 
@@ -26,90 +34,86 @@ impl ResourcePathResolver {
                 continue; // [plugin]/[type]/[name] 구조가 아니면 무시
             }
 
-            let plugin = components[0].clone();
-            let r_type = components[1].clone();
+            let ctx = ResolveContext {
+                plugin: components[0].clone(),
+                r_type: components[1].clone(),
+                components,
+                path,
+            };
 
-            if r_type == "skills" {
-                self.resolve_skill(&mut groups, plugin, r_type, &components, path)?;
-            } else if r_type == "commands" || r_type == "agents" {
-                self.resolve_command_agent(&mut groups, plugin, r_type, &components, path)?;
+            if ctx.r_type == "commands" || ctx.r_type == "agents" {
+                self.resolve_default(&mut groups, ctx)?;
+            } else if ctx.r_type == "skills" {
+                self.resolve_skill(&mut groups, ctx)?;
             }
         }
 
         Ok(groups)
     }
-
-    fn resolve_skill(
-        &self,
-        groups: &mut HashMap<ResourceKey, ResourcePaths>,
-        plugin: String,
-        r_type: String,
-        components: &[String],
-        path: PathBuf,
-    ) -> Result<()> {
-        // Skill 특수 처리: [plugin]/skills/[skill_name]/...
-        if components.len() >= 4 {
-            let skill_name = components[2].clone();
-            let file_name = components[3].clone();
-
-            let key = ResourceKey {
-                plugin: plugin.clone(),
-                r_type: r_type.clone(),
-                name: skill_name.clone(),
-            };
-            let entry = groups.entry(key).or_default();
-
-            let is_metadata = (file_name == format!("{}.json", skill_name))
-                || (file_name == format!("{}.yaml", skill_name))
-                || (file_name == format!("{}.yml", skill_name));
-
-            if is_metadata {
-                if entry.metadata.is_some() {
-                    anyhow::bail!(
-                        "Conflict: Multiple metadata formats found for skill '{}' in plugin '{}'",
-                        skill_name,
-                        plugin
-                    );
-                }
-                entry.metadata = Some(path);
-            } else if file_name.ends_with(".md") {
-                // 메인 마크다운 파일 (관례상 SKILL.md 또는 README.md 권장)
-                entry.md = Some(path);
-            }
-        }
-        Ok(())
-    }
-
-    fn resolve_command_agent(
-        &self,
-        groups: &mut HashMap<ResourceKey, ResourcePaths>,
-        plugin: String,
-        r_type: String,
-        _components: &[String],
-        path: PathBuf,
-    ) -> Result<()> {
+    fn resolve_default(&self, groups: &mut HashMap<ResourceKey, ResourcePaths>, ctx: ResolveContext) -> Result<()> {
         // Command/Agent 처리: [plugin]/[type]/[name].{md,json,yaml,yml}
-        let file_stem = path.file_stem().unwrap().to_string_lossy().into_owned();
-        let extension = path.extension().unwrap_or_default().to_string_lossy().into_owned();
+        let file_stem = ctx.path.file_stem().unwrap().to_string_lossy().into_owned();
+        let extension = ctx.path.extension().unwrap_or_default().to_string_lossy().into_owned();
 
         let key = ResourceKey {
-            plugin: plugin.clone(),
-            r_type,
+            plugin: ctx.plugin.clone(),
+            r_type: ctx.r_type,
             name: file_stem.clone(),
         };
         let entry = groups.entry(key).or_default();
 
         if extension == "md" {
-            entry.md = Some(path);
-        } else if extension == "json" || extension == "yaml" || extension == "yml" {
-            if entry.metadata.is_some() {
-                anyhow::bail!(
-                    "Conflict: Multiple metadata formats found for resource '{}' in plugin '{}'",
-                    file_stem,
-                    plugin
-                );
-            }
-            entry.metadata = Some(path);
+            entry.md = Some(ctx.path);
+        } else if self.is_metadata_extension(&extension) {
+            self.validate_metadata_uniqueness(&entry.metadata, &file_stem, &ctx.plugin)?;
+            entry.metadata = Some(ctx.path);
+        }
+        Ok(())
+    }
+
+    fn resolve_skill(&self, groups: &mut HashMap<ResourceKey, ResourcePaths>, ctx: ResolveContext) -> Result<()> {
+        // Skill 특수 처리: [plugin]/skills/[skill_name]/...
+        // 4개 미만이면 유효한 스킬 파일 구조가 아니므로 즉시 종료
+        if ctx.components.len() < 4 {
+            return Ok(());
+        }
+
+        let skill_name = ctx.components[2].clone();
+        let file_name = ctx.components[3].clone();
+
+        let key = ResourceKey {
+            plugin: ctx.plugin.clone(),
+            r_type: ctx.r_type.clone(),
+            name: skill_name.clone(),
+        };
+        let entry = groups.entry(key).or_default();
+
+        let path_for_ext = Path::new(&file_name);
+        let stem = path_for_ext.file_stem().and_then(|s| s.to_str());
+        let ext = path_for_ext.extension().and_then(|s| s.to_str()).unwrap_or_default();
+
+        if stem == Some(&skill_name) && self.is_metadata_extension(ext) {
+            self.validate_metadata_uniqueness(&entry.metadata, &skill_name, &ctx.plugin)?;
+            entry.metadata = Some(ctx.path);
+        } else if file_name.ends_with(".md") {
+            // 메인 마크다운 파일 (관례상 SKILL.md 또는 README.md 권장)
+            entry.md = Some(ctx.path);
+        }
+
+        Ok(())
+    }
+
+    fn is_metadata_extension(&self, ext: &str) -> bool {
+        matches!(ext, "json" | "yaml" | "yml")
+    }
+
+    fn validate_metadata_uniqueness(&self, existing: &Option<PathBuf>, name: &str, plugin: &str) -> Result<()> {
+        if existing.is_some() {
+            anyhow::bail!(
+                "Conflict: Multiple metadata formats found for resource '{}' in plugin '{}'",
+                name,
+                plugin
+            );
         }
         Ok(())
     }

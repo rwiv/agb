@@ -11,29 +11,7 @@ pub struct GeminiTransformer;
 impl Transformer for GeminiTransformer {
     fn transform(&self, resource: &Resource) -> Result<TransformedFile> {
         match resource {
-            Resource::Command(data) => {
-                // 1. JSON Metadata를 TOML Value로 변환 후 Table로 캐스팅
-                let json_value = &data.metadata;
-                let toml_value = json_to_toml(json_value)?;
-
-                let mut table = match toml_value {
-                    toml::Value::Table(t) => t,
-                    _ => {
-                        return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
-                    }
-                };
-
-                // 2. Markdown content를 'prompt' 필드에 추가
-                table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));
-
-                // 3. TOML 직렬화
-                let content = toml::to_string_pretty(&table)?;
-
-                // 4. 경로 설정
-                let path = PathBuf::from("commands").join(format!("{}.toml", data.name));
-
-                Ok(TransformedFile { path, content })
-            }
+            Resource::Command(data) => self.transform_command_to_toml(data),
             Resource::Agent(_) | Resource::Skill(_) => {
                 let default_transformer = DefaultTransformer {
                     target: BuildTarget::GeminiCli,
@@ -49,6 +27,32 @@ impl Transformer for GeminiTransformer {
             path: PathBuf::from("GEMINI.md"),
             content: content.to_string(),
         })
+    }
+}
+
+impl GeminiTransformer {
+    fn transform_command_to_toml(&self, data: &crate::resource::ResourceData) -> Result<TransformedFile> {
+        // 1. JSON Metadata를 TOML Value로 변환 후 Table로 캐스팅
+        let json_value = &data.metadata;
+        let toml_value = json_to_toml(json_value)?;
+
+        let mut table = match toml_value {
+            toml::Value::Table(t) => t,
+            _ => {
+                return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
+            }
+        };
+
+        // 2. Markdown content를 'prompt' 필드에 추가
+        table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));
+
+        // 3. TOML 직렬화
+        let content = toml::to_string_pretty(&table)?;
+
+        // 4. 경로 설정
+        let path = PathBuf::from("commands").join(format!("{}.toml", data.name));
+
+        Ok(TransformedFile { path, content })
     }
 }
 

@@ -11,9 +11,8 @@
 ## 모듈 구조
 
 - `mod.rs`: `Transformer` 트레이트 및 `TransformerFactory` 정의.
-- `gemini.rs`: Gemini-cli (TOML 기반) 변환기.
-- `claude.rs`: Claude-code (Frontmatter Markdown) 변환기.
-- `opencode.rs`: OpenCode (Claude-code와 유사한 Markdown) 변환기.
+- `gemini.rs`: Gemini-cli용 하이브리드 변환기 (Commands는 TOML, 나머지는 DefaultTransformer 사용).
+- `default.rs`: 공용 마크다운 변환기 (Claude-code, OpenCode 및 Gemini의 Agents/Skills 처리).
 
 ## 주요 구성 요소
 
@@ -36,13 +35,12 @@ pub trait Transformer {
 ## 타겟별 특이사항
 
 - **Gemini-cli**: 
-  - 메타데이터 -> TOML Key-Value 매핑
-  - 본문 -> TOML `prompt` 필드로 삽입
-  - 결과 파일: `commands/*.toml`, `agents/*.toml`, `skills/*.toml`, `GEMINI.md`
+  - **Commands**: 메타데이터 -> TOML Key-Value 매핑, 본문 -> TOML `prompt` 필드로 삽입하여 `*.toml` 생성.
+  - **Agents / Skills**: `DefaultTransformer`를 사용하여 메타데이터가 포함된 마크다운 `*.md` 생성.
+  - 전역 지침: `GEMINI.md` 생성.
 - **Claude-code / OpenCode**: 
-  - 메타데이터 -> YAML Frontmatter
-  - 본문 -> 마크다운 본문 결합
-  - 결과 파일: `commands/*.md`, `agents/*.md`, `skills/*.md`, `CLAUDE.md`
+  - `DefaultTransformer` 사용. 메타데이터 -> YAML Frontmatter, 본문 -> 마크다운 본문 결합하여 `*.md` 생성.
+  - 전역 지침: `CLAUDE.md` 또는 `OPENCODE.md` 생성.
 
 ## 새로운 에이전트 추가 방법
 

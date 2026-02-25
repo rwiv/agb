@@ -17,8 +17,8 @@
 - **플러그인 기반 리소스 관리:** `plugins/` 내에 독립적인 기능 단위로 리소스 구성.
 - **유연한 메타데이터:** JSON(`.json`) 및 YAML(`.yaml`, `.yml`) 형식의 메타데이터 지원.
 - **에이전트별 포맷 변환:**
-  - **Gemini-cli:** 마크다운 본문을 TOML의 `prompt` 필드로 자동 변환.
-  - **Claude-code / OpenCode:** Frontmatter를 포함한 최적화된 마크다운 구조로 빌드.
+  - **Gemini-cli:** Commands 리소스는 TOML로 자동 변환하며, Agents와 Skills는 메타데이터가 포함된 마크다운 구조로 빌드합니다.
+  - **Claude-code / OpenCode:** Frontmatter를 포함한 최적화된 마크다운 구조로 빌드합니다.
 - **충돌 방지:** 서로 다른 플러그인 간의 리소스 이름 중복을 감지하여 안전한 빌드 보장.
 
 ## 프로젝트 구조
@@ -65,12 +65,16 @@ description: Expert research sub-agent. Use this for in-depth analysis of comple
 model: gemini-3.0-pro
 ```
 
-빌드 시(Gemini-cli 타겟), 위 파일들은 `agents/researcher.toml`로 병합됩니다:
-```toml
-name = "researcher"
-description = "Expert research sub-agent. Use this for in-depth analysis of complex technical topics or when academic research is required."
-model = "gemini-3.0-pro"
-prompt = "You are a professional researcher. Analyze the given topic deeply."
+빌드 시(Gemini-cli 타겟), 위 파일들은 `agents/researcher.md`로 병합됩니다:
+```markdown
+---
+metadata:
+  name: researcher
+  description: Expert research sub-agent. Use this for in-depth analysis of complex technical topics or when academic research is required.
+  model: gemini-3.0-pro
+---
+
+You are a professional researcher. Analyze the given topic deeply.
 ```
 
 ## 설정 방법 (`agb.yaml`)

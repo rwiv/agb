@@ -18,7 +18,7 @@
 - **유연한 메타데이터:** JSON(`.json`) 및 YAML(`.yaml`, `.yml`) 형식의 외부 메타데이터 파일 지원뿐만 아니라, 마크다운 파일 내의 **YAML Frontmatter**도 지원합니다.
 - **타겟 기반 오버라이트:** 외부 메타데이터 파일 내에 에이전트별 섹션(`gemini`, `claude`, `opencode`)을 두어 빌드 타겟에 따라 설정을 동적으로 변경할 수 있습니다.
 - **에이전트별 포맷 변환:**
-  - **Gemini-cli:** Commands 리소스는 TOML로 자동 변환하며, Agents와 Skills는 메타데이터가 포함된 마크다운 구조로 빌드합니다.
+  - **Gemini-cli:** Commands 리소스는 TOML로 자동 변환하며, Agents와 Skills는 메타데이터가 포함된 마크다운 구조(`SKILL.md`)로 빌드합니다.
   - **Claude-code / OpenCode:** Frontmatter를 포함한 최적화된 마크다운 구조로 빌드합니다.
 - **충돌 방지:** 서로 다른 플러그인 간의 리소스 이름 중복을 감지하여 안전한 빌드 보장.
 
@@ -45,7 +45,10 @@
 ├── agb.yaml                # 빌드 설정 파일
 ├── GEMINI.md               # 빌드된 전역 지침 (target이 gemini-cli인 경우, FM 제거됨)
 ├── commands/               # 변환된 커맨드 파일들
-└── ...
+├── agents/                 # 변환된 에이전트 파일들
+└── skills/                 # 변환된 스킬 폴더들
+    └── [skill_name]/
+        └── SKILL.md        # 변환된 스킬 본문
 ```
 
 ## 리소스 작성 예시

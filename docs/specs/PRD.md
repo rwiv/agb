@@ -52,7 +52,7 @@
 
 ### 5.3 에이전트별 포맷 변환
 
-- **Gemini-cli:** Commands 리소스는 TOML 규격으로 자동 변환하며, Agents와 Skills는 최적화된 마크다운 구조로 빌드합니다.
+- **Gemini-cli:** Commands 리소스는 TOML 규격으로 자동 변환하며, Agents와 Skills는 최적화된 마크다운 구조(`SKILL.md`)로 빌드합니다.
 - **Claude-code / OpenCode:** 에이전트 규격에 최적화된 마크다운 구조로 빌드합니다.
 
 ### 5.4 리소스 병합 및 충돌 방지

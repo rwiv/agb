@@ -29,7 +29,7 @@ impl Transformer for DefaultTransformer {
         let content = format!("---\n{}---\n\n{}", yaml_frontmatter, data.content);
 
         let path = if matches!(resource, Resource::Skill(_)) {
-            PathBuf::from(folder).join(&data.name).join(format!("{}.md", data.name))
+            PathBuf::from(folder).join(&data.name).join("SKILL.md")
         } else {
             PathBuf::from(folder).join(format!("{}.md", data.name))
         };
@@ -98,7 +98,7 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.md"));
+        assert_eq!(result.path, PathBuf::from("skills/test-skill/SKILL.md"));
         assert!(result.content.contains("metadata:"));
         assert!(result.content.contains("description: Skill description"));
         assert!(result.content.contains("type: expert"));

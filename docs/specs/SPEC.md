@@ -70,10 +70,10 @@
 
 - **Gemini-cli**: 
   - `commands/[name].toml` 생성. 마크다운 본문은 `prompt` 필드로, 메타데이터는 최상위 키로 매핑.
-  - `agents/[name].md`, `skills/[name].md` 생성. 메타데이터를 포함한 마크다운 구조(`DefaultTransformer`)로 빌드.
+  - `agents/[name].md`, `skills/[name]/SKILL.md` 생성. 메타데이터를 포함한 마크다운 구조(`DefaultTransformer`)로 빌드.
   - `AGENTS.md` -> `GEMINI.md` 변환. (변환 전 Frontmatter는 제거됨)
 - **Claude-code / OpenCode**: 
-  - `commands/[name].md`, `agents/[name].md`, `skills/[name].md` 생성. (`DefaultTransformer` 사용)
+  - `commands/[name].md`, `agents/[name].md`, `skills/[name]/SKILL.md` 생성. (`DefaultTransformer` 사용)
   - 메타데이터를 YAML Frontmatter로, 본문을 마크다운 내용으로 결합.
   - `AGENTS.md` -> `CLAUDE.md` 또는 `OPENCODE.md` 변환. (변환 전 원본 Frontmatter는 제거됨)
 

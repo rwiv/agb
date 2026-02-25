@@ -33,13 +33,13 @@ resources:
 
     // Verify outputs
     assert!(root.join("commands/foo.toml").exists());
-    assert!(root.join("skills/python_expert/python_expert.md").exists());
+    assert!(root.join("skills/python_expert/SKILL.md").exists());
 
     let content = fs::read_to_string(root.join("commands/foo.toml")).unwrap();
     assert!(content.contains("prompt = \"# Foo Command\""));
     assert!(content.contains("model = \"gemini-1.5-pro\""));
 
-    let skill_content = fs::read_to_string(root.join("skills/python_expert/python_expert.md")).unwrap();
+    let skill_content = fs::read_to_string(root.join("skills/python_expert/SKILL.md")).unwrap();
     assert!(skill_content.contains("metadata:"));
     assert!(skill_content.contains("type: expert"));
     assert!(skill_content.contains("Python Expert Content"));

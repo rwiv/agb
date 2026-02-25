@@ -128,7 +128,7 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(result.path, PathBuf::from("skills/test-skill/test-skill.md"));
+        assert_eq!(result.path, PathBuf::from("skills/test-skill/SKILL.md"));
         assert!(result.content.contains("metadata:"));
         assert!(result.content.contains("type: expert"));
         assert!(result.content.contains("Skill Content"));

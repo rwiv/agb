@@ -15,7 +15,7 @@
 ## 주요 기능
 
 - **플러그인 기반 리소스 관리:** `plugins/` 내에 독립적인 기능 단위로 리소스 구성.
-- **유연한 메타데이터:** JSON(`.json`) 및 YAML(`.yaml`, `.yml`) 형식의 외부 메타데이터 파일 지원뿐만 아니라, 마크다운 파일 내의 **YAML Frontmatter**도 지원합니다.
+- **유연한 메타데이터:** YAML(`.yaml`, `.yml`) 형식의 외부 메타데이터 파일 지원뿐만 아니라, 마크다운 파일 내의 **YAML Frontmatter**도 지원합니다.
 - **타겟 기반 오버라이트:** 외부 메타데이터 파일 내에 에이전트별 섹션(`gemini`, `claude`, `opencode`)을 두어 빌드 타겟에 따라 설정을 동적으로 변경할 수 있습니다.
 - **에이전트별 포맷 변환:**
   - **Gemini-cli:** Commands 리소스는 TOML로 자동 변환하며, Agents와 Skills는 메타데이터가 포함된 마크다운 구조(`SKILL.md`)로 빌드합니다.
@@ -25,15 +25,15 @@
 ## 프로젝트 구조
 
 ### 소스 리소스 (Source)
-리소스는 본문(`*.md`)과 메타데이터(`*.yaml/json`)의 조합으로 구성됩니다. 마크다운 파일 내에 Frontmatter를 직접 포함할 수도 있습니다.
+리소스는 본문(`*.md`)과 메타데이터(`*.yaml`, `*.yml`)의 조합으로 구성됩니다. 마크다운 파일 내에 Frontmatter를 직접 포함할 수도 있습니다.
 
 ```text
 [Source Repository]/
 ├── AGENTS.md               # 전역 시스템 지침 (타겟에 따라 GEMINI.md 등으로 변환, Frontmatter 지원)
 └── plugins/
     └── [plugin_name]/
-        ├── commands/       # 파일 쌍: [name].md (FM 포함 가능) + [name].json/yaml (선택 사항)
-        ├── agents/         # 파일 쌍: [name].md (FM 포함 가능) + [name].json/yaml (선택 사항)
+        ├── commands/       # 파일 쌍: [name].md (FM 포함 가능) + [name].yaml/yml (선택 사항)
+        ├── agents/         # 파일 쌍: [name].md (FM 포함 가능) + [name].yaml/yml (선택 사항)
         └── skills/         # 폴더 구조: [skill_name]/SKILL.yaml + 기타 파일들
 ```
 

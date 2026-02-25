@@ -11,7 +11,6 @@
 - **직렬화/역직렬화:**
   - `serde`: 데이터 모델링 및 `#[serde(tag = "type")]`을 통한 리소스 구분
   - `serde_yaml`: `agb.yaml` 및 메타데이터(`*.yaml`, `*.yml`) 파싱
-  - `serde_json`: 메타데이터(`*.json`) 파싱
   - `toml`: Gemini-cli용 결과물 생성
 - **파일 시스템 및 유틸리티:**
   - `walkdir`: 플러그인 디렉터리 재귀 탐색
@@ -57,11 +56,11 @@
 - **YAML Frontmatter 지원**: 모든 `.md` 파일(리소르 및 `AGENTS.md`)은 상단에 `---`로 구분된 YAML Frontmatter를 포함할 수 있습니다.
 - **메타데이터 병합 (Target-Aware Merge)**: 
   1. `.md` 파일에서 추출한 Frontmatter를 기본(Base)으로 사용합니다.
-  2. 외부 메타데이터 파일(`.json`, `.yaml`)이 존재하면 해당 내용을 덮어씁니다 (Shallow merge).
+  2. 외부 메타데이터 파일(`.yaml`, `.yml`)이 존재하면 해당 내용을 덮어씁니다 (Shallow merge).
   3. 외부 파일 내에 현재 `BuildTarget`에 해당하는 섹션(`gemini`, `claude`, `opencode`)이 존재하면 해당 섹션 내부의 필드들을 최종적으로 덮어씁니다.
   4. 최종 결과물에서는 `gemini`, `claude`, `opencode`와 같은 타겟 예약어 키들은 제거됩니다.
 - **명시적 이름 설정**: 메타데이터(FM 또는 외부 파일)에 `"name"` 필드가 존재하면 파일명 대신 해당 값을 리소스 이름으로 사용합니다.
-- **Skill 메타데이터 규칙**: 스킬 리소스는 폴더 기반이며, 외부 메타데이터 파일명은 반드시 `SKILL.{json,yaml,yml}`이어야 합니다.
+- **Skill 메타데이터 규칙**: 스킬 리소스는 폴더 기반이며, 외부 메타데이터 파일명은 반드시 `SKILL.{yaml,yml}`이어야 합니다.
 
 ### 4.3 보안 및 제약 사항
 - **타겟 전용 파일 금지**: 플러그인 내부에는 `GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`와 같은 파일이 존재할 수 없습니다. 발견 시 빌드가 중단됩니다.

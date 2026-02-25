@@ -82,14 +82,14 @@ mod tests {
         fs::create_dir_all(&cmd_dir)?;
         fs::create_dir_all(&skill_dir)?;
 
-        // Command: md + json
+        // Command: md + yaml
         fs::write(cmd_dir.join("foo.md"), "# Foo Content")?;
-        fs::write(cmd_dir.join("foo.json"), "{\"key\": \"val\"}")?;
+        fs::write(cmd_dir.join("foo.yaml"), "key: val")?;
         // Exclude 대상
         fs::write(cmd_dir.join("test.tmp"), "temp")?;
 
-        // Skill: SKILL.json + md
-        fs::write(skill_dir.join("SKILL.json"), "{\"desc\": \"skill\"}")?;
+        // Skill: SKILL.yaml + md
+        fs::write(skill_dir.join("SKILL.yaml"), "desc: skill")?;
         fs::write(skill_dir.join("logic.md"), "prompt")?;
 
         let loader = ResourceLoader::new(&plugins_path, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;

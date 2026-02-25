@@ -52,7 +52,7 @@ impl ResourcePathResolver {
     }
 
     fn resolve_default(&self, groups: &mut HashMap<ResourceKey, ResourcePaths>, ctx: ResolveContext) -> Result<()> {
-        // Command/Agent 처리: [plugin]/[type]/[name].{md,json,yaml,yml}
+        // Command/Agent 처리: [plugin]/[type]/[name].{md,yaml,yml}
         let file_stem = ctx.path.file_stem().unwrap().to_string_lossy().into_owned();
         let extension = ctx.path.extension().unwrap_or_default().to_string_lossy().into_owned();
 
@@ -105,7 +105,7 @@ impl ResourcePathResolver {
     }
 
     fn is_metadata_extension(&self, ext: &str) -> bool {
-        matches!(ext, "json" | "yaml" | "yml")
+        matches!(ext, "yaml" | "yml")
     }
 
     fn validate_metadata_uniqueness(&self, existing: &Option<PathBuf>, name: &str, plugin: &str) -> Result<()> {
@@ -129,7 +129,7 @@ mod tests {
         let root = Path::new("/root");
         let files = vec![
             PathBuf::from("/root/p1/commands/foo.md"),
-            PathBuf::from("/root/p1/commands/foo.json"),
+            PathBuf::from("/root/p1/commands/foo.yaml"),
             PathBuf::from("/root/p2/skills/task/SKILL.yaml"),
             PathBuf::from("/root/p2/skills/task/logic.md"),
             PathBuf::from("/root/p1/agents/bot.md"),
@@ -138,7 +138,7 @@ mod tests {
         let resolver = ResourcePathResolver::new();
         let groups = resolver.resolve(root, files)?;
 
-        // p1:commands:foo -> (Some(foo.md), Some(foo.json))
+        // p1:commands:foo -> (Some(foo.md), Some(foo.yaml))
         let foo_key = ResourceKey {
             plugin: "p1".to_string(),
             r_type: "commands".to_string(),
@@ -146,7 +146,7 @@ mod tests {
         };
         let paths = groups.get(&foo_key).unwrap();
         assert!(paths.md.as_ref().unwrap().ends_with("foo.md"));
-        assert!(paths.metadata.as_ref().unwrap().ends_with("foo.json"));
+        assert!(paths.metadata.as_ref().unwrap().ends_with("foo.yaml"));
 
         // p2:skills:task -> (Some(logic.md), Some(SKILL.yaml))
         let task_key = ResourceKey {
@@ -175,7 +175,7 @@ mod tests {
     fn test_resource_path_resolver_conflict_error() {
         let root = Path::new("/root");
         let files = vec![
-            PathBuf::from("/root/p1/commands/foo.json"),
+            PathBuf::from("/root/p1/commands/foo.yml"),
             PathBuf::from("/root/p1/commands/foo.yaml"),
         ];
 

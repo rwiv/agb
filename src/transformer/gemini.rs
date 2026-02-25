@@ -32,14 +32,14 @@ impl Transformer for GeminiTransformer {
 
 impl GeminiTransformer {
     fn transform_command_to_toml(&self, data: &crate::resource::ResourceData) -> Result<TransformedFile> {
-        // 1. JSON Metadata를 TOML Value로 변환 후 Table로 캐스팅
+        // 1. Metadata를 TOML Value로 변환 후 Table로 캐스팅
         let json_value = &data.metadata;
         let toml_value = json_to_toml(json_value)?;
 
         let mut table = match toml_value {
             toml::Value::Table(t) => t,
             _ => {
-                return Err(anyhow!("Metadata must be a JSON object for Gemini conversion"));
+                return Err(anyhow!("Metadata must be an object for Gemini conversion"));
             }
         };
 

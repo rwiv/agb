@@ -114,13 +114,13 @@ fn setup_fixtures(root: &Path) {
 
     fs::write(plugin_a_cmds.join("foo.md"), "# Foo Command").unwrap();
     fs::write(
-        plugin_a_cmds.join("foo.json"),
-        r#"{"model": "gemini-1.5-pro", "description": "Foo command description"}"#,
+        plugin_a_cmds.join("foo.yaml"),
+        "model: gemini-1.5-pro\ndescription: Foo command description",
     )
     .unwrap();
 
     fs::write(plugin_c_skills.join("python_expert.md"), "Python Expert Content").unwrap();
-    fs::write(plugin_c_skills.join("SKILL.json"), r#"{"type": "expert"}"#).unwrap();
+    fs::write(plugin_c_skills.join("SKILL.yaml"), "type: expert").unwrap();
 
     fs::write(root.join("AGENTS.md"), "# Global Instructions").unwrap();
 }

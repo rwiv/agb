@@ -7,7 +7,7 @@
 1.  **플러그인 스캔**: 소스 디렉터리를 재귀적으로 탐색하여 유효한 파일 목록을 수집합니다.
 2.  **파일 필터링**: 설정된 제외 패턴과 보안 규칙에 따라 불필요하거나 금지된 파일을 걸러냅니다.
 3.  **리소스 그룹화**: 파일 이름과 경로 구조를 분석하여 흩어져 있는 Markdown 본문과 메타데이터 파일을 하나의 리소스로 결합합니다.
-4.  **메타데이터 파싱**: JSON, YAML, YML 형식의 메타데이터를 통합된 데이터 모델로 변환합니다.
+4.  **메타데이터 파싱**: YAML, YML 형식의 메타데이터를 통합된 데이터 모델로 변환합니다.
 
 ## 주요 구성 요소
 
@@ -24,21 +24,21 @@
 
 ### 3. ResourcePathResolver (`resolver.rs`)
 파일 경로를 분석하여 리소스 단위로 그룹화합니다.
-- **Commands & Agents**: `[plugin]/[type]/[name].{md,json,yaml,yml}` 구조 분석.
-- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `SKILL.{json,yaml,yml}`을 필수 메타데이터로 인식합니다.
-- **포맷 충돌 검증**: 동일 리소스에 대해 JSON과 YAML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
+- **Commands & Agents**: `[plugin]/[type]/[name].{md,yaml,yml}` 구조 분석.
+- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `SKILL.{yaml,yml}`을 필수 메타데이터로 인식합니다.
+- **포맷 충돌 검증**: 동일 리소스에 대해 YAML과 YML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
 
 ### 4. ResourceParser (`parser.rs`)
 메타데이터 파싱과 최종 `Resource` 객체 조립을 담당합니다.
-- **메타데이터 파싱**: JSON, YAML, YML 형식을 `serde_json::Value`로 변환.
+- **메타데이터 파싱**: YAML, YML 형식을 `serde_json::Value`로 변환.
 - **리소스 조립**: 마크다운 본문과 메타데이터를 결합하여 `Resource` 타입별 객체 생성.
 
 ## 리소스 그룹화 규칙
 
 | 리소스 타입 | 구조 | 메타데이터 매칭 | 본문 매칭 |
 | :--- | :--- | :--- | :--- |
-| **Commands/Agents** | 파일 기반 | 파일 이름이 동일한 JSON/YAML | 파일 이름이 동일한 `.md` |
-| **Skills** | 폴더 기반 | `SKILL.json/yaml/yml` | 폴더 내의 `.md` 파일 |
+| **Commands/Agents** | 파일 기반 | 파일 이름이 동일한 YAML/YML | 파일 이름이 동일한 `.md` |
+| **Skills** | 폴더 기반 | `SKILL.yaml/yml` | 폴더 내의 `.md` 파일 |
 
 ## 구현 상세
 

@@ -4,7 +4,7 @@
 
 ## 핵심 역할
 
-1. **포맷 변환**: JSON 메타데이터와 Markdown 컨텐츠를 타겟 에이전트가 이해할 수 있는 형식(예: TOML, Frontmatter Markdown)으로 변환합니다.
+1. **포맷 변환**: 내부 메타데이터와 Markdown 컨텐츠를 타겟 에이전트가 이해할 수 있는 형식(예: TOML, Frontmatter Markdown)으로 변환합니다.
 2. **경로 결정**: 각 리소스가 타겟 에이전트의 파일 시스템 구조에서 어디에 위치해야 하는지 정의합니다. (예: `commands/foo.toml`)
 3. **전역 지침 처리**: 루트의 `AGENTS.md`를 각 에이전트의 메인 메모리 파일(Gemini: `GEMINI.md`, Claude/OpenCode: `CLAUDE.md`)로 변환합니다.
 

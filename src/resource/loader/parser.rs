@@ -58,8 +58,6 @@ impl ResourceParser {
         let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
 
         match extension {
-            "json" => serde_json::from_str(&meta_str)
-                .with_context(|| format!("Failed to parse JSON for resource: {}/{}", resource_type, resource_name)),
             "yaml" | "yml" => serde_yaml::from_str(&meta_str)
                 .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name)),
             _ => anyhow::bail!(
@@ -199,9 +197,9 @@ model: fm-model
     fn test_resource_parser_parse_resource_command() -> Result<()> {
         let dir = tempdir()?;
         let md_path = dir.path().join("foo.md");
-        let json_path = dir.path().join("foo.json");
+        let yaml_path = dir.path().join("foo.yaml");
         fs::write(&md_path, "# Content")?;
-        fs::write(&json_path, r#"{"key": "val"}"#)?;
+        fs::write(&yaml_path, "key: val")?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
         let key = ResourceKey {
@@ -211,7 +209,7 @@ model: fm-model
         };
         let paths = ResourcePaths {
             md: Some(md_path),
-            metadata: Some(json_path),
+            metadata: Some(yaml_path),
         };
 
         let res = parser.parse_resource(key, paths)?;
@@ -223,19 +221,6 @@ model: fm-model
         } else {
             panic!("Expected Command resource");
         }
-        Ok(())
-    }
-
-    #[test]
-    fn test_metadata_parser_parse_json() -> Result<()> {
-        let dir = tempdir()?;
-        let json_path = dir.path().join("test.json");
-        fs::write(&json_path, r#"{"key": "val"}"#)?;
-
-        let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let value = parser.parse_metadata(&json_path, "commands", "test")?;
-
-        assert_eq!(value["key"], "val");
         Ok(())
     }
 
@@ -254,22 +239,6 @@ num: 123",
 
         assert_eq!(value["key"], "val");
         assert_eq!(value["num"], 123);
-        Ok(())
-    }
-
-    #[test]
-    fn test_metadata_parser_invalid_json() -> Result<()> {
-        let dir = tempdir()?;
-        let json_path = dir.path().join("bad.json");
-        fs::write(&json_path, "{ invalid }")?;
-
-        let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let result = parser.parse_metadata(&json_path, "commands", "bad");
-
-        assert!(result.is_err());
-        let err_msg = result.unwrap_err().to_string();
-        assert!(err_msg.contains("Failed to parse JSON"));
-        assert!(err_msg.contains("commands/bad"));
         Ok(())
     }
 

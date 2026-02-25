@@ -2,8 +2,7 @@ pub mod claude;
 pub mod gemini;
 pub mod opencode;
 
-use crate::builder::config::BuildTarget;
-use crate::resource::{Resource, TransformedFile};
+use crate::resource::{BuildTarget, Resource, TransformedFile};
 use anyhow::Result;
 
 use self::claude::ClaudeTransformer;
@@ -36,7 +35,7 @@ impl TransformerFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::builder::config::BuildTarget;
+    use crate::resource::BuildTarget;
     use std::path::PathBuf;
 
     #[test]

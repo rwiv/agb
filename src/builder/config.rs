@@ -2,15 +2,7 @@ use serde::Deserialize;
 use std::fs;
 use std::path::Path;
 
-#[derive(Debug, Deserialize, PartialEq)]
-pub enum BuildTarget {
-    #[serde(rename = "gemini-cli")]
-    GeminiCli,
-    #[serde(rename = "claude-code")]
-    ClaudeCode,
-    #[serde(rename = "opencode")]
-    OpenCode,
-}
+use crate::resource::BuildTarget;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Resources {

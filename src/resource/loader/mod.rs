@@ -2,23 +2,21 @@ pub mod filter;
 pub mod parser;
 pub mod resolver;
 
-use crate::resource::{Resource, ResourceData};
+use crate::resource::Resource;
 use anyhow::Result;
-use serde_json::Value;
-use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use self::filter::FileFilter;
-use self::parser::MetadataParser;
-use self::resolver::{ResourceKey, ResourcePathResolver, ResourcePaths};
+use self::parser::ResourceParser;
+use self::resolver::ResourcePathResolver;
 
 /// 플러그인 디렉터리를 탐색하고 리소스를 로드하는 객체입니다.
 pub struct ResourceLoader {
     root: PathBuf,
     filter: FileFilter,
     resolver: ResourcePathResolver,
-    parser: MetadataParser,
+    parser: ResourceParser,
 }
 
 impl ResourceLoader {
@@ -31,7 +29,7 @@ impl ResourceLoader {
 
         let filter = FileFilter::new(exclude_patterns)?;
         let resolver = ResourcePathResolver::new();
-        let parser = MetadataParser::new();
+        let parser = ResourceParser::new();
 
         Ok(Self {
             root,
@@ -48,7 +46,7 @@ impl ResourceLoader {
 
         groups
             .into_iter()
-            .map(|(key, paths)| self.parse_resource(key, paths))
+            .map(|(key, paths)| self.parser.parse_resource(key, paths))
             .collect()
     }
 
@@ -65,43 +63,12 @@ impl ResourceLoader {
 
         Ok(files)
     }
-
-    /// 그룹화된 파일 경로들로부터 Resource 객체를 생성합니다.
-    fn parse_resource(&self, key: ResourceKey, paths: ResourcePaths) -> Result<Resource> {
-        let ResourceKey { plugin, r_type, name } = key;
-        let ResourcePaths { md, metadata } = paths;
-
-        let content = if let Some(p) = md {
-            fs::read_to_string(p)?
-        } else {
-            String::new()
-        };
-
-        let metadata_val = if let Some(p) = metadata {
-            self.parser.parse(&p, &r_type, &name)?
-        } else {
-            Value::Null
-        };
-
-        let data = ResourceData {
-            name: name.clone(),
-            plugin,
-            content,
-            metadata: metadata_val,
-        };
-
-        match r_type.as_str() {
-            "commands" => Ok(Resource::Command(data)),
-            "agents" => Ok(Resource::Agent(data)),
-            "skills" => Ok(Resource::Skill(data)),
-            _ => anyhow::bail!("Unknown resource type: {}", r_type),
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use tempfile::tempdir;
 
     #[test]

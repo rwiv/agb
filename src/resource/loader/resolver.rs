@@ -1,21 +1,7 @@
+use crate::resource::{ResourceKey, ResourcePaths};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-
-/// 리소스 식별을 위한 키
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct ResourceKey {
-    pub plugin: String,
-    pub r_type: String,
-    pub name: String,
-}
-
-/// 리소스를 구성하는 파일 경로 그룹
-#[derive(Debug, Default, Clone)]
-pub struct ResourcePaths {
-    pub md: Option<PathBuf>,
-    pub metadata: Option<PathBuf>,
-}
 
 /// 파일 경로를 분석하여 리소스별로 그룹화하는 객체입니다.
 pub struct ResourcePathResolver;

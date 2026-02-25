@@ -34,7 +34,7 @@
     └── [plugin_name]/
         ├── commands/       # 파일 쌍: [name].md (FM 포함 가능) + [name].json/yaml (선택 사항)
         ├── agents/         # 파일 쌍: [name].md (FM 포함 가능) + [name].json/yaml (선택 사항)
-        └── skills/         # 폴더 구조: [skill_name]/[skill_name].json + 기타 파일들
+        └── skills/         # 폴더 구조: [skill_name]/SKILL.yaml + 기타 파일들
 ```
 
 ### 빌드 환경 (Output)

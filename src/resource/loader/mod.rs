@@ -88,8 +88,8 @@ mod tests {
         // Exclude 대상
         fs::write(cmd_dir.join("test.tmp"), "temp")?;
 
-        // Skill: [skill_name].json + md
-        fs::write(skill_dir.join("my_skill.json"), "{\"desc\": \"skill\"}")?;
+        // Skill: SKILL.json + md
+        fs::write(skill_dir.join("SKILL.json"), "{\"desc\": \"skill\"}")?;
         fs::write(skill_dir.join("logic.md"), "prompt")?;
 
         let loader = ResourceLoader::new(&plugins_path, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;

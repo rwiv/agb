@@ -93,7 +93,7 @@ impl ResourcePathResolver {
         let stem = path_for_ext.file_stem().and_then(|s| s.to_str());
         let ext = path_for_ext.extension().and_then(|s| s.to_str()).unwrap_or_default();
 
-        if stem == Some(&skill_name) && self.is_metadata_extension(ext) {
+        if stem == Some("SKILL") && self.is_metadata_extension(ext) {
             self.validate_metadata_uniqueness(&entry.metadata, &skill_name, &ctx.plugin)?;
             entry.metadata = Some(ctx.path);
         } else if file_name.ends_with(".md") {
@@ -130,7 +130,7 @@ mod tests {
         let files = vec![
             PathBuf::from("/root/p1/commands/foo.md"),
             PathBuf::from("/root/p1/commands/foo.json"),
-            PathBuf::from("/root/p2/skills/task/task.yaml"),
+            PathBuf::from("/root/p2/skills/task/SKILL.yaml"),
             PathBuf::from("/root/p2/skills/task/logic.md"),
             PathBuf::from("/root/p1/agents/bot.md"),
         ];
@@ -148,7 +148,7 @@ mod tests {
         assert!(paths.md.as_ref().unwrap().ends_with("foo.md"));
         assert!(paths.metadata.as_ref().unwrap().ends_with("foo.json"));
 
-        // p2:skills:task -> (Some(logic.md), Some(task.yaml))
+        // p2:skills:task -> (Some(logic.md), Some(SKILL.yaml))
         let task_key = ResourceKey {
             plugin: "p2".to_string(),
             r_type: "skills".to_string(),
@@ -156,7 +156,7 @@ mod tests {
         };
         let paths = groups.get(&task_key).unwrap();
         assert!(paths.md.as_ref().unwrap().ends_with("logic.md"));
-        assert!(paths.metadata.as_ref().unwrap().ends_with("task.yaml"));
+        assert!(paths.metadata.as_ref().unwrap().ends_with("SKILL.yaml"));
 
         // p1:agents:bot -> (Some(bot.md), None)
         let bot_key = ResourceKey {

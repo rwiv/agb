@@ -34,12 +34,12 @@
 ## 리소스 구성 방식
 
 ### Commands & Agents
-파일 한 쌍(`[name].md` + `[name].{json|yaml|yml}`)으로 구성됩니다.
-- 본문은 프롬프트로, 메타데이터는 에이전트 설정(모델 이름, 설명 등)으로 사용됩니다.
+파일 한 쌍(`[name].md` + `[name].{json|yaml|yml}`) 또는 Frontmatter가 포함된 단일 `[name].md` 파일로 구성됩니다.
+- 본문은 프롬프트로, 메타데이터(Frontmatter 또는 외부 파일)는 에이전트 설정(모델 이름, 설명 등)으로 사용됩니다.
 
 ### Skills
 폴더(`skills/[skill_name]/`) 기반으로 구성됩니다.
-- 폴더명과 동일한 이름의 메타데이터 파일이 필수입니다.
+- `SKILL.{json|yaml|yml}` 형식의 메타데이터 파일이 필수입니다.
 - 폴더 내의 `.md` 파일들이 스킬의 지침으로 로드됩니다.
 
 ## 데이터 흐름 (Data Flow)

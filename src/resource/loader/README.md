@@ -25,7 +25,7 @@
 ### 3. ResourcePathResolver (`resolver.rs`)
 파일 경로를 분석하여 리소스 단위로 그룹화합니다.
 - **Commands & Agents**: `[plugin]/[type]/[name].{md,json,yaml,yml}` 구조 분석.
-- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `[skill_name].{json,yaml,yml}`을 필수 메타데이터로 인식합니다.
+- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `SKILL.{json,yaml,yml}`을 필수 메타데이터로 인식합니다.
 - **포맷 충돌 검증**: 동일 리소스에 대해 JSON과 YAML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
 
 ### 4. ResourceParser (`parser.rs`)
@@ -38,7 +38,7 @@
 | 리소스 타입 | 구조 | 메타데이터 매칭 | 본문 매칭 |
 | :--- | :--- | :--- | :--- |
 | **Commands/Agents** | 파일 기반 | 파일 이름이 동일한 JSON/YAML | 파일 이름이 동일한 `.md` |
-| **Skills** | 폴더 기반 | 폴더명과 일치하는 JSON/YAML | 폴더 내의 `.md` 파일 |
+| **Skills** | 폴더 기반 | `SKILL.json/yaml/yml` | 폴더 내의 `.md` 파일 |
 
 ## 구현 상세
 

@@ -27,9 +27,9 @@
 ### 3.1 데이터 흐름 (Data Flow)
 
 1. **Load Config**: `agb.yaml`을 읽어 빌드 컨텍스트를 생성합니다. (`builder/config.rs`)
-2. **Scan & Load**: 소스 경로의 플러그인을 스캔하고 `Resource` 객체로 로드합니다. 메타데이터는 JSON과 YAML 형식을 모두 지원합니다. (`resource/loader/`)
+2. **Scan & Load**: 소스 경로의 플러그인을 스캔하고 `Resource` 객체로 로드합니다. `ResourceLoader`가 스캔과 해석을 담당하고, `ResourceParser`가 최종 객체 조립을 수행합니다. (`resource/loader/`)
 3. **Validate & Register**: 리소스 이름 충돌 및 중복된 메타데이터 포맷을 검증하고 레지스트리에 등록합니다. (`resource/registry.rs`)
-4. **Transform**: 선택된 타겟에 맞는 `Transformer`가 리소스를 변환합니다. (`transformer/`)
+4. **Transform**: 선택된 타겟(`BuildTarget`)에 맞는 `Transformer`가 리소스를 변환합니다. (`transformer/`)
 5. **Emit**: 기존 결과물을 정리(Clean)하고 변환된 파일을 물리적 경로에 작성합니다. (`resource/emitter.rs`)
 
 ### 3.2 모듈 구조 (Module Structure)
@@ -38,7 +38,7 @@
 | :--- | :--- | :--- |
 | `src/main.rs` | CLI 엔트리포인트 및 실행 제어 | - |
 | `src/builder/` | 빌드 파이프라인 제어 및 `agb.yaml` 관리 | [`src/builder/README.md`](../../src/builder/README.md) |
-| `src/resource/` | 리소스 모델, 로딩(Loader), 등록(Registry), 출력(Emitter) | [`src/resource/README.md`](../../src/resource/README.md) |
+| `src/resource/` | 리소스 모델(`BuildTarget`, `Resource` 등), 로딩(Loader), 등록(Registry), 출력(Emitter) | [`src/resource/README.md`](../../src/resource/README.md) |
 | `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode) | [`src/transformer/README.md`](../../src/transformer/README.md) |
 | `src/utils/` | 파일 시스템 조작 등 공통 유틸리티 | - |
 
@@ -46,8 +46,12 @@
 
 ### 4.1 리소스 모델 (`Resource`)
 리소스는 `ResourceData` 구조체를 포함하며, `Enum`을 통해 타입을 구분합니다.
-- **타입**: `Command`, `Agent`, `Skill`
-- **구성**: `name`, `plugin`, `content` (Markdown), `metadata` (`serde_json::Value`)
+- **주요 타입**:
+  - `BuildTarget`: 빌드 대상 플랫폼 (Gemini, Claude, OpenCode)
+  - `Resource`: `Command`, `Agent`, `Skill` 타입을 지원하는 Enum
+  - `ResourceKey`: 리소스 식별자 (plugin, type, name)
+  - `ResourcePaths`: 리소스를 구성하는 파일 경로들의 집합
+- **ResourceData 구성**: `name`, `plugin`, `content` (Markdown), `metadata` (`serde_json::Value`)
 
 ### 4.2 리소스 로딩 규칙
 - **Commands & Agents**: 파일 쌍(`[name].md` + `[name].{json|yaml|yml}`)으로 구성.

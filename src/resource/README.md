@@ -6,12 +6,14 @@
 
 ### 1. 데이터 모델 (`model.rs`)
 에이전트 리소스의 핵심 구조를 정의하며, `serde`를 통한 직렬화/역직렬화를 지원합니다.
+- **BuildTarget**: 빌드 대상 플랫폼 규격(`gemini-cli`, `claude-code`, `opencode`)을 정의합니다.
 - **Resource Enum**: `Command`, `Agent`, `Skill` 타입을 지원합니다. `#[serde(tag = "type")]` 설정을 통해 JSON/YAML에서 타입별로 구분됩니다.
 - **ResourceData**: 
   - `name`: 리소스 이름 (파일명 또는 폴더명에서 추출)
   - `plugin`: 리소스가 소속된 플러그인 식별자
   - `content`: 마크다운 본문 내용
   - `metadata`: JSON/YAML에서 파싱된 설정 값 (`serde_json::Value`)
+- **ResourceKey / ResourcePaths**: 리소스 식별 및 파일 그룹화를 위한 공통 구조체입니다.
 - **TransformedFile**: 변환기(Transformer)를 거친 후 최종적으로 파일 시스템에 써야 할 데이터를 담는 구조체입니다.
 
 ### 2. 리소스 로더 (`loader/`)

@@ -12,7 +12,7 @@
 ## 주요 구성 요소
 
 ### 1. ResourceLoader (`mod.rs`)
-모듈의 엔트리포인트로, 하위 컴포넌트들을 사용하여 전체 로딩 공정을 제어합니다.
+모듈의 엔트리포인트로, 스캔(`FileFilter`), 해석(`ResourcePathResolver`), 조립(`ResourceParser`) 단계를 오케스트레이션합니다.
 - `scan()`: 유효 파일 탐색
 - `load()`: 전체 리소스 로드 및 객체화
 
@@ -28,9 +28,10 @@
 - **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `[skill_name].{json,yaml,yml}`을 필수 메타데이터로 인식합니다.
 - **포맷 충돌 검증**: 동일 리소스에 대해 JSON과 YAML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
 
-### 4. MetadataParser (`parser.rs`)
-메타데이터 파일을 읽어 `serde_json::Value`로 변환합니다.
-- 지원 포맷: `.json`, `.yaml`, `.yml`
+### 4. ResourceParser (`parser.rs`)
+메타데이터 파싱과 최종 `Resource` 객체 조립을 담당합니다.
+- **메타데이터 파싱**: JSON, YAML, YML 형식을 `serde_json::Value`로 변환.
+- **리소스 조립**: 마크다운 본문과 메타데이터를 결합하여 `Resource` 타입별 객체 생성.
 
 ## 리소스 그룹화 규칙
 

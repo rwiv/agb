@@ -14,7 +14,7 @@
 ### 2. Config (`config.rs`)
 빌드 설정을 정의하고 관리합니다:
 - `agb.yaml` 파일의 역직렬화(Deserialization) 및 구조화
-- 빌드 대상 플랫폼(`BuildTarget`), 소스 경로, 제외 패턴, 대상 리소스 목록 정의
+- 빌드 대상 플랫폼(`resource::BuildTarget`), 소스 경로, 제외 패턴, 대상 리소스 목록 정의
 - `shellexpand`를 사용한 경로 내 물결표(`~`) 확장 지원
 
 ## 빌드 프로세스 (5단계)

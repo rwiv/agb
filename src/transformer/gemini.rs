@@ -44,7 +44,11 @@ impl GeminiTransformer {
         };
 
         // 2. Markdown content를 'prompt' 필드에 추가
-        table.insert("prompt".to_string(), toml::Value::String(data.content.clone()));
+        let mut prompt = data.content.clone();
+        if prompt.contains('\n') && !prompt.ends_with('\n') {
+            prompt.push('\n');
+        }
+        table.insert("prompt".to_string(), toml::Value::String(prompt));
 
         // 3. TOML 직렬화
         let content = toml::to_string_pretty(&table)?;
@@ -113,6 +117,21 @@ mod tests {
         assert_eq!(toml_val.get("model").unwrap().as_str().unwrap(), "gemini-1.5-pro");
         assert_eq!(toml_val.get("description").unwrap().as_str().unwrap(), "A test command");
         assert_eq!(toml_val.get("prompt").unwrap().as_str().unwrap(), "Hello World");
+    }
+
+    #[test]
+    fn test_gemini_command_multiline_prompt_formatting() {
+        let transformer = GeminiTransformer;
+        let resource = Resource::Command(ResourceData {
+            name: "multiline-cmd".to_string(),
+            plugin: "test-plugin".to_string(),
+            content: "line1\nline2".to_string(),
+            metadata: json!({}),
+        });
+
+        let result = transformer.transform(&resource).unwrap();
+        // Ensure the closing triple quotes are on a new line
+        assert!(result.content.contains("line2\n\"\"\""));
     }
 
     #[test]

@@ -50,6 +50,7 @@ impl ResourcePathResolver {
 
         Ok(groups)
     }
+
     fn resolve_default(&self, groups: &mut HashMap<ResourceKey, ResourcePaths>, ctx: ResolveContext) -> Result<()> {
         // Command/Agent 처리: [plugin]/[type]/[name].{md,json,yaml,yml}
         let file_stem = ctx.path.file_stem().unwrap().to_string_lossy().into_owned();

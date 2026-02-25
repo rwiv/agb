@@ -15,7 +15,8 @@
 ## 주요 기능
 
 - **플러그인 기반 리소스 관리:** `plugins/` 내에 독립적인 기능 단위로 리소스 구성.
-- **유연한 메타데이터:** JSON(`.json`) 및 YAML(`.yaml`, `.yml`) 형식의 메타데이터 지원.
+- **유연한 메타데이터:** JSON(`.json`) 및 YAML(`.yaml`, `.yml`) 형식의 외부 메타데이터 파일 지원뿐만 아니라, 마크다운 파일 내의 **YAML Frontmatter**도 지원합니다.
+- **타겟 기반 오버라이트:** 외부 메타데이터 파일 내에 에이전트별 섹션(`gemini`, `claude`, `opencode`)을 두어 빌드 타겟에 따라 설정을 동적으로 변경할 수 있습니다.
 - **에이전트별 포맷 변환:**
   - **Gemini-cli:** Commands 리소스는 TOML로 자동 변환하며, Agents와 Skills는 메타데이터가 포함된 마크다운 구조로 빌드합니다.
   - **Claude-code / OpenCode:** Frontmatter를 포함한 최적화된 마크다운 구조로 빌드합니다.
@@ -24,15 +25,15 @@
 ## 프로젝트 구조
 
 ### 소스 리소스 (Source)
-리소스는 본문(`*.md`)과 메타데이터(`*.yaml/json`)의 조합으로 구성됩니다.
+리소스는 본문(`*.md`)과 메타데이터(`*.yaml/json`)의 조합으로 구성됩니다. 마크다운 파일 내에 Frontmatter를 직접 포함할 수도 있습니다.
 
 ```text
 [Source Repository]/
-├── AGENTS.md               # 전역 시스템 지침 (타겟에 따라 GEMINI.md 등으로 변환)
+├── AGENTS.md               # 전역 시스템 지침 (타겟에 따라 GEMINI.md 등으로 변환, Frontmatter 지원)
 └── plugins/
     └── [plugin_name]/
-        ├── commands/       # 파일 쌍: [name].md + [name].json/yaml
-        ├── agents/         # 파일 쌍: [name].md + [name].json/yaml
+        ├── commands/       # 파일 쌍: [name].md (FM 포함 가능) + [name].json/yaml (선택 사항)
+        ├── agents/         # 파일 쌍: [name].md (FM 포함 가능) + [name].json/yaml (선택 사항)
         └── skills/         # 폴더 구조: [skill_name]/[skill_name].json + 기타 파일들
 ```
 
@@ -42,35 +43,37 @@
 ```text
 [Output Workspace]/
 ├── agb.yaml                # 빌드 설정 파일
-├── GEMINI.md               # 빌드된 전역 지침 (target이 gemini-cli인 경우)
+├── GEMINI.md               # 빌드된 전역 지침 (target이 gemini-cli인 경우, FM 제거됨)
 ├── commands/               # 변환된 커맨드 파일들
 └── ...
 ```
 
 ## 리소스 작성 예시
 
-`agb` 리소스는 마크다운 본문과 메타데이터 파일이 한 쌍으로 구성됩니다.
-
-### Subagent 예시
+### Frontmatter 및 타겟 오버라이트 예시
 
 `plugins/my_plugin/agents/researcher.md`:
 ```markdown
+---
+name: researcher
+model: default-model
+---
 You are a professional researcher. Analyze the given topic deeply.
 ```
 
-`plugins/my_plugin/agents/researcher.yaml`:
+`plugins/my_plugin/agents/researcher.yaml` (외부 메타데이터):
 ```yaml
-name: researcher
-description: Expert research sub-agent. Use this for in-depth analysis of complex technical topics or when academic research is required.
-model: gemini-3.0-pro
+gemini:
+  model: gemini-3.0-pro
+claude:
+  model: claude-3-opus
 ```
 
-빌드 시(Gemini-cli 타겟), 위 파일들은 `agents/researcher.md`로 병합됩니다:
+빌드 시(Gemini-cli 타겟), 외부 파일의 `gemini` 섹션이 Frontmatter의 기본 설정을 오버라이트하여 `agents/researcher.md`가 생성됩니다:
 ```markdown
 ---
 metadata:
   name: researcher
-  description: Expert research sub-agent. Use this for in-depth analysis of complex technical topics or when academic research is required.
   model: gemini-3.0-pro
 ---
 

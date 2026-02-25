@@ -42,7 +42,7 @@ impl Builder {
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let exclude = cfg.exclude.unwrap_or_default();
 
-        let loader = resource::ResourceLoader::new(&plugins_dir, &exclude)?;
+        let loader = resource::ResourceLoader::new(&plugins_dir, &exclude, cfg.target.clone())?;
         let all_resources = loader.load()?;
 
         // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축
@@ -83,8 +83,9 @@ impl Builder {
         let agents_md_path = source_dir.join("AGENTS.md");
         if agents_md_path.exists() {
             println!("  - Found root system prompt: {}", agents_md_path.display());
-            let content = std::fs::read_to_string(&agents_md_path)?;
-            let transformed = transformer.transform_root_prompt(&content)?;
+            let raw_content = std::fs::read_to_string(&agents_md_path)?;
+            let (_fm, pure_content) = crate::utils::yaml::extract_frontmatter(&raw_content);
+            let transformed = transformer.transform_root_prompt(&pure_content)?;
             transformed_files.push(transformed);
         }
 

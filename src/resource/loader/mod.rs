@@ -2,7 +2,7 @@ pub mod filter;
 pub mod parser;
 pub mod resolver;
 
-use crate::resource::Resource;
+use crate::resource::{BuildTarget, Resource};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -21,7 +21,7 @@ pub struct ResourceLoader {
 
 impl ResourceLoader {
     /// 새로운 ResourceLoader 인스턴스를 생성합니다.
-    pub fn new<P: AsRef<Path>>(root: P, exclude_patterns: &[String]) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(root: P, exclude_patterns: &[String], target: BuildTarget) -> Result<Self> {
         let root = root.as_ref().to_path_buf();
         if !root.exists() {
             anyhow::bail!("Plugins directory not found: {:?}", root);
@@ -29,7 +29,7 @@ impl ResourceLoader {
 
         let filter = FileFilter::new(exclude_patterns)?;
         let resolver = ResourcePathResolver::new();
-        let parser = ResourceParser::new();
+        let parser = ResourceParser::new(target);
 
         Ok(Self {
             root,
@@ -92,7 +92,7 @@ mod tests {
         fs::write(skill_dir.join("my_skill.json"), "{\"desc\": \"skill\"}")?;
         fs::write(skill_dir.join("logic.md"), "prompt")?;
 
-        let loader = ResourceLoader::new(&plugins_path, &["*.tmp".to_string()])?;
+        let loader = ResourceLoader::new(&plugins_path, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;
         let resources = loader.load()?;
 
         assert_eq!(resources.len(), 2);

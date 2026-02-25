@@ -24,18 +24,23 @@
 ### 5.1 플러그인 기반 리소스 관리
 
 - `source` 경로 하위의 `plugins/` 디렉터리 내에 독립적인 기능 단위로 리소스(Commands, Agents, Skills)를 구성합니다.
-- 각 리소스는 내용(Markdown)과 메타데이터(JSON/YAML)로 분리되어 관리됩니다.
+- 각 리소스는 내용(Markdown)과 메타데이터(JSON/YAML)로 구성됩니다.
+- **유연한 메타데이터 작성**: 마크다운 파일 상단에 Frontmatter를 직접 포함하거나, 외부 메타데이터 파일(JSON/YAML)을 함께 사용할 수 있습니다.
+- **타겟 기반 설정 오버라이트**: 단일 리소스 파일에서 타겟별로 다른 설정을 가질 수 있도록 메타데이터 병합 규칙을 제공합니다.
 
 #### 작성 예시 (Subagent):
-- `plugins/my_plugin/agents/researcher.md`:
+- `plugins/my_plugin/agents/researcher.md` (Frontmatter 포함):
   ```markdown
+  ---
+  name: researcher
+  model: default-model
+  ---
   You are a professional researcher. Analyze the given topic deeply.
   ```
-- `plugins/my_plugin/agents/researcher.yaml`:
+- `plugins/my_plugin/agents/researcher.yaml` (타겟 전용 설정):
   ```yaml
-  name: researcher
-  description: Expert research sub-agent.
-  model: gemini-3.0-pro
+  gemini:
+    model: gemini-3.0-pro
   ```
 
 ### 5.2 명시적 빌드 제어 (`agb.yaml`)

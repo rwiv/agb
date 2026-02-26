@@ -3,6 +3,7 @@ pub mod gemini;
 
 use crate::core::{BuildTarget, Resource, ResourceData, ResourceType, TransformedFile};
 use anyhow::Result;
+use std::path::PathBuf;
 
 use self::default::DefaultTransformer;
 use self::gemini::GeminiTransformer;
@@ -17,6 +18,9 @@ pub trait Transformer {
 
     /// 타겟 포맷의 파일 내용을 다시 ResourceData로 복원합니다.
     fn detransform(&self, r_type: ResourceType, file_content: &str) -> Result<ResourceData>;
+
+    /// 리소스의 타입과 이름을 기반으로 타겟 경로를 반환합니다.
+    fn get_target_path(&self, r_type: ResourceType, name: &str) -> PathBuf;
 }
 
 /// Transformer 인스턴스를 생성하는 팩토리 객체입니다.

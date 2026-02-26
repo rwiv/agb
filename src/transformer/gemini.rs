@@ -58,6 +58,18 @@ impl Transformer for GeminiTransformer {
             }
         }
     }
+
+    fn get_target_path(&self, r_type: ResourceType, name: &str) -> PathBuf {
+        match r_type {
+            ResourceType::Command => PathBuf::from(DIR_COMMANDS).join(format!("{}{}", name, EXT_TOML)),
+            ResourceType::Agent => {
+                PathBuf::from(crate::core::DIR_AGENTS).join(format!("{}{}", name, crate::core::EXT_MD))
+            }
+            ResourceType::Skill => PathBuf::from(crate::core::DIR_SKILLS)
+                .join(name)
+                .join(crate::core::SKILL_MD),
+        }
+    }
 }
 
 impl GeminiTransformer {

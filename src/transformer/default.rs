@@ -71,6 +71,20 @@ impl Transformer for DefaultTransformer {
             source_path: PathBuf::new(), // Syncer에서 보완 예정
         })
     }
+
+    fn get_target_path(&self, r_type: ResourceType, name: &str) -> PathBuf {
+        let folder = match r_type {
+            ResourceType::Command => DIR_COMMANDS,
+            ResourceType::Agent => DIR_AGENTS,
+            ResourceType::Skill => DIR_SKILLS,
+        };
+
+        if matches!(r_type, ResourceType::Skill) {
+            PathBuf::from(folder).join(name).join(SKILL_MD)
+        } else {
+            PathBuf::from(folder).join(format!("{}{}", name, EXT_MD))
+        }
+    }
 }
 
 #[cfg(test)]

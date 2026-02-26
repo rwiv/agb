@@ -1,10 +1,10 @@
 use regex::Regex;
 
-pub struct Patcher {
+pub struct MdPatcher {
     raw_content: String,
 }
 
-impl Patcher {
+impl MdPatcher {
     pub fn new(content: &str) -> Self {
         Self {
             raw_content: content.to_string(),
@@ -28,8 +28,8 @@ impl Patcher {
             let mut lines: Vec<String> = yaml_part.lines().map(|s| s.to_string()).collect();
             let mut found = false;
 
-            // description: 키를 찾아 교체 (공백 허용)
-            let re = Regex::new(r"^(\s*description:\s*).*$").unwrap();
+            // description: 키를 찾아 교체 (공백 및 인용부호 허용)
+            let re = Regex::new(r#"^(\s*description:\s*)(?:'[^']*'|"[^"]*"|.*)$"#).unwrap();
             for line in lines.iter_mut() {
                 if let Some(caps) = re.captures(line) {
                     let prefix = caps.get(1).unwrap().as_str();
@@ -63,8 +63,8 @@ impl Patcher {
         let rest = &content[3..];
         if let Some(end_offset) = rest.find("---") {
             let yaml_part = &rest[..end_offset];
-            // Frontmatter 영역을 유지하고 본문만 교체
-            self.raw_content = format!("---\n{}\n---\n\n{}", yaml_part, new_body);
+            // Frontmatter 영역을 유지하고 본문만 교체 (--- 뒤에 개행 추가 보장)
+            self.raw_content = format!("---\n{}\n---\n\n{}", yaml_part.trim_end(), new_body.trim_start());
         } else {
             // 닫는 ---가 없는 경우 그냥 덮어씀
             self.raw_content = new_body.to_string();
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn test_has_changed() {
-        let patcher = Patcher::new("hello");
+        let patcher = MdPatcher::new("hello");
         assert!(patcher.has_changed("world"));
         assert!(!patcher.has_changed("hello"));
         assert!(!patcher.has_changed("hello\n"));
@@ -100,7 +100,7 @@ mod tests {
 name: test
 ---
 # Old Content";
-        let mut patcher = Patcher::new(source);
+        let mut patcher = MdPatcher::new(source);
         patcher.replace_body("# New Content");
         let updated = patcher.render();
         assert!(updated.contains("name: test"));
@@ -115,7 +115,7 @@ name: test
 description: old description
 ---
 # Content";
-        let mut patcher = Patcher::new(source);
+        let mut patcher = MdPatcher::new(source);
         patcher.update_description("new description");
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
@@ -124,12 +124,56 @@ description: old description
     }
 
     #[test]
+    fn test_update_description_quoted() {
+        let source = "---
+description: 'old quoted description'
+---";
+        let mut patcher = MdPatcher::new(source);
+        patcher.update_description("\"new quoted description\"");
+        let updated = patcher.render();
+        assert!(updated.contains("description: \"new quoted description\""));
+    }
+
+    #[test]
+    fn test_update_description_with_comments() {
+        let source = "---
+name: test # name comment
+description: old # desc comment
+# overall comment
+---";
+        let mut patcher = MdPatcher::new(source);
+        patcher.update_description("new");
+        let updated = patcher.render();
+        assert!(updated.contains("name: test # name comment"));
+        assert!(updated.contains("description: new"));
+        assert!(updated.contains("# overall comment"));
+    }
+
+    #[test]
+    fn test_replace_body_preserves_frontmatter_exactly() {
+        let source = "---
+name: test
+# comment
+description: desc
+---
+# Old Body";
+        let mut patcher = MdPatcher::new(source);
+        patcher.replace_body("# New Body");
+        let updated = patcher.render();
+        assert!(updated.contains("name: test"));
+        assert!(updated.contains("# comment"));
+        assert!(updated.contains("description: desc"));
+        assert!(updated.contains("# New Body"));
+        assert!(updated.contains("---\n\n# New Body")); // 개행 보장 확인
+    }
+
+    #[test]
     fn test_update_description_missing() {
         let source = "---
 name: test
 ---
 # Content";
-        let mut patcher = Patcher::new(source);
+        let mut patcher = MdPatcher::new(source);
         patcher.update_description("new description");
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
@@ -139,11 +183,22 @@ name: test
     #[test]
     fn test_update_description_no_frontmatter() {
         let source = "# Content";
-        let mut patcher = Patcher::new(source);
+        let mut patcher = MdPatcher::new(source);
         patcher.update_description("new description");
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
         assert!(updated.contains("# Content"));
         assert!(updated.starts_with("---"));
+    }
+
+    #[test]
+    fn test_patch_empty_source() {
+        let source = "";
+        let mut patcher = MdPatcher::new(source);
+        patcher.update_description("new");
+        patcher.replace_body("# New Body");
+        let updated = patcher.render();
+        assert!(updated.contains("description: new"));
+        assert!(updated.contains("# New Body"));
     }
 }

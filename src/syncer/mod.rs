@@ -1,10 +1,10 @@
 pub mod diff;
-pub mod syncer;
+pub mod sync;
 
 use crate::builder::config;
-use crate::core::{Registry, PLUGINS_DIR_NAME};
+use crate::core::{PLUGINS_DIR_NAME, Registry};
 use crate::loader::ResourceLoader;
-use crate::syncer::syncer::Syncer;
+use crate::syncer::sync::Syncer;
 use crate::transformer::TransformerFactory;
 use anyhow::Result;
 use std::collections::HashSet;

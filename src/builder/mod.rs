@@ -7,7 +7,7 @@ use anyhow::Context;
 use std::path::{Path, PathBuf};
 
 use self::emitter::Emitter;
-use crate::core::{Registry, TransformedResource, PLUGINS_DIR_NAME};
+use crate::core::{PLUGINS_DIR_NAME, Registry, TransformedResource};
 
 pub struct BuildExecutor {
     config_file: String,

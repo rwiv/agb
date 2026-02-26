@@ -5,6 +5,7 @@ pub use cli::{Cli, Commands};
 pub use context::AppContext;
 
 use crate::builder::Builder;
+use log::info;
 
 pub struct App;
 
@@ -36,7 +37,7 @@ impl App {
     fn build(&self, ctx: &AppContext) -> anyhow::Result<()> {
         let builder = Builder::new();
 
-        println!("Transforming resources for target: {:?}...", ctx.config.target);
+        info!("Transforming resources for target: {:?}...", ctx.config.target);
 
         builder.run(
             ctx.transformer.as_ref(),
@@ -44,13 +45,13 @@ impl App {
             &ctx.source_dir,
             &ctx.output_dir,
         )?;
-        println!("  - Target: {:?}", ctx.config.target);
-        println!("  - Resources: {} total", ctx.registry.len());
+        info!("  - Target: {:?}", ctx.config.target);
+        info!("  - Resources: {} total", ctx.registry.len());
         Ok(())
     }
 
     fn sync(&self, ctx: &AppContext) -> anyhow::Result<()> {
-        println!(
+        info!(
             "Syncing target changes to source for target: {:?}...",
             ctx.config.target
         );
@@ -61,7 +62,7 @@ impl App {
             syncer.sync_resource(res, ctx.transformer.as_ref(), &ctx.output_dir, &exclude)?;
         }
 
-        println!("Sync successful!");
+        info!("Sync successful!");
         Ok(())
     }
 }

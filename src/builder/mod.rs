@@ -5,6 +5,7 @@ use crate::core::{AGENTS_MD, TransformedResource};
 use crate::loader::registry::Registry;
 use crate::transformer::Transformer;
 use anyhow::Context;
+use log::info;
 use std::path::Path;
 
 #[derive(Default)]
@@ -37,7 +38,7 @@ impl Builder {
         // AGENTS.md 처리
         let agents_md_path = source_dir.join(AGENTS_MD);
         if agents_md_path.exists() {
-            println!("  - Found root system prompt: {}", agents_md_path.display());
+            info!("  - Found root system prompt: {}", agents_md_path.display());
             let raw_content = std::fs::read_to_string(&agents_md_path)?;
             let (_fm, pure_content) = crate::utils::yaml::extract_frontmatter(&raw_content);
             let transformed_file = transformer.transform_root_prompt(&pure_content)?;
@@ -48,12 +49,12 @@ impl Builder {
             });
         }
 
-        println!("Emitting files to {}...", output_dir.display());
+        info!("Emitting files to {}...", output_dir.display());
         let emitter = Emitter::new(output_dir);
         emitter.clean()?;
         emitter.emit(&transformed_resources)?;
 
-        println!("Build successful!");
+        info!("Build successful!");
 
         Ok(())
     }

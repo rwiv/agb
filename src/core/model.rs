@@ -86,6 +86,30 @@ impl Resource {
             _ => Vec::new(),
         }
     }
+
+    /// 리소스의 메인 소스 마크다운 파일 경로를 반환합니다.
+    pub fn main_source_path(&self) -> PathBuf {
+        match self {
+            Resource::Command(d) | Resource::Agent(d) => d.source_path.clone(),
+            Resource::Skill(s) => s.base.source_path.join(crate::core::SKILL_MD),
+        }
+    }
+
+    /// 리소스의 메타데이터를 반환합니다.
+    pub fn metadata(&self) -> &Value {
+        match self {
+            Resource::Command(d) | Resource::Agent(d) => &d.metadata,
+            Resource::Skill(s) => &s.base.metadata,
+        }
+    }
+
+    /// 리소스의 본문 내용을 반환합니다.
+    pub fn content(&self) -> &str {
+        match self {
+            Resource::Command(d) | Resource::Agent(d) => &d.content,
+            Resource::Skill(s) => &s.base.content,
+        }
+    }
 }
 
 /// 변환된 파일의 경로와 내용을 담는 구조체

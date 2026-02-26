@@ -3,6 +3,7 @@ use crate::loader;
 use crate::loader::registry::Registry as LoaderRegistry;
 use crate::transformer::Transformer;
 use crate::transformer::TransformerFactory;
+use log::info;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -22,7 +23,7 @@ impl AppContext {
         }
         let output_dir = config_path.parent().unwrap_or(Path::new(".")).to_path_buf();
 
-        println!("Loading config: {}", config_file);
+        info!("Loading config: {}", config_file);
         let cfg = crate::core::load_config(config_file)?;
         let source_dir = PathBuf::from(&cfg.source);
 
@@ -45,11 +46,11 @@ impl AppContext {
         let exclude = cfg.exclude.as_ref().cloned().unwrap_or_default();
 
         // ResourceLoader를 통한 리소스 로드 및 필터링
-        println!("Scanning and loading resources from {}...", source_dir.display());
+        info!("Scanning and loading resources from {}...", source_dir.display());
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let loader = loader::ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
 
-        println!("Validating and registering resources...");
+        info!("Validating and registering resources...");
         let all_resources = loader.load()?;
         let mut registry = LoaderRegistry::new();
 

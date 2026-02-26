@@ -1,11 +1,12 @@
+pub mod directory;
 pub mod patcher;
 pub mod planner;
-pub mod skill;
 
-use crate::core::{Resource, SKILL_MD};
+use crate::core::Resource;
 use crate::syncer::patcher::MdPatcher;
 use crate::transformer::Transformer;
 use anyhow::{Context, Result};
+use log::info;
 use std::fs;
 use std::path::Path;
 
@@ -33,7 +34,7 @@ impl Syncer {
             return Ok(()); // 타겟 파일이 없으면 변경사항도 없는 것으로 간주
         }
 
-        println!("  Checking resource: {}/{}", resource.r_type(), resource.name());
+        info!("  Checking resource: {}/{}", resource.r_type(), resource.name());
 
         // 타겟 파일 내용 읽기
         let target_content = fs::read_to_string(&target_path)
@@ -45,15 +46,10 @@ impl Syncer {
             .with_context(|| format!("Failed to detransform target file: {:?}", target_path))?;
 
         // 소스 정보 가져오기
-        let (source_path, _current_content, current_metadata) = match resource {
-            Resource::Command(d) | Resource::Agent(d) => (&d.source_path, &d.content, &d.metadata),
-            Resource::Skill(s) => (&s.base.source_path, &s.base.content, &s.base.metadata),
-        };
-
-        let source_file_content = match resource {
-            Resource::Command(_) | Resource::Agent(_) => fs::read_to_string(source_path)?,
-            Resource::Skill(_) => fs::read_to_string(source_path.join(SKILL_MD))?,
-        };
+        let source_path = resource.main_source_path();
+        let source_file_content = fs::read_to_string(&source_path)
+            .with_context(|| format!("Failed to read source file: {:?}", source_path))?;
+        let current_metadata = resource.metadata();
 
         let mut patcher = MdPatcher::new(&source_file_content);
         let mut changed = false;
@@ -65,31 +61,27 @@ impl Syncer {
         if old_desc != new_desc {
             patcher.update_description(new_desc)?;
             changed = true;
-            println!("    - Updated description in source");
+            info!("    - Updated description in source");
         }
 
         // 2. Content 동기화
         if patcher.has_changed(&detransformed.content) {
             patcher.replace_body(&detransformed.content);
             changed = true;
-            println!("    - Updated content in source");
+            info!("    - Updated content in source");
         }
 
         // 소스 파일 쓰기
         if changed {
-            let write_path = match resource {
-                Resource::Command(_) | Resource::Agent(_) => source_path.clone(),
-                Resource::Skill(_) => source_path.join(SKILL_MD),
-            };
-            fs::write(&write_path, patcher.render())?;
+            fs::write(&source_path, patcher.render())?;
         }
 
         // 3. Skill ExtraFiles 동기화
-        if let Resource::Skill(_) = resource {
+        if let Resource::Skill(s) = resource {
             let target_skill_dir = target_path
                 .parent()
                 .ok_or_else(|| anyhow::anyhow!("Failed to get parent directory of {:?}", target_path))?;
-            skill::SkillSyncer::sync_skill_dir(source_path, target_skill_dir, exclude)?;
+            directory::DirectorySyncer::sync(&s.base.source_path, target_skill_dir, exclude)?;
         }
 
         Ok(())

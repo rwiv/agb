@@ -4,6 +4,15 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+/// 리소스 식별을 위한 키 (플러그인명, 리소스명)
+type ResourceKey = (String, String);
+
+/// 일반 리소스(Command, Agent)의 파일 그룹 (Markdown, Metadata)
+type FileGroup = (Option<PathBuf>, Option<PathBuf>);
+
+/// Skill 리소스의 파일 그룹 (Markdown, Metadata, Extras)
+type SkillGroup = (Option<PathBuf>, Option<PathBuf>, Vec<PathBuf>);
+
 /// 경로 분석에 필요한 정보를 담는 컨텍스트 구조체입니다.
 struct ResolveContext {
     plugin: String,
@@ -22,10 +31,9 @@ impl ResourcePathResolver {
 
     /// 파일 목록을 받아 스캔된 리소스 목록으로 변환합니다.
     pub fn resolve(&self, root: &Path, files: Vec<PathBuf>) -> Result<Vec<ScannedResource>> {
-        let mut command_groups: HashMap<(String, String), (Option<PathBuf>, Option<PathBuf>)> = HashMap::new();
-        let mut agent_groups: HashMap<(String, String), (Option<PathBuf>, Option<PathBuf>)> = HashMap::new();
-        let mut skill_groups: HashMap<(String, String), (Option<PathBuf>, Option<PathBuf>, Vec<PathBuf>)> =
-            HashMap::new();
+        let mut command_groups: HashMap<ResourceKey, FileGroup> = HashMap::new();
+        let mut agent_groups: HashMap<ResourceKey, FileGroup> = HashMap::new();
+        let mut skill_groups: HashMap<ResourceKey, SkillGroup> = HashMap::new();
 
         for path in files {
             let relative = path.strip_prefix(root).unwrap_or(&path);
@@ -83,11 +91,7 @@ impl ResourcePathResolver {
         Ok(results)
     }
 
-    fn resolve_default(
-        &self,
-        groups: &mut HashMap<(String, String), (Option<PathBuf>, Option<PathBuf>)>,
-        ctx: ResolveContext,
-    ) -> Result<()> {
+    fn resolve_default(&self, groups: &mut HashMap<ResourceKey, FileGroup>, ctx: ResolveContext) -> Result<()> {
         let file_stem = ctx.path.file_stem().unwrap().to_string_lossy().into_owned();
         let extension = ctx.path.extension().unwrap_or_default().to_string_lossy().into_owned();
 
@@ -103,11 +107,7 @@ impl ResourcePathResolver {
         Ok(())
     }
 
-    fn resolve_skill(
-        &self,
-        groups: &mut HashMap<(String, String), (Option<PathBuf>, Option<PathBuf>, Vec<PathBuf>)>,
-        ctx: ResolveContext,
-    ) -> Result<()> {
+    fn resolve_skill(&self, groups: &mut HashMap<ResourceKey, SkillGroup>, ctx: ResolveContext) -> Result<()> {
         if ctx.components.len() < 4 {
             return Ok(());
         }

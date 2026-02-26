@@ -12,6 +12,14 @@ pub struct ResourceParser {
     pub target: BuildTarget,
 }
 
+/// 파싱 과정에서 공통으로 사용되는 정보를 담는 내부 컨텍스트입니다.
+struct ParseContext<'a> {
+    plugin: &'a str,
+    name: &'a str,
+    md: Option<PathBuf>,
+    metadata: Option<PathBuf>,
+}
+
 impl ResourceParser {
     pub fn new(target: BuildTarget) -> Self {
         Self { target }
@@ -20,92 +28,93 @@ impl ResourceParser {
     /// 스캔된 리소스 정보로부터 Resource 객체를 생성합니다.
     pub fn parse_resource(&self, scanned: ScannedResource) -> Result<Resource> {
         let plugin = scanned.plugin;
-        let resource_name = scanned.name;
+        let name = scanned.name;
 
-        match scanned.paths {
-            ScannedPaths::Command { md, metadata } => {
-                let data = self.parse_common(DIR_COMMANDS, &plugin, &resource_name, md, metadata)?;
-                Ok(Resource::Command(data))
-            }
-            ScannedPaths::Agent { md, metadata } => {
-                let data = self.parse_common(DIR_AGENTS, &plugin, &resource_name, md, metadata)?;
-                Ok(Resource::Agent(data))
-            }
-            ScannedPaths::Skill { md, metadata, extras } => {
-                let base = self.parse_common(DIR_SKILLS, &plugin, &resource_name, md, metadata)?;
+        // 리소스 타입에 따른 정보 추출
+        let (r_type, md, metadata, extras) = match scanned.paths {
+            ScannedPaths::Command { md, metadata } => (DIR_COMMANDS, md, metadata, None),
+            ScannedPaths::Agent { md, metadata } => (DIR_AGENTS, md, metadata, None),
+            ScannedPaths::Skill { md, metadata, extras } => (DIR_SKILLS, md, metadata, Some(extras)),
+        };
 
-                // extras 처리 (스킬 디렉터리 내의 추가 파일들)
+        let ctx = ParseContext {
+            plugin: &plugin,
+            name: &name,
+            md,
+            metadata,
+        };
+
+        let data = self.parse_common(r_type, ctx)?;
+
+        match r_type {
+            DIR_COMMANDS => Ok(Resource::Command(data)),
+            DIR_AGENTS => Ok(Resource::Agent(data)),
+            DIR_SKILLS => {
                 let skill_extras = extras
+                    .unwrap_or_default()
                     .into_iter()
                     .map(|source| {
-                        // 대상 경로는 skills/[skill_name]/[file_name] 형식으로 설정
                         let file_name = source.file_name().unwrap().to_os_string();
-                        let target = PathBuf::from(DIR_SKILLS).join(&resource_name).join(file_name);
+                        let target = PathBuf::from(DIR_SKILLS).join(&name).join(file_name);
                         ExtraFile { source, target }
                     })
                     .collect();
 
                 Ok(Resource::Skill(SkillData {
-                    base,
+                    base: data,
                     extras: skill_extras,
                 }))
             }
+            _ => unreachable!("Unknown resource type: {}", r_type),
         }
     }
 
     /// 공통 데이터 파싱 로직 (Markdown + Metadata)
-    fn parse_common(
-        &self,
-        r_type: &str,
-        plugin: &str,
-        name: &str,
-        md: Option<PathBuf>,
-        metadata: Option<PathBuf>,
-    ) -> Result<ResourceData> {
+    fn parse_common(&self, r_type: &str, ctx: ParseContext) -> Result<ResourceData> {
         // 1. Markdown 본문 및 Frontmatter 추출
-        let (mut fm_metadata, pure_content) = if let Some(p) = md {
+        let (mut fm_metadata, pure_content) = if let Some(ref p) = ctx.md {
             let raw_content =
-                fs::read_to_string(&p).with_context(|| format!("Failed to read markdown content: {:?}", p))?;
+                fs::read_to_string(p).with_context(|| format!("Failed to read markdown content: {:?}", p))?;
             crate::utils::yaml::extract_frontmatter(&raw_content)
         } else {
             anyhow::bail!(
                 "Markdown file is missing for resource '{}' in plugin '{}' ({})",
-                name,
-                plugin,
+                ctx.name,
+                ctx.plugin,
                 r_type
             );
         };
 
         // 2. 외부 메타데이터 파일 파싱 및 병합
-        if let Some(p) = metadata {
-            let ext_metadata = self.parse_metadata(&p, r_type, name)?;
+        if let Some(ref p) = ctx.metadata {
+            let ext_metadata = self.parse_metadata(p, r_type, &ctx)?;
             self.merge_metadata(&mut fm_metadata, &ext_metadata)
-                .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, name))?;
+                .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, ctx.name))?;
         }
 
         Ok(ResourceData {
-            name: name.to_string(),
-            plugin: plugin.to_string(),
+            name: ctx.name.to_string(),
+            plugin: ctx.plugin.to_string(),
             content: pure_content,
             metadata: fm_metadata,
         })
     }
 
     /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
-    fn parse_metadata(&self, path: &Path, resource_type: &str, resource_name: &str) -> Result<Value> {
+    fn parse_metadata(&self, path: &Path, r_type: &str, ctx: &ParseContext) -> Result<Value> {
         let meta_str = fs::read_to_string(path).with_context(|| format!("Failed to read metadata file: {:?}", path))?;
 
         let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
 
         if extension == &EXT_YAML[1..] || extension == &EXT_YML[1..] {
             serde_yaml::from_str(&meta_str)
-                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name))
+                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", r_type, ctx.name))
         } else {
             anyhow::bail!(
                 "Unsupported metadata extension '{}' for resource: {}/{}",
                 extension,
-                resource_type,
-                resource_name
+                r_type,
+                ctx.name
             )
         }
     }

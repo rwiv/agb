@@ -35,7 +35,7 @@ impl FileFilter {
         }
 
         // 2. PRD Constraint: 플러그인 내부 금지된 파일 체크
-        if matches!(file_name, "GEMINI.md" | "CLAUDE.md" | "OPENCODE.md") {
+        if crate::core::constants::FORBIDDEN_FILES.contains(&file_name) {
             anyhow::bail!("Forbidden file '{}' found in plugin: {:?}", file_name, path);
         }
 
@@ -88,8 +88,7 @@ mod tests {
         let root = dir.path();
         let filter = FileFilter::new(&[])?;
 
-        let forbidden = ["GEMINI.md", "CLAUDE.md", "OPENCODE.md"];
-        for f in forbidden {
+        for &f in crate::core::constants::FORBIDDEN_FILES {
             let path = root.join(f);
             fs::write(&path, "content")?;
             let result = filter.is_valid(root, &path);

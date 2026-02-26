@@ -5,6 +5,7 @@ description: Use this skill when initiating a new feature, bug fix, or refactori
 
 코드를 작성하기 이전에 계획 문서를 작성하시오.
 
+- 충분한 코드베이스 리서치 작업을 수행한 뒤 문서를 작성하시오.
 - 복잡한 내용을 다루는 계획이라면 `PLAN.md` 문서 작성 이전에 `DESIGN.md` 문서를 작성하시오.
 - 개별 task를 작성하기 이전에 `PLAN.md` 문서가 존재하는지 체크하고, 만약 없다면 `PLAN.md` 문서를 작성하시오.
 - `PLAN.md`를 기반으로 하여 구체적인 tasks 문서들을 작성하시오.

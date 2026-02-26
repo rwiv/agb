@@ -24,8 +24,8 @@ impl TransformerFactory {
     pub fn create(target: &BuildTarget) -> Box<dyn Transformer> {
         match target {
             BuildTarget::GeminiCli => Box::new(GeminiTransformer),
-            BuildTarget::ClaudeCode => Box::new(DefaultTransformer { target: target.clone() }),
-            BuildTarget::OpenCode => Box::new(DefaultTransformer { target: target.clone() }),
+            BuildTarget::ClaudeCode => Box::new(DefaultTransformer { target: *target }),
+            BuildTarget::OpenCode => Box::new(DefaultTransformer { target: *target }),
         }
     }
 }

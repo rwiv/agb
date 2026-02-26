@@ -46,7 +46,7 @@ impl Builder {
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let exclude = cfg.exclude.unwrap_or_default();
 
-        let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target.clone())?;
+        let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
         let all_resources = loader.load()?;
 
         // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축

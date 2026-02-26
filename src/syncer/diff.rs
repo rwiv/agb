@@ -104,8 +104,9 @@ description: {}
         let mut found = false;
 
         // description: 키를 찾아 교체
+        let re = regex::Regex::new(r"^(\s*description:\s*).*$").unwrap();
         for line in lines.iter_mut() {
-            if let Some(caps) = regex::Regex::new(r"^(\s*description:\s*).*$").unwrap().captures(line) {
+            if let Some(caps) = re.captures(line) {
                 let prefix = caps.get(1).unwrap().as_str();
                 *line = format!("{}{}", prefix, new_desc);
                 found = true;

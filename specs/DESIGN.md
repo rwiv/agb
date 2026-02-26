@@ -8,6 +8,15 @@
 
 `agb`의 빌드 과정은 총 5단계의 순차적인 파이프라인을 거쳐 수행됩니다.
 
+```mermaid
+graph LR
+    Config[agb.yaml] --> Loader[ResourceLoader]
+    Loader -->|Scan| Files[Raw Files]
+    Files -->|Parse| Registry[Registry]
+    Registry -->|Transform| Transformed[TransformedResource]
+    Transformed -->|Emit| Output[Target Files]
+```
+
 1. **설정 로드 (Load Config)**: `agb.yaml`을 읽어 빌드 컨텍스트(소스 경로, 타겟 에이전트 등)를 생성합니다. (`builder/config.rs`)
 2. **리소스 스캔 및 로드 (Scan & Load)**: 소스 경로 내의 플러그인 구조를 분석하여 파일들을 수집하고, 이를 `core::Resource` 객체로 로드합니다. (`loader` 모듈)
 3. **검증 및 등록 (Validate & Register)**: 로드된 리소스들의 이름 충돌 여부를 확인하고, 빌드 대상 리소스를 `loader::registry::Registry`에 등록합니다. 타입과 이름을 모두 고려하여 중복을 체크합니다.
@@ -71,7 +80,12 @@ graph TD
 - **ScannedPaths**: 리소스 타입별 파일 경로 구성을 강제하는 Enum (예: `Skill`의 경우 `md`, `metadata`, 그리고 `extras` 목록 포함).
 - **Registry**: 로드 및 검증이 완료된 `Resource` 객체들을 메모리에 보관하는 중앙 저장소입니다. 리소스의 타입과 이름에 대한 충돌을 검증합니다.
 
-### 2.3 리소스 처리 파이프라인
+### 2.3 리소스 충돌 정책 (Conflict Policy)
+`agb`는 빌드 결과물의 예측 가능성을 보장하기 위해 엄격한 이름 충돌 방지 정책을 가집니다.
+- **동일 타입 충돌**: 동일한 리소스 타입(예: Command) 내에서 이름이 중복되는 경우, 소속된 플러그인이 다르더라도 빌드를 즉시 중단합니다.
+- **교차 타입 허용**: 서로 다른 리소스 타입(예: Command 'foo'와 Skill 'foo')은 동일한 이름을 가질 수 있습니다. 이는 에이전트별로 리소스 종류에 따라 저장 경로가 구분되기 때문입니다.
+
+### 2.4 리소스 처리 파이프라인
 분산된 소스 파일들을 읽어 하나의 `Resource` 객체로 완성하는 조립 과정을 담당합니다.
 - **Metadata Merge**: `ResourceParser`는 `BuildTarget` 정보를 활용하여 Markdown Frontmatter와 외부 YAML 설정을 병합합니다. 외부 YAML 파일이 존재하는 경우에만 타겟별 오버라이트 로직이 활성화됩니다. (`merge_metadata` 로직)
 - **Extra Files**: `Skill` 타입 리소스 폴더 내의 `SKILL.md`와 `SKILL.yaml`을 제외한 모든 파일은 `extras`로 분류되어, 변환 단계 후 Emitter에 의해 물리적으로 대상 폴더에 복사됩니다.

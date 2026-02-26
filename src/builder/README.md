@@ -7,7 +7,7 @@
 
 ### 1. Emitter (`emitter.rs`)
 변환된 최종 결과물을 물리적 파일로 출력합니다.
-- **Clean**: 빌드 시작 전, 출력 디렉터리에서 이전 빌드의 잔재를 삭제하여 깨끗한 환경을 보장합니다.
+- **Clean (삭제 범위)**: 빌드 시작 전, `agb.yaml`이 위치한 타겟 루트 디렉터리 내의 `commands/`, `agents/`, `skills/` 디렉터리와 타겟 메인 파일(`GEMINI.md` 등)을 삭제합니다. 타겟 루트 내의 다른 사용자 파일(예: `.git`, `agb.yaml`)은 삭제되지 않습니다.
 - **Emit**: `core::TransformedResource` 목록을 바탕으로, 텍스트 변환된 파일(`files`)들은 디스크에 기록하고 단순 포함 파일(`extras`)들은 물리적으로 대상 디렉터리에 복사합니다.
 
 ### 2. Builder (`mod.rs`)

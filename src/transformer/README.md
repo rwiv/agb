@@ -46,7 +46,11 @@ pub trait Transformer {
 
 ## 새로운 에이전트 추가 방법
 
-1. `src/transformer/` 내에 새로운 모듈을 생성합니다 (예: `new_agent.rs`).
-2. `Transformer` 트레이트를 구현합니다.
-3. `TransformerFactory::create` 함수에 해당 에이전트 분기를 추가합니다.
-4. `src/core/model.rs`의 `BuildTarget` 열거형에 새로운 에이전트 이름을 등록합니다.
+기존 구조를 유지하며 새로운 빌드 타겟을 지원하려면 다음 체크리스트를 따르십시오:
+
+1.  **`BuildTarget` 등록**: `src/core/target.rs`의 `BuildTarget` 열거형에 새 에이전트 식별자 추가 및 예약어 상수 정의.
+2.  **`Transformer` 구현**: `src/transformer/` 내에 새 모듈(예: `foo_agent.rs`)을 생성하고 `Transformer` 트레이트 구현.
+    - `transform`: 내부 리소스를 에이전트 전용 포맷으로 변환.
+    - `transform_root_prompt`: `AGENTS.md`를 에이전트 메인 파일로 변환.
+3.  **팩토리 분기 추가**: `src/transformer/mod.rs`의 `TransformerFactory::create`에서 새 타겟에 대한 구현체 반환 로직 추가.
+4.  **역변환(Detransform) 지원**: 동기화 기능을 위해 `Transformer::detransform` 구현 (선택 사항이나 권장).

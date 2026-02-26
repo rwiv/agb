@@ -85,6 +85,12 @@ gemini-cli:
 
 ### 5.1 메타데이터 병합 알고리즘 (Metadata Merge)
 `loader::ResourceParser`가 빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 처리합니다 (Shallow Merge):
+
+**병합 예시 (Target: `gemini-cli`)**:
+- **Source FM (`.md`)**: `{ "name": "researcher", "model": "default" }`
+- **External YAML**: `{ "gemini-cli": { "model": "gemini-pro" }, "claude-code": { "model": "sonnet" } }`
+- **Resulting Data**: `{ "name": "researcher", "model": "gemini-pro" }` (현재 타겟 섹션만 병합되고 다른 타겟 섹션은 제거됨)
+
 1.  **Extract Base**: `.md` 파일에서 YAML Frontmatter 추출.
 2.  **External Process (Optional)**: 외부 메타데이터 파일(`.yaml`/`.yml`)이 존재하는 경우에만 다음을 수행:
     - **Validate**: 최상위 키가 모두 타겟 예약어(`gemini-cli`, `claude-code`, `opencode`)인지 검증. 일반 필드 발견 시 빌드 오류.
@@ -93,6 +99,7 @@ gemini-cli:
 3.  **Finalize**: 리소스 이름은 원본 파일명을 그대로 사용하며, 병합된 메타데이터와 본문을 결합하여 리소스 객체 완성.
 
 ### 5.2 보안 및 제약 사항
+- **제외 패턴(`exclude`) 적용**: `agb.yaml`에 정의된 패턴은 빌드 스캔 및 동기화 시 모두 적용됩니다. 단, 리소스의 필수 본문(`*.md` 또는 `SKILL.md`)은 제외 패턴에 해당하더라도 시스템 보호를 위해 스캔에서 제외되지 않습니다.
 - **타겟 전용 파일 금지**: 플러그인 내부에는 `GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`와 같은 파일이 존재할 수 없습니다. 발견 시 빌드가 중단됩니다.
 - **충돌 검사 (Conflict Check)**: 서로 다른 플러그인에서 동일한 **타입**과 **이름**을 가진 리소스가 동시에 빌드 대상으로 선택된 경우 빌드를 실패 처리합니다. 리소스의 타입이 다르면 동일한 이름을 가질 수 있습니다 (예: `command/write-plan`과 `skill/write-plan`은 공존 가능).
 

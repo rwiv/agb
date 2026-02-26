@@ -16,7 +16,8 @@
 
 ### 2. Patcher (`patcher.rs`)
 마크다운 파일의 구조와 포맷을 최대한 보존하면서 특정 부분만 수정하는 역할을 수행합니다.
-- **Surgical Update**: YAML Frontmatter의 특정 필드(`description` 등)나 본문(Body) 영역만 정규표현식을 사용하여 정교하게 교체합니다.
+- **수술적 업데이트 (Surgical Update)**: `Patcher`는 정규표현식을 사용하여 파일의 특정 라인만 교체합니다. 이를 통해 원본 마크다운 파일에 작성된 **사용자 주석, 메타데이터의 필드 순서, 그리고 들여쓰기**를 훼손하지 않고 동기화할 수 있습니다.
+- **지원 범위**: YAML Frontmatter의 `description` 필드 및 마크다운 본문(Body) 영역.
 
 ### 3. SyncPlanner (`planner.rs`)
 두 디렉터리(Source와 Target)를 비교하여 수행해야 할 작업 목록(`SyncAction`)을 생성합니다.

@@ -22,8 +22,8 @@ impl MdPatcher {
 
         let rest = &content[3..];
         if let Some(end_offset) = rest.find("---") {
-            let yaml_part = &rest[..end_offset];
-            let pure_content = &rest[end_offset + 3..];
+            let yaml_part = rest[..end_offset].trim();
+            let pure_content = rest[end_offset + 3..].trim_start();
 
             let mut lines: Vec<String> = yaml_part.lines().map(|s| s.to_string()).collect();
             let mut found = false;
@@ -44,7 +44,7 @@ impl MdPatcher {
                 lines.push(format!("description: {}", new_desc));
             }
 
-            self.raw_content = format!("---\n{}\n---{}", lines.join("\n"), pure_content);
+            self.raw_content = format!("---\n{}\n---\n\n{}", lines.join("\n"), pure_content);
         } else {
             // 닫는 ---가 없는 경우 (잘못된 형식), 안전하게 앞에 추가
             self.raw_content = format!("---\ndescription: {}\n---\n\n{}", new_desc, self.raw_content);
@@ -62,9 +62,9 @@ impl MdPatcher {
 
         let rest = &content[3..];
         if let Some(end_offset) = rest.find("---") {
-            let yaml_part = &rest[..end_offset];
+            let yaml_part = rest[..end_offset].trim();
             // Frontmatter 영역을 유지하고 본문만 교체 (--- 뒤에 개행 추가 보장)
-            self.raw_content = format!("---\n{}\n---\n\n{}", yaml_part.trim_end(), new_body.trim_start());
+            self.raw_content = format!("---\n{}\n---\n\n{}", yaml_part, new_body.trim_start());
         } else {
             // 닫는 ---가 없는 경우 그냥 덮어씀
             self.raw_content = new_body.to_string();
@@ -199,6 +199,28 @@ name: test
         patcher.replace_body("# New Body");
         let updated = patcher.render();
         assert!(updated.contains("description: new"));
+        assert!(updated.contains("# New Body"));
+    }
+
+    #[test]
+    fn test_newline_accumulation_prevention() {
+        let source = "---\nname: test\ndescription: old\n---\n\n# Body";
+        let mut patcher = MdPatcher::new(source);
+        
+        // 여러 번 업데이트 수행
+        patcher.update_description("new1");
+        patcher.update_description("new2");
+        patcher.replace_body("# New Body");
+        patcher.update_description("new3");
+        
+        let updated = patcher.render();
+        
+        // "---" 바로 다음에 "\n\n"이 오지 않는지 확인 (정상적이라면 "\nname")
+        assert!(updated.starts_with("---\nname"));
+        assert!(!updated.contains("---\n\nname"));
+        
+        // 전체적인 구조가 깨지지 않았는지 확인
+        assert!(updated.contains("description: new3"));
         assert!(updated.contains("# New Body"));
     }
 }

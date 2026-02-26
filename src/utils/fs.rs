@@ -17,7 +17,8 @@ pub fn calculate_hash<P: AsRef<Path>>(path: P) -> Result<String> {
     let mut file =
         fs::File::open(&path).with_context(|| format!("Failed to open file for hashing: {:?}", path.as_ref()))?;
     let mut hasher = Sha256::new();
-    io::copy(&mut file, &mut hasher).with_context(|| format!("Failed to read file for hashing: {:?}", path.as_ref()))?;
+    io::copy(&mut file, &mut hasher)
+        .with_context(|| format!("Failed to read file for hashing: {:?}", path.as_ref()))?;
     let result = hasher.finalize();
     Ok(format!("{:x}", result))
 }

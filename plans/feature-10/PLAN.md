@@ -14,7 +14,6 @@
 - **Task 2-1**: `transformer::Transformer` 트레이트에 `detransform` 메서드 추가.
 - **Task 2-2**: `GeminiTransformer`의 `detransform` 구현 (`commands/*.toml` -> `ResourceData`).
 - **Task 2-3**: `DefaultTransformer`의 `detransform` 구현 (`*.md` -> `ResourceData`).
-- **Task 2-4**: 기존 `TransformerFactory`를 활용한 역변환 로직 유닛 테스트 작성.
 
 ### Phase 3: 동기화 엔진 구현 (Diff & Apply)
 - **Task 3-1**: 마크다운 파일의 `description` 필드 "수술적 업데이트(Surgical Update)" 함수 구현.

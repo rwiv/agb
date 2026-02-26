@@ -1,6 +1,7 @@
 mod builder;
 mod core;
 mod loader;
+mod syncer;
 mod transformer;
 mod utils;
 
@@ -23,6 +24,12 @@ enum Commands {
         #[arg(short, long)]
         config: Option<String>,
     },
+    /// Sync changes from target back to source
+    Sync {
+        /// Optional path to the config file
+        #[arg(short, long)]
+        config: Option<String>,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -33,6 +40,11 @@ fn main() -> anyhow::Result<()> {
             let config_file = config.as_deref().unwrap_or("agb.yaml");
             let builder = Builder::new(config_file);
             builder.run()?;
+        }
+        Commands::Sync { config } => {
+            let config_file = config.as_deref().unwrap_or("agb.yaml");
+            let syncer = syncer::Syncer::new(config_file);
+            syncer.run()?;
         }
     }
 

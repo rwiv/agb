@@ -1,6 +1,5 @@
 pub mod config;
 pub mod emitter;
-pub mod registry;
 
 use crate::loader::ResourceLoader;
 use crate::transformer;
@@ -8,7 +7,7 @@ use anyhow::Context;
 use std::path::{Path, PathBuf};
 
 use self::emitter::Emitter;
-use self::registry::Registry;
+use crate::core::Registry;
 
 const PLUGINS_DIR_NAME: &str = "plugins";
 

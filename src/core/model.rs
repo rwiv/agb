@@ -1,6 +1,27 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt;
 use std::path::PathBuf;
+
+/// 리소스 타입 정의
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResourceType {
+    Command,
+    Agent,
+    Skill,
+}
+
+impl fmt::Display for ResourceType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            ResourceType::Command => "command",
+            ResourceType::Agent => "agent",
+            ResourceType::Skill => "skill",
+        };
+        write!(f, "{}", s)
+    }
+}
 
 /// 리소스 식별을 위한 키
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
@@ -34,6 +55,14 @@ pub enum Resource {
 }
 
 impl Resource {
+    pub fn r_type(&self) -> ResourceType {
+        match self {
+            Resource::Command(_) => ResourceType::Command,
+            Resource::Agent(_) => ResourceType::Agent,
+            Resource::Skill(_) => ResourceType::Skill,
+        }
+    }
+
     pub fn name(&self) -> &str {
         match self {
             Resource::Command(d) | Resource::Agent(d) | Resource::Skill(d) => &d.name,

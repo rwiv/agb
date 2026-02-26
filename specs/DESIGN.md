@@ -10,7 +10,7 @@
 
 1. **설정 로드 (Load Config)**: `agb.yaml`을 읽어 빌드 컨텍스트(소스 경로, 타겟 에이전트 등)를 생성합니다. (`builder/config.rs`)
 2. **리소스 스캔 및 로드 (Scan & Load)**: 소스 경로 내의 플러그인 구조를 분석하여 파일들을 수집하고, 이를 `core::Resource` 객체로 로드합니다. (`loader` 모듈)
-3. **검증 및 등록 (Validate & Register)**: 로드된 리소스들의 이름 충돌 여부를 확인하고, 빌드 대상 리소스를 `builder::registry::Registry`에 등록합니다.
+3. **검증 및 등록 (Validate & Register)**: 로드된 리소스들의 이름 충돌 여부를 확인하고, 빌드 대상 리소스를 `core::registry::Registry`에 등록합니다. 타입과 이름을 모두 고려하여 중복을 체크합니다.
 4. **포맷 변환 (Transform)**: 설정된 타겟(`BuildTarget`) 규격에 맞춰 각 리소스를 실제 파일 포맷(TOML, Markdown FM 등)으로 변환합니다. (`transformer` 모듈)
 5. **최종 배포 (Emit)**: 기존 출력 디렉터리를 정리(Clean)한 후, 변환된 리소스들을 물리적 파일로 작성합니다. (`builder::emitter::Emitter`)
 
@@ -19,9 +19,9 @@
 | 모듈 경로 | 설명 | 상세 문서 |
 | :--- | :--- | :--- |
 | `src/main.rs` | CLI 엔트리포인트 및 실행 제어 | - |
-| `src/core/` | 시스템 전역 공용 모델(`model.rs`) 및 상수(`constants.rs`) 정의 | [`README.md`](../src/core/README.md) |
+| `src/core/` | 시스템 전역 공용 모델(`model.rs`), 상수(`constants.rs`) 및 리소스 레지스트리(`registry.rs`) 정의 | [`README.md`](../src/core/README.md) |
 | `src/loader/` | 파일 시스템 리소스 스캔, 필터링, 파싱 및 로드 로직 | [`README.md`](../src/loader/README.md) |
-| `src/builder/` | 빌드 파이프라인 제어, 설정(`config`), 등록(`registry`), 출력(`emitter`) | [`README.md`](../src/builder/README.md) |
+| `src/builder/` | 빌드 파이프라인 제어, 설정(`config`), 출력(`emitter`) | [`README.md`](../src/builder/README.md) |
 | `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode) | [`README.md`](../src/transformer/README.md) |
 | `src/utils/` | 파일 시스템 조작 등 공통 유틸리티 | [`README.md`](../src/utils/README.md) |
 

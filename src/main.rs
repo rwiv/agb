@@ -7,6 +7,7 @@ mod utils;
 
 use builder::BuildExecutor;
 use clap::{Parser, Subcommand};
+use std::path::Path;
 
 #[derive(Parser)]
 #[command(name = "agb")]
@@ -35,16 +36,29 @@ enum Commands {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
+    let config_file = match &cli.command {
+        Commands::Build { config } => config.as_deref().unwrap_or("agb.yaml"),
+        Commands::Sync { config } => config.as_deref().unwrap_or("agb.yaml"),
+    };
+
+    let config_path = Path::new(config_file);
+    if !config_path.exists() {
+        anyhow::bail!("Config file not found: {}", config_file);
+    }
+    let output_dir = config_path.parent().unwrap_or(Path::new("."));
+
+    println!("Loading config: {}", config_file);
+    let cfg = core::load_config(config_file)?;
+    let source_dir = Path::new(&cfg.source);
+
     match &cli.command {
-        Commands::Build { config } => {
-            let config_file = config.as_deref().unwrap_or("agb.yaml");
-            let executor = BuildExecutor::new(config_file);
-            executor.run()?;
+        Commands::Build { .. } => {
+            let executor = BuildExecutor::new();
+            executor.run(&cfg, source_dir, output_dir)?;
         }
-        Commands::Sync { config } => {
-            let config_file = config.as_deref().unwrap_or("agb.yaml");
-            let executor = syncer::SyncExecutor::new(config_file);
-            executor.run()?;
+        Commands::Sync { .. } => {
+            let executor = syncer::SyncExecutor::new();
+            executor.run(&cfg, source_dir, output_dir)?;
         }
     }
 

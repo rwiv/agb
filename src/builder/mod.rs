@@ -1,53 +1,35 @@
-pub mod config;
 pub mod emitter;
 
 use crate::loader::ResourceLoader;
 use crate::transformer;
 use anyhow::Context;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use self::emitter::Emitter;
-use crate::core::{PLUGINS_DIR_NAME, TransformedResource};
+use crate::core::{PLUGINS_DIR_NAME, TransformedResource, Config};
 
-pub struct BuildExecutor {
-    config_file: String,
-    output_dir: PathBuf,
-}
+#[derive(Default)]
+pub struct BuildExecutor;
 
 impl BuildExecutor {
-    pub fn new(config_file: &str) -> Self {
-        let config_path = Path::new(config_file);
-        let output_dir = config_path.parent().unwrap_or(Path::new(".")).to_path_buf();
-
-        Self {
-            config_file: config_file.to_string(),
-            output_dir,
-        }
+    pub fn new() -> Self {
+        Self
     }
 
-    pub fn run(&self) -> anyhow::Result<()> {
-        let config_path = Path::new(&self.config_file);
-        if !config_path.exists() {
-            anyhow::bail!("Config file not found: {}", self.config_file);
-        }
-
-        println!("[1/5] Loading config: {}", self.config_file);
-        let cfg = config::load_config(&self.config_file)?;
-
-        let source_dir = Path::new(&cfg.source);
+    pub fn run(&self, cfg: &Config, source_dir: &Path, output_dir: &Path) -> anyhow::Result<()> {
         if !source_dir.exists() {
-            anyhow::bail!("Source directory does not exist: {}", cfg.source);
+            anyhow::bail!("Source directory does not exist: {}", source_dir.display());
         }
 
         // 1. 모든 플러그인 파일 스캔 및 로드
-        println!("[2/5] Scanning and loading resources from {}...", source_dir.display());
+        println!("Scanning and loading resources from {}...", source_dir.display());
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
-        let exclude = cfg.exclude.unwrap_or_default();
+        let exclude = cfg.exclude.as_ref().cloned().unwrap_or_default();
 
         let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
 
         // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축
-        println!("[3/5] Validating and registering resources...");
+        println!("Validating and registering resources...");
         let mut target_identifiers = std::collections::HashSet::new();
         if let Some(cmds) = &cfg.resources.commands {
             target_identifiers.extend(cmds.clone());
@@ -62,7 +44,7 @@ impl BuildExecutor {
         let registry = loader.load_registry(&target_identifiers)?;
 
         // 3. Transformation
-        println!("[4/5] Transforming resources for target: {:?}...", cfg.target);
+        println!("Transforming resources for target: {:?}...", cfg.target);
         let transformer = transformer::TransformerFactory::create(&cfg.target);
 
         let mut transformed_resources = Vec::new();
@@ -92,8 +74,8 @@ impl BuildExecutor {
         }
 
         // 4. Emission
-        println!("[5/5] Emitting files to {}...", self.output_dir.display());
-        let emitter = Emitter::new(&self.output_dir);
+        println!("Emitting files to {}...", output_dir.display());
+        let emitter = Emitter::new(output_dir);
         emitter.clean()?;
         emitter.emit(&transformed_resources)?;
 

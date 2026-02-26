@@ -3,47 +3,29 @@ pub mod planner;
 pub mod skill;
 pub mod sync;
 
-use crate::builder::config;
-use crate::core::PLUGINS_DIR_NAME;
+use crate::core::{PLUGINS_DIR_NAME, Config};
 use crate::loader::ResourceLoader;
 use crate::syncer::sync::Syncer;
 use crate::transformer::TransformerFactory;
 use anyhow::Result;
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-pub struct SyncExecutor {
-    config_file: String,
-    output_dir: PathBuf,
-}
+#[derive(Default)]
+pub struct SyncExecutor;
 
 impl SyncExecutor {
-    pub fn new(config_file: &str) -> Self {
-        let config_path = Path::new(config_file);
-        let output_dir = config_path.parent().unwrap_or(Path::new(".")).to_path_buf();
-
-        Self {
-            config_file: config_file.to_string(),
-            output_dir,
-        }
+    pub fn new() -> Self {
+        Self
     }
 
-    pub fn run(&self) -> Result<()> {
-        let config_path = Path::new(&self.config_file);
-        if !config_path.exists() {
-            anyhow::bail!("Config file not found: {}", self.config_file);
-        }
-
-        println!("[1/4] Loading config for sync: {}", self.config_file);
-        let cfg = config::load_config(&self.config_file)?;
-
-        let source_dir = Path::new(&cfg.source);
+    pub fn run(&self, cfg: &Config, source_dir: &Path, output_dir: &Path) -> Result<()> {
         if !source_dir.exists() {
-            anyhow::bail!("Source directory does not exist: {}", cfg.source);
+            anyhow::bail!("Source directory does not exist: {}", source_dir.display());
         }
 
         // 1. 소스 레지스트리 구축 (ResourceLoader 활용)
-        println!("[2/4] Loading source registry from {}...", source_dir.display());
+        println!("Loading source registry from {}...", source_dir.display());
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let exclude = cfg.exclude.clone().unwrap_or_default();
 
@@ -63,9 +45,9 @@ impl SyncExecutor {
         let registry = loader.load_registry(&target_identifiers)?;
 
         // 2. Transformer 및 Registry 순회 동기화
-        println!("[3/4] Syncing target changes to source for target: {:?}...", cfg.target);
+        println!("Syncing target changes to source for target: {:?}...", cfg.target);
         let transformer = TransformerFactory::create(&cfg.target);
-        let syncer = Syncer::new(self.output_dir.clone(), exclude);
+        let syncer = Syncer::new(output_dir.to_path_buf(), exclude);
 
         for res in registry.all_resources() {
             syncer.sync(res, transformer.as_ref())?;

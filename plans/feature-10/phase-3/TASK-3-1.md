@@ -1,4 +1,4 @@
-# TASK 3-1: Implement Surgical Update for Markdown `description`
+# TASK 3-1: Implement Partial Update for Markdown `description`
 
 ## 개요 (Description)
 원본 마크다운 파일의 포맷을 손상시키지 않고 `description` 필드만 업데이트하는 `update_description` 함수를 구현합니다.

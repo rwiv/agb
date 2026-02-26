@@ -59,7 +59,7 @@ pub use model::BuildTarget;
 ## 4. Constraints (제약 사항 및 금지 행동)
 
 - `BuildTarget`의 각 항목에 대한 `serde(rename)` 속성을 유지해야 합니다.
-- `BuildTarget`을 `resource` 모듈로 옮기는 것 외에 다른 로직을 수정하지 마세요. (Surgical Update)
+- `BuildTarget`을 `resource` 모듈로 옮기는 것 외에 다른 로직을 수정하지 마세요. (Partial Update)
 
 ## 5. Acceptance Criteria (검증 체크리스트)
 

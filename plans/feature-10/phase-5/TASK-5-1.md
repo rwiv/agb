@@ -1,7 +1,7 @@
-# TASK 5-1: Unit Tests for Surgical Update and Detransform
+# TASK 5-1: Unit Tests for Partial Update and Detransform
 
 ## 개요 (Description)
-`Syncer`의 핵심 로직인 `Surgical Update`와 `Detransform`에 대한 철저한 유닛 테스트를 작성합니다.
+`Syncer`의 핵심 로직인 `Partial Update`와 `Detransform`에 대한 철저한 유닛 테스트를 작성합니다.
 
 ## 수정 파일 (Files to Modify)
 - `src/utils/yaml.rs`
@@ -9,7 +9,7 @@
 - `src/transformer/default.rs`
 
 ## 상세 지침 (Actionable Instructions)
-1. `Surgical Update` (`update_description`)에 대해 다음 케이스를 테스트합니다.
+1. `Partial Update` (`update_description`)에 대해 다음 케이스를 테스트합니다.
     - `description` 필드가 이미 존재하는 경우 (수정 여부)
     - `description` 필드가 없는 경우 (추가 여부)
     - `description` 줄에 주석이 있는 경우 (주석 보존 여부)

@@ -13,7 +13,7 @@
     - `loader::ResourceLoader`를 사용해 소스 기준의 `Registry`를 구축합니다.
     - 타겟 디렉터리(`dest`)를 스캔하여 등록된 리소스들과 대조합니다.
     - 각 리소스에 대해 `Transformer::detransform`을 호출하여 `ResourceData`를 복원합니다.
-    - 소스 파일의 `description`과 `content`를 타겟의 내용과 비교하여 변경사항이 있다면 `Surgical Update`를 수행합니다.
+    - 소스 파일의 `description`과 `content`를 타겟의 내용과 비교하여 변경사항이 있다면 `Partial Update`를 수행합니다.
     - 스킬 타입의 경우 `sync_skill_dir`을 호출하여 추가/삭제/수정을 동기화합니다.
 4. `GEMINI.md`, `CLAUDE.md`, `OPENCODE.md` 등의 메인 지침 파일은 명시적으로 건너뛰도록 예외 처리를 추가합니다.
 

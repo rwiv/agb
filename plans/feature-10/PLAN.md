@@ -16,7 +16,7 @@
 - **Task 2-3**: `DefaultTransformer`의 `detransform` 구현 (`*.md` -> `ResourceData`).
 
 ### Phase 3: 동기화 엔진 구현 (Diff & Apply)
-- **Task 3-1**: 마크다운 파일의 `description` 필드 "수술적 업데이트(Surgical Update)" 함수 구현.
+- **Task 3-1**: 마크다운 파일의 `description` 필드 "부분적 업데이트(Partial Update)" 함수 구현.
 - **Task 3-2**: 마크다운 본문(Content) 변경 감지 및 소스 파일 덮어쓰기 로직 구현.
 - **Task 3-3**: 스킬(Skill) 디렉터리 전체 동기화 로직 구현 (추가/삭제/수정 감지 및 `exclude` 패턴 적용).
 - **Task 3-4**: `syncer::Syncer` 오케스트레이터 구현 및 로그 출력 시스템 정비.
@@ -26,7 +26,7 @@
 - **Task 4-2**: `Syncer`를 실행하기 위한 빌드 컨텍스트 로딩 및 실행 제어 로직 구현.
 
 ### Phase 5: 검증 및 테스트 (Validation & Testing)
-- **Task 5-1**: 개별 컴포넌트 유닛 테스트 작성 (Surgical Update, De-transformer).
+- **Task 5-1**: 개별 컴포넌트 유닛 테스트 작성 (Partial Update, De-transformer).
 - **Task 5-2**: `agb sync` 전체 프로세스 E2E 테스트 작성 (fixtures 활용).
 - **Task 5-3**: `exclude` 패턴 및 예외 상황(파일 손상 등) 처리 테스트.
 

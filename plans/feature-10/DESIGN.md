@@ -5,7 +5,7 @@
 
 ## 2. 핵심 설계 원칙 (Core Principles)
 - **진실의 원천(SSOT) 보호**: `agb.yaml`을 통한 리소스 관리 규칙은 유지하며, 타겟에서 발생한 "내용적" 변경만 소스에 흡수합니다.
-- **수술적 업데이트 (Surgical Update)**: `.md` 파일의 메타데이터 수정 시, YAML 라이브러리를 사용하지 않고 라인 단위 교체 방식을 통해 원본 파일의 주석이나 포맷을 최대한 보존합니다.
+- **부분적 업데이트 (Partial Update)**: `.md` 파일의 메타데이터 수정 시, YAML 라이브러리를 사용하지 않고 라인 단위 교체 방식을 통해 원본 파일의 주석이나 포맷을 최대한 보존합니다.
 - **포괄적 스킬 동기화 (Full Skill Sync)**: 스킬 디렉터리 내의 `ExtraFiles`는 추가, 삭제, 수정을 모두 감지하여 소스와 동기화합니다.
 - **안전한 제외 (Safe Exclusion)**: `agb.yaml`의 `exclude` 패턴을 준수하고, 메인 지침 파일(`GEMINI.md` 등)은 동기화 대상에서 제외합니다.
 
@@ -65,7 +65,7 @@ pub struct SkillData {
 
 ## 5. 상세 구현 전략 (Detailed Strategies)
 
-### 5.1. Metadata Surgical Update (`.md`)
+### 5.1. Metadata Partial Update (`.md`)
 원본 마크다운 파일의 Frontmatter 영역에서 `description:` 키를 찾아 해당 라인만 교체합니다.
 
 ```rust

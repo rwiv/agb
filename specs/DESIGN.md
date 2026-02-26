@@ -29,7 +29,7 @@ graph LR
 
 1. Registry 로딩: Loader를 사용해 소스 기준의 Registry를 구축합니다.
 2. 타겟 리소스 역변환 (De-transformation): 타겟 결과물을 읽어 내부 모델로 복원합니다. (`Transformer::detransform`)
-3. 비교 및 반영 (Diff & Apply): 소스와 타겟을 비교하여 Surgical Update(.md) 또는 디렉터리 동기화(Skill)를 수행합니다.
+3. 비교 및 반영 (Diff & Apply): 소스와 타겟을 비교하여 Partial Update(.md) 또는 디렉터리 동기화(Skill)를 수행합니다.
 
 ### 1.3 모듈 구조 (Module Structure)
 

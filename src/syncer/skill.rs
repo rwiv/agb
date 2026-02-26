@@ -49,7 +49,7 @@ impl SkillSyncer {
                         let mut patcher = Patcher::new(&source_content);
 
                         // 현재 SKILL.md 동기화 로직은 본문만 교체하는 것이 기본 (설계에 따라 다를 수 있음)
-                        // PRD/DESIGN을 보면 '본문 교체' 및 'description surgical update' 언급됨.
+                        // PRD/DESIGN을 보면 '본문 교체' 및 'description partial update' 언급됨.
                         // sync_skill_dir 내부에서는 SKILL.md의 본문과 description을 모두 업데이트하는 것이 안전.
 
                         // 1. 본문 교체

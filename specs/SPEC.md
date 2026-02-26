@@ -16,7 +16,7 @@
     └── [plugin_name]/
         ├── commands/       # 파일 쌍: [name].md + [name].yaml (선택 사항)
         ├── agents/         # 파일 쌍: [name].md + [name].yaml (선택 사항)
-        └── skills/         # 폴더 구조: [skill_name]/SKILL.yaml + 기타 파일들
+        └── skills/         # 폴더 구조: [skill_name]/SKILL.md + SKILL.yaml (선택 사항)
 ```
 
 ### 2.2 빌드 환경 구조 (Output)

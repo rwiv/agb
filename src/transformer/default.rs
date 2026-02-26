@@ -1,6 +1,6 @@
 use crate::core::{
-    BuildTarget, Resource, TransformedFile, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD,
-    GEMINI_MD, OPENCODE_MD, SKILL_MD,
+    BuildTarget, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD, GEMINI_MD, OPENCODE_MD, Resource, SKILL_MD,
+    TransformedFile,
 };
 use crate::transformer::Transformer;
 use anyhow::Result;
@@ -104,10 +104,7 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(
-            result.path,
-            PathBuf::from(DIR_SKILLS).join("test-skill").join(SKILL_MD)
-        );
+        assert_eq!(result.path, PathBuf::from(DIR_SKILLS).join("test-skill").join(SKILL_MD));
         assert!(result.content.contains("metadata:"));
         assert!(result.content.contains("description: Skill description"));
         assert!(result.content.contains("type: expert"));

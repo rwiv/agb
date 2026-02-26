@@ -25,7 +25,7 @@
 ### 3. ResourcePathResolver (`resolver.rs`)
 파일 경로를 분석하여 리소스 단위로 그룹화합니다.
 - **Commands & Agents**: `[plugin]/[type]/[name].{md,yaml,yml}` 구조 분석.
-- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `SKILL.{yaml,yml}`을 필수 메타데이터로 인식합니다.
+- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `SKILL.{yaml,yml}`을 선택적 메타데이터로 인식합니다.
 - **포맷 충돌 검증**: 동일 리소스에 대해 YAML과 YML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
 
 ### 4. ResourceParser (`parser.rs`)

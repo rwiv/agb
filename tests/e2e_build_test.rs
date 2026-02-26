@@ -119,7 +119,7 @@ fn setup_fixtures(root: &Path) {
     )
     .unwrap();
 
-    fs::write(plugin_c_skills.join("python_expert.md"), "Python Expert Content").unwrap();
+    fs::write(plugin_c_skills.join("SKILL.md"), "Python Expert Content").unwrap();
     fs::write(plugin_c_skills.join("SKILL.yaml"), "type: expert").unwrap();
 
     fs::write(root.join("AGENTS.md"), "# Global Instructions").unwrap();

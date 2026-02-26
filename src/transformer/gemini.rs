@@ -1,10 +1,8 @@
-use crate::core::{
-    BuildTarget, Resource, ResourceData, TransformedFile, DIR_COMMANDS, EXT_TOML, GEMINI_MD,
-};
-use crate::transformer::default::DefaultTransformer;
+use crate::core::{BuildTarget, DIR_COMMANDS, EXT_TOML, GEMINI_MD, Resource, ResourceData, TransformedFile};
 use crate::transformer::Transformer;
+use crate::transformer::default::DefaultTransformer;
 use crate::utils::toml::json_to_toml;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::path::PathBuf;
 
 pub struct GeminiTransformer;
@@ -88,18 +86,9 @@ mod tests {
         );
 
         let toml_val: Table = toml::from_str(&result.content).unwrap();
-        assert_eq!(
-            toml_val.get("model").unwrap().as_str().unwrap(),
-            "gemini-1.5-pro"
-        );
-        assert_eq!(
-            toml_val.get("description").unwrap().as_str().unwrap(),
-            "A test command"
-        );
-        assert_eq!(
-            toml_val.get("prompt").unwrap().as_str().unwrap(),
-            "Hello World"
-        );
+        assert_eq!(toml_val.get("model").unwrap().as_str().unwrap(), "gemini-1.5-pro");
+        assert_eq!(toml_val.get("description").unwrap().as_str().unwrap(), "A test command");
+        assert_eq!(toml_val.get("prompt").unwrap().as_str().unwrap(), "Hello World");
     }
 
     #[test]

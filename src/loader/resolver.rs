@@ -1,6 +1,5 @@
 use crate::core::{
-    ResourceKey, ResourcePaths, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD, EXT_YAML, EXT_YML,
-    SKILL_MD,
+    DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD, EXT_YAML, EXT_YML, ResourceKey, ResourcePaths, SKILL_MD,
 };
 use anyhow::Result;
 use std::collections::HashMap;
@@ -23,11 +22,7 @@ impl ResourcePathResolver {
     }
 
     /// 파일 목록을 받아 리소스 키와 경로 그룹으로 변환합니다.
-    pub fn resolve(
-        &self,
-        root: &Path,
-        files: Vec<PathBuf>,
-    ) -> Result<HashMap<ResourceKey, ResourcePaths>> {
+    pub fn resolve(&self, root: &Path, files: Vec<PathBuf>) -> Result<HashMap<ResourceKey, ResourcePaths>> {
         let mut groups: HashMap<ResourceKey, ResourcePaths> = HashMap::new();
 
         for path in files {
@@ -58,19 +53,10 @@ impl ResourcePathResolver {
         Ok(groups)
     }
 
-    fn resolve_default(
-        &self,
-        groups: &mut HashMap<ResourceKey, ResourcePaths>,
-        ctx: ResolveContext,
-    ) -> Result<()> {
+    fn resolve_default(&self, groups: &mut HashMap<ResourceKey, ResourcePaths>, ctx: ResolveContext) -> Result<()> {
         // Command/Agent 처리: [plugin]/[type]/[name].{md,yaml,yml}
         let file_stem = ctx.path.file_stem().unwrap().to_string_lossy().into_owned();
-        let extension = ctx
-            .path
-            .extension()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .into_owned();
+        let extension = ctx.path.extension().unwrap_or_default().to_string_lossy().into_owned();
 
         let key = ResourceKey {
             plugin: ctx.plugin.clone(),
@@ -79,7 +65,7 @@ impl ResourcePathResolver {
         };
         let entry = groups.entry(key).or_default();
 
-        if extension == &EXT_MD[1..] {
+        if extension == EXT_MD[1..] {
             entry.md = Some(ctx.path);
         } else if self.is_metadata_extension(&extension) {
             self.validate_metadata_uniqueness(&entry.metadata, &file_stem, &ctx.plugin)?;
@@ -88,11 +74,7 @@ impl ResourcePathResolver {
         Ok(())
     }
 
-    fn resolve_skill(
-        &self,
-        groups: &mut HashMap<ResourceKey, ResourcePaths>,
-        ctx: ResolveContext,
-    ) -> Result<()> {
+    fn resolve_skill(&self, groups: &mut HashMap<ResourceKey, ResourcePaths>, ctx: ResolveContext) -> Result<()> {
         // Skill 특수 처리: [plugin]/skills/[skill_name]/...
         // 4개 미만이면 유효한 스킬 파일 구조가 아니므로 즉시 종료
         if ctx.components.len() < 4 {
@@ -111,18 +93,14 @@ impl ResourcePathResolver {
 
         let path_for_ext = Path::new(&file_name);
         let stem = path_for_ext.file_stem().and_then(|s| s.to_str());
-        let ext = path_for_ext
-            .extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or_default();
+        let ext = path_for_ext.extension().and_then(|s| s.to_str()).unwrap_or_default();
 
         let skill_md_stem = Path::new(SKILL_MD).file_stem().and_then(|s| s.to_str());
 
         if stem == skill_md_stem && self.is_metadata_extension(ext) {
             self.validate_metadata_uniqueness(&entry.metadata, &skill_name, &ctx.plugin)?;
             entry.metadata = Some(ctx.path);
-        } else if file_name.ends_with(EXT_MD) {
-            // 메인 마크다운 파일 (관례상 SKILL.md 또는 README.md 권장)
+        } else if file_name == SKILL_MD {
             entry.md = Some(ctx.path);
         }
 
@@ -156,7 +134,7 @@ mod tests {
             PathBuf::from("/root/p1/commands/foo.md"),
             PathBuf::from("/root/p1/commands/foo.yaml"),
             PathBuf::from("/root/p2/skills/task/SKILL.yaml"),
-            PathBuf::from("/root/p2/skills/task/logic.md"),
+            PathBuf::from("/root/p2/skills/task/SKILL.md"),
             PathBuf::from("/root/p1/agents/bot.md"),
         ];
 
@@ -180,7 +158,7 @@ mod tests {
             name: "task".to_string(),
         };
         let paths = groups.get(&task_key).unwrap();
-        assert!(paths.md.as_ref().unwrap().ends_with("logic.md"));
+        assert!(paths.md.as_ref().unwrap().ends_with("SKILL.md"));
         assert!(paths.metadata.as_ref().unwrap().ends_with("SKILL.yaml"));
 
         // p1:agents:bot -> (Some(bot.md), None)

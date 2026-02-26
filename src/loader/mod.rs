@@ -90,7 +90,7 @@ mod tests {
 
         // Skill: SKILL.yaml + md
         fs::write(skill_dir.join("SKILL.yaml"), "desc: skill")?;
-        fs::write(skill_dir.join("logic.md"), "prompt")?;
+        fs::write(skill_dir.join("SKILL.md"), "prompt")?;
 
         let loader = ResourceLoader::new(&plugins_path, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;
         let resources = loader.load()?;

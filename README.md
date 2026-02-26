@@ -60,9 +60,9 @@ description: Search the web to retrieve the latest information.
 Search the following query on Google and summarize the results: {{query}}
 ```
 
-**Skill 정의**: 스킬은 캡슐화된 폴더 구조를 가지며, `SKILL.yaml`을 필수 메타데이터로 포함해야 합니다.
-- `plugins/my_plugin/skills/analyzer/SKILL.yaml` (메타데이터)
-- `plugins/my_plugin/skills/analyzer/prompt.md` (명령어 본문)
+**Skill 정의**: 스킬은 캡슐화된 폴더 구조를 가집니다. 메타데이터(`SKILL.yaml`)는 선택 사항입니다.
+- `plugins/my_plugin/skills/analyzer/SKILL.md` (명령어 본문)
+- `plugins/my_plugin/skills/analyzer/SKILL.yaml` (메타데이터 - 선택 사항)
 
 ## 문서 가이드
 상세한 설계 사양 및 기술 규격은 `specs/` 디렉토리를 참조하십시오.

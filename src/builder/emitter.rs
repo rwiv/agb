@@ -1,6 +1,4 @@
-use crate::core::{
-    TransformedFile, AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD,
-};
+use crate::core::{AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD, TransformedFile};
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::PathBuf;
@@ -18,14 +16,7 @@ impl Emitter {
 
     /// 기존에 생성된 디렉터리 및 메인 메모리 파일을 삭제합니다.
     pub fn clean(&self) -> Result<()> {
-        let targets = [
-            DIR_COMMANDS,
-            DIR_AGENTS,
-            DIR_SKILLS,
-            GEMINI_MD,
-            CLAUDE_MD,
-            AGENTS_MD,
-        ];
+        let targets = [DIR_COMMANDS, DIR_AGENTS, DIR_SKILLS, GEMINI_MD, CLAUDE_MD, AGENTS_MD];
 
         for target in targets {
             let path = self.output_path.join(target);

@@ -1,6 +1,6 @@
 use crate::core::{
-    BuildTarget, Resource, ResourceData, ResourceKey, ResourcePaths, DIR_AGENTS, DIR_COMMANDS,
-    DIR_SKILLS, EXT_YAML, EXT_YML, TARGET_CLAUDE, TARGET_GEMINI, TARGET_OPENCODE,
+    BuildTarget, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_YAML, EXT_YML, Resource, ResourceData, ResourceKey,
+    ResourcePaths, TARGET_CLAUDE, TARGET_GEMINI, TARGET_OPENCODE,
 };
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
@@ -55,27 +55,14 @@ impl ResourceParser {
     }
 
     /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
-    pub fn parse_metadata(
-        &self,
-        path: &Path,
-        resource_type: &str,
-        resource_name: &str,
-    ) -> Result<Value> {
-        let meta_str = fs::read_to_string(path)
-            .with_context(|| format!("Failed to read metadata file: {:?}", path))?;
+    pub fn parse_metadata(&self, path: &Path, resource_type: &str, resource_name: &str) -> Result<Value> {
+        let meta_str = fs::read_to_string(path).with_context(|| format!("Failed to read metadata file: {:?}", path))?;
 
-        let extension = path
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or_default();
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
 
         if extension == &EXT_YAML[1..] || extension == &EXT_YML[1..] {
-            serde_yaml::from_str(&meta_str).with_context(|| {
-                format!(
-                    "Failed to parse YAML for resource: {}/{}",
-                    resource_type, resource_name
-                )
-            })
+            serde_yaml::from_str(&meta_str)
+                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name))
         } else {
             anyhow::bail!(
                 "Unsupported metadata extension '{}' for resource: {}/{}",
@@ -97,8 +84,8 @@ impl ResourceParser {
 
         // 1. Markdown 본문 및 Frontmatter 추출
         let (mut fm_metadata, pure_content) = if let Some(p) = md {
-            let raw_content = fs::read_to_string(&p)
-                .with_context(|| format!("Failed to read markdown content: {:?}", p))?;
+            let raw_content =
+                fs::read_to_string(&p).with_context(|| format!("Failed to read markdown content: {:?}", p))?;
             crate::utils::yaml::extract_frontmatter(&raw_content)
         } else {
             (json!({}), String::new())

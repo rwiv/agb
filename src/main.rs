@@ -1,8 +1,9 @@
 use agb::app::{App, Cli};
 use clap::Parser;
+use env_logger::Env;
 
 fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let cli = Cli::parse();
     let app = App::new();
     app.run(cli)

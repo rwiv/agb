@@ -14,37 +14,60 @@
 cargo install --path .
 ```
 
-### 빌드 실행
-`agb.yaml` 파일이 있는 디렉터리에서 실행합니다.
-```bash
-# 기본 설정(agb.yaml)으로 빌드
-agb build
+## 사용 가이드
 
-# 특정 설정 파일 지정
-agb build --config custom-agb.yaml
+### 빌드 워크플로우
+1. 프로젝트 루트에 `agb.yaml` 설정 파일을 생성합니다.
+2. `agb build` 명령을 실행하여 빌드 파이프라인을 가동합니다.
+3. 타겟 에이전트 규격에 따라 생성된 `commands/`, `agents/`, `skills/` 결과를 확인합니다.
+
+## 프로젝트 구조
+
+```text
+.
+├── agb.yaml                # 빌드 구성 정의 (Config)
+├── GEMINI.md               # (Output) 변환된 전역 시스템 지침
+├── commands/               # (Output) 타겟별 커맨드 리소스
+└── [Source Directory]/     # 소스 리소스 저장소 (plugins 포함)
+    ├── AGENTS.md           # 전역 시스템 지침 원본
+    └── plugins/
+        └── my_plugin/
+            ├── commands/   # [name].md + [name].yaml (파일 쌍)
+            └── skills/     # [name]/SKILL.yaml + *.md (폴더 구조)
 ```
 
-## 설정 가이드
+## 설정 규격
 
-### 빌드 설정 (`agb.yaml`)
-`agb`는 프로젝트 루트의 `agb.yaml` 파일을 통해 동작을 제어합니다.
+### 빌드 구성 (`agb.yaml`)
 
-| 필드 | 설명 |
-| :--- | :--- |
-| `source` | 소스 리소스 저장소의 경로 |
-| `target` | 빌드 대상 에이전트 (`gemini-cli`, `claude-code` 등) |
-| `resources` | 빌드에 포함할 리소스 목록 (`플러그인:이름`) |
+```yaml
+source: ~/agb-resources      # 리소스 소스 저장소 경로
+target: gemini-cli           # 빌드 타겟 (gemini-cli, claude-code, opencode)
+resources:
+  commands:
+    - my_plugin:web_search   # [플러그인]:[리소스명]
+  skills:
+    - shared:python_expert
+```
 
-### 리소스 작성
-- **메타데이터**: Markdown 상단의 YAML Frontmatter 또는 외부 `.yaml` 파일을 사용합니다.
-- **구조**: `plugins/[플러그인명]/[commands|agents|skills]/` 하위에 위치시킵니다.
+### 리소스 정의 예시
+
+**Command 정의** (`plugins/my_plugin/commands/web_search.md`):
+```markdown
+---
+description: Search the web to retrieve the latest information.
+---
+Search the following query on Google and summarize the results: {{query}}
+```
+
+**Skill 정의**: 스킬은 캡슐화된 폴더 구조를 가지며, `SKILL.yaml`을 필수 메타데이터로 포함해야 합니다.
+- `plugins/my_plugin/skills/analyzer/SKILL.yaml` (메타데이터)
+- `plugins/my_plugin/skills/analyzer/prompt.md` (명령어 본문)
 
 ## 문서 가이드
-프로젝트의 상세 설계 및 기술 규격은 `specs/` 디렉토리를 참조하십시오.
+상세한 설계 사양 및 기술 규격은 `specs/` 디렉토리를 참조하십시오.
 
-- [**PRD.md**](./specs/PRD.md): 제품 요구사항 및 목표
+- [**PRD.md**](./specs/PRD.md): 제품 요구사항 및 비즈니스 목표
+- [**DESIGN.md**](./specs/DESIGN.md): 시스템 아키텍처 및 내부 설계
 - [**SPEC.md**](./specs/SPEC.md): 상세 기술 규격 및 변환 규칙
-- [**DESIGN.md**](./specs/DESIGN.md): 시스템 아키텍처 및 상세 설계
 
-## 라이선스
-MIT License

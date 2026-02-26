@@ -2,15 +2,13 @@ pub mod diff;
 pub mod syncer;
 
 use crate::builder::config;
-use crate::core::Registry;
+use crate::core::{Registry, PLUGINS_DIR_NAME};
 use crate::loader::ResourceLoader;
 use crate::syncer::syncer::Syncer;
 use crate::transformer::TransformerFactory;
 use anyhow::Result;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-
-const PLUGINS_DIR_NAME: &str = "plugins";
 
 pub struct SyncExecutor {
     config_file: String,

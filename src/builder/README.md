@@ -1,12 +1,12 @@
-# Builder 모듈
+# BuildExecutor 모듈
 
 ## 개요
 이 모듈은 `agb` 프로젝트의 핵심 빌드 오케스트레이션(Orchestration)을 담당합니다. `agb.yaml` 설정 파일을 기반으로 전체 빌드 파이프라인을 제어하며, 리소스 스캔부터 변환, 최종 파일 배포까지의 흐름을 관리합니다.
 
 ## 주요 구성 요소
 
-### 1. Builder (`mod.rs`)
-빌드 프로세스의 실제 실행 로직을 담고 있습니다. `Builder` 구조체는 다음과 같은 역할을 수행합니다:
+### 1. BuildExecutor (`mod.rs`)
+빌드 프로세스의 실제 실행 로직을 담고 있습니다. `BuildExecutor` 구조체는 다음과 같은 역할을 수행합니다:
 - 빌드 환경(설정 파일 경로, 출력 디렉터리) 초기화
 - 5단계 빌드 프로세스 실행 (`run()` 메서드)
 - 각 단계별 상태 및 결과 로깅
@@ -35,11 +35,11 @@
 ## 사용 예시
 
 ```rust
-use crate::builder::Builder;
+use crate::builder::BuildExecutor;
 
 fn main() -> anyhow::Result<()> {
-    let builder = Builder::new("agb.yaml");
-    builder.run()?;
+    let executor = BuildExecutor::new("agb.yaml");
+    executor.run()?;
     Ok(())
 }
 ```

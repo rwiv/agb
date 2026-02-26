@@ -12,6 +12,7 @@ pub const FORBIDDEN_FILES: &[&str] = &[GEMINI_MD, CLAUDE_MD, OPENCODE_MD];
 pub const DIR_COMMANDS: &str = "commands";
 pub const DIR_AGENTS: &str = "agents";
 pub const DIR_SKILLS: &str = "skills";
+pub const PLUGINS_DIR_NAME: &str = "plugins";
 
 // 확장자 상수
 pub const EXT_MD: &str = ".md";

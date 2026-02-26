@@ -7,16 +7,14 @@ use anyhow::Context;
 use std::path::{Path, PathBuf};
 
 use self::emitter::Emitter;
-use crate::core::{Registry, TransformedResource};
+use crate::core::{Registry, TransformedResource, PLUGINS_DIR_NAME};
 
-const PLUGINS_DIR_NAME: &str = "plugins";
-
-pub struct Builder {
+pub struct BuildExecutor {
     config_file: String,
     output_dir: PathBuf,
 }
 
-impl Builder {
+impl BuildExecutor {
     pub fn new(config_file: &str) -> Self {
         let config_path = Path::new(config_file);
         let output_dir = config_path.parent().unwrap_or(Path::new(".")).to_path_buf();

@@ -5,7 +5,7 @@ mod syncer;
 mod transformer;
 mod utils;
 
-use builder::Builder;
+use builder::BuildExecutor;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -38,8 +38,8 @@ fn main() -> anyhow::Result<()> {
     match &cli.command {
         Commands::Build { config } => {
             let config_file = config.as_deref().unwrap_or("agb.yaml");
-            let builder = Builder::new(config_file);
-            builder.run()?;
+            let executor = BuildExecutor::new(config_file);
+            executor.run()?;
         }
         Commands::Sync { config } => {
             let config_file = config.as_deref().unwrap_or("agb.yaml");

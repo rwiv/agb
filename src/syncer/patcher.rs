@@ -206,19 +206,19 @@ name: test
     fn test_newline_accumulation_prevention() {
         let source = "---\nname: test\ndescription: old\n---\n\n# Body";
         let mut patcher = MdPatcher::new(source);
-        
+
         // 여러 번 업데이트 수행
         patcher.update_description("new1");
         patcher.update_description("new2");
         patcher.replace_body("# New Body");
         patcher.update_description("new3");
-        
+
         let updated = patcher.render();
-        
+
         // "---" 바로 다음에 "\n\n"이 오지 않는지 확인 (정상적이라면 "\nname")
         assert!(updated.starts_with("---\nname"));
         assert!(!updated.contains("---\n\nname"));
-        
+
         // 전체적인 구조가 깨지지 않았는지 확인
         assert!(updated.contains("description: new3"));
         assert!(updated.contains("# New Body"));

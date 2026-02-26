@@ -84,12 +84,12 @@ mod tests {
 
         // Command: md + yaml
         fs::write(cmd_dir.join("foo.md"), "# Foo Content")?;
-        fs::write(cmd_dir.join("foo.yaml"), "key: val")?;
+        fs::write(cmd_dir.join("foo.yaml"), "gemini-cli:\n  key: val")?;
         // Exclude 대상
         fs::write(cmd_dir.join("test.tmp"), "temp")?;
 
         // Skill: SKILL.yaml + md
-        fs::write(skill_dir.join("SKILL.yaml"), "desc: skill")?;
+        fs::write(skill_dir.join("SKILL.yaml"), "gemini-cli:\n  desc: skill")?;
         fs::write(skill_dir.join("SKILL.md"), "prompt")?;
 
         let loader = ResourceLoader::new(&plugins_path, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;

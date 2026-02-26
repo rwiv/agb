@@ -115,12 +115,31 @@ fn setup_fixtures(root: &Path) {
     fs::write(plugin_a_cmds.join("foo.md"), "# Foo Command").unwrap();
     fs::write(
         plugin_a_cmds.join("foo.yaml"),
-        "model: gemini-1.5-pro\ndescription: Foo command description",
+        r#"
+gemini-cli:
+  model: gemini-1.5-pro
+  description: Foo command description
+claude-code:
+  description: Foo command description
+opencode:
+  description: Foo command description
+"#,
     )
     .unwrap();
 
     fs::write(plugin_c_skills.join("SKILL.md"), "Python Expert Content").unwrap();
-    fs::write(plugin_c_skills.join("SKILL.yaml"), "type: expert").unwrap();
+    fs::write(
+        plugin_c_skills.join("SKILL.yaml"),
+        r#"
+gemini-cli:
+  type: expert
+claude-code:
+  type: expert
+opencode:
+  type: expert
+"#,
+    )
+    .unwrap();
 
     fs::write(root.join("AGENTS.md"), "# Global Instructions").unwrap();
 }

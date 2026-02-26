@@ -32,7 +32,12 @@ impl ResourceParser {
                 fs::read_to_string(&p).with_context(|| format!("Failed to read markdown content: {:?}", p))?;
             crate::utils::yaml::extract_frontmatter(&raw_content)
         } else {
-            (json!({}), String::new())
+            anyhow::bail!(
+                "Markdown file is missing for resource '{}' in plugin '{}' ({})",
+                resource_name,
+                plugin,
+                r_type
+            );
         };
 
         // 2. 외부 메타데이터 파일 파싱
@@ -272,6 +277,28 @@ model: fm-model
         let err_msg = format!("{:#}", res.unwrap_err());
         assert!(err_msg.contains("unauthorized top-level field: 'key'"));
         Ok(())
+    }
+
+    #[test]
+    fn test_resource_parser_error_on_missing_md() {
+        let parser = ResourceParser::new(BuildTarget::GeminiCli);
+        let key = ResourceKey {
+            plugin: "p1".to_string(),
+            r_type: DIR_COMMANDS.to_string(),
+            name: "foo".to_string(),
+        };
+        // md is None
+        let paths = ResourcePaths {
+            md: None,
+            metadata: None,
+        };
+
+        let res = parser.parse_resource(key, paths);
+        assert!(res.is_err());
+        let err_msg = res.unwrap_err().to_string();
+        assert!(err_msg.contains("Markdown file is missing"));
+        assert!(err_msg.contains("foo"));
+        assert!(err_msg.contains("p1"));
     }
 
     #[test]

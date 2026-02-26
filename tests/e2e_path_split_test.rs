@@ -18,7 +18,11 @@ fn test_e2e_path_split_build() {
     fs::write(plugin_a_cmds.join("hello.md"), "# Hello").unwrap();
     fs::write(
         plugin_a_cmds.join("hello.yaml"),
-        "model: gemini-1.5-pro\ndescription: Greeting",
+        r#"
+gemini-cli:
+  model: gemini-1.5-pro
+  description: Greeting
+"#,
     )
     .unwrap();
 

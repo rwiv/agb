@@ -60,9 +60,13 @@ description: Search the web to retrieve the latest information.
 Search the following query on Google and summarize the results: {{query}}
 ```
 
-**Skill 정의**: 스킬은 캡슐화된 폴더 구조를 가집니다. 메타데이터(`SKILL.yaml`)는 선택 사항입니다.
-- `plugins/my_plugin/skills/analyzer/SKILL.md` (명령어 본문)
-- `plugins/my_plugin/skills/analyzer/SKILL.yaml` (메타데이터 - 선택 사항)
+**Skill 정의**: 스킬은 캡슐화된 폴더 구조를 가집니다. 메타데이터(`SKILL.yaml`)는 선택 사항이며, **타겟 에이전트 전용 섹션만 포함할 수 있습니다.**
+- `plugins/my_plugin/skills/analyzer/SKILL.md` (명령어 본문 및 공용 메타데이터)
+- `plugins/my_plugin/skills/analyzer/SKILL.yaml` (타겟별 오버라이드 설정)
+
+### 리소스 메타데이터 규칙
+- **공용 필드**: `name`, `description` 등 모든 공통 설정은 반드시 `.md` 파일의 Frontmatter에 작성해야 합니다.
+- **타겟 필드**: 에이전트별 특화 설정은 외부 `.yaml` 파일 내의 타겟 예약어 섹션(`gemini-cli` 등)에 작성합니다. 외부 파일에 일반 필드가 있으면 빌드 시 오류가 발생합니다.
 
 ## 문서 가이드
 상세한 설계 사양 및 기술 규격은 `specs/` 디렉토리를 참조하십시오.

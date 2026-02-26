@@ -43,7 +43,8 @@ impl ResourceParser {
         };
 
         // 3. 타겟 규칙에 따른 병합 (FM + External)
-        self.merge_metadata(&mut fm_metadata, &ext_metadata);
+        self.merge_metadata(&mut fm_metadata, &ext_metadata)
+            .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, resource_name))?;
 
         // 4. 명시된 이름이 있다면 리소스 이름으로 사용
         if let Some(explicit_name) = fm_metadata.get("name").and_then(|v| v.as_str()) {
@@ -88,7 +89,7 @@ impl ResourceParser {
     }
 
     /// 두 개의 메타데이터 객체를 타겟 규칙에 따라 병합합니다.
-    fn merge_metadata(&self, base: &mut Value, external: &Value) {
+    fn merge_metadata(&self, base: &mut Value, external: &Value) -> Result<()> {
         if !base.is_object() {
             *base = json!({});
         }
@@ -97,14 +98,19 @@ impl ResourceParser {
         let reserved_keys = BuildTarget::all_reserved_keys();
 
         if let Some(ext_obj) = external.as_object() {
-            // 1. 외부 파일의 일반 필드들을 base에 덮어씀 (Shallow merge)
-            for (k, v) in ext_obj {
+            // 1. 외부 파일의 최상위 키 검증 (예약어만 허용)
+            for k in ext_obj.keys() {
                 if !reserved_keys.contains(&k.as_str()) {
-                    base_obj.insert(k.clone(), v.clone());
+                    anyhow::bail!(
+                        "External metadata contains unauthorized top-level field: '{}'. \
+                         Only target reserved keys ({:?}) are allowed.",
+                        k,
+                        reserved_keys
+                    );
                 }
             }
 
-            // 2. 타겟 전용 필드들로 최종 오버라이트
+            // 2. 타겟 전용 필드들로 최종 오버라이트 (Shallow merge)
             let target_key = self.target.reserved_key();
             if let Some(target_section) = ext_obj.get(target_key).and_then(|v| v.as_object()) {
                 for (k, v) in target_section {
@@ -117,6 +123,8 @@ impl ResourceParser {
         for key in reserved_keys {
             base_obj.remove(*key);
         }
+
+        Ok(())
     }
 }
 
@@ -126,15 +134,15 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn test_merge_metadata_target_aware() {
+    fn test_merge_metadata_target_only_override() -> Result<()> {
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
         let mut base = json!({
             "name": "my-agent",
             "model": "default-model",
             "temperature": 0.5
         });
+        // Valid external metadata: only target keys
         let external = json!({
-            "name": "overwritten-name",
             "gemini-cli": {
                 "model": "gemini-3.0-pro",
                 "temperature": 0.2
@@ -144,13 +152,30 @@ mod tests {
             }
         });
 
-        parser.merge_metadata(&mut base, &external);
+        parser.merge_metadata(&mut base, &external)?;
 
-        assert_eq!(base["name"], "overwritten-name");
+        // Common fields like 'name' should NOT be overwritten from external (because they shouldn't exist there)
+        assert_eq!(base["name"], "my-agent");
         assert_eq!(base["model"], "gemini-3.0-pro");
         assert_eq!(base["temperature"], 0.2);
         assert!(base.get("gemini-cli").is_none());
         assert!(base.get("claude-code").is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn test_merge_metadata_validation_fail() {
+        let parser = ResourceParser::new(BuildTarget::GeminiCli);
+        let mut base = json!({"name": "foo"});
+        // Invalid external metadata: contains 'name' at top-level
+        let external = json!({
+            "name": "illegal-override",
+            "gemini-cli": { "model": "bar" }
+        });
+
+        let result = parser.merge_metadata(&mut base, &external);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("unauthorized top-level field: 'name'"));
     }
 
     #[test]
@@ -196,12 +221,40 @@ model: fm-model
     }
 
     #[test]
-    fn test_resource_parser_parse_resource_command() -> Result<()> {
+    fn test_resource_parser_parse_resource_command_no_ext_metadata() -> Result<()> {
+        let dir = tempdir()?;
+        let md_path = dir.path().join("foo.md");
+        fs::write(&md_path, "# Content")?;
+
+        let parser = ResourceParser::new(BuildTarget::GeminiCli);
+        let key = ResourceKey {
+            plugin: "p1".to_string(),
+            r_type: DIR_COMMANDS.to_string(),
+            name: "foo".to_string(),
+        };
+        let paths = ResourcePaths {
+            md: Some(md_path),
+            metadata: None,
+        };
+
+        let res = parser.parse_resource(key, paths)?;
+        if let Resource::Command(d) = res {
+            assert_eq!(d.name, "foo");
+            assert_eq!(d.plugin, "p1");
+            assert_eq!(d.content, "# Content");
+        } else {
+            panic!("Expected Command resource");
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_resource_parser_validation_error_on_general_field() -> Result<()> {
         let dir = tempdir()?;
         let md_path = dir.path().join("foo.md");
         let yaml_path = dir.path().join("foo.yaml");
         fs::write(&md_path, "# Content")?;
-        fs::write(&yaml_path, "key: val")?;
+        fs::write(&yaml_path, "key: val")?; // General field 'key' is unauthorized
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
         let key = ResourceKey {
@@ -214,15 +267,10 @@ model: fm-model
             metadata: Some(yaml_path),
         };
 
-        let res = parser.parse_resource(key, paths)?;
-        if let Resource::Command(d) = res {
-            assert_eq!(d.name, "foo");
-            assert_eq!(d.plugin, "p1");
-            assert_eq!(d.content, "# Content");
-            assert_eq!(d.metadata["key"], "val");
-        } else {
-            panic!("Expected Command resource");
-        }
+        let res = parser.parse_resource(key, paths);
+        assert!(res.is_err());
+        let err_msg = format!("{:#}", res.unwrap_err());
+        assert!(err_msg.contains("unauthorized top-level field: 'key'"));
         Ok(())
     }
 

@@ -58,9 +58,9 @@ resources:
 ## 4. 리소스 작성 규격
 
 ### 4.1 메타데이터 작성
-- **YAML Frontmatter**: 마크다운 파일 상단에 `---`로 구분하여 작성.
-- **외부 메타데이터**: 마크다운과 동일한 이름의 `.yaml` 또는 `.yml` 파일.
-- **우선순위**: 외부 메타데이터가 Frontmatter보다 우선하며, 타겟 전용 섹션이 최종적으로 적용됩니다.
+- **YAML Frontmatter**: 마크다운 파일 상단에 `---`로 구분하여 작성. 모든 공용 메타데이터(name, description 등)는 여기서 관리합니다.
+- **외부 메타데이터**: 마크다운과 동일한 이름의 `.yaml` 또는 `.yml` 파일. **타겟 에이전트 전용 예약어 섹션만 포함할 수 있습니다.**
+- **우선순위**: 외부 파일 내의 타겟 전역 예약어 섹션(`gemini-cli`, `claude-code`, `opencode`) 내용이 Frontmatter의 공용 설정을 최종적으로 오버라이트합니다.
 
 ### 4.2 작성 예시 (Agents)
 `plugins/my_plugin/agents/researcher.md`:
@@ -74,7 +74,8 @@ You are a professional researcher.
 
 `plugins/my_plugin/agents/researcher.yaml`:
 ```yaml
-gemini:
+# 타겟 전용 섹션만 허용됩니다. 일반 필드(name 등)는 무시되거나 빌드 에러를 유발합니다.
+gemini-cli:
   model: gemini-3.0-pro
 ```
 
@@ -83,8 +84,8 @@ gemini:
 ### 5.1 메타데이터 병합 알고리즘 (Metadata Merge)
 `loader::ResourceParser`가 빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 병합합니다 (Shallow Merge):
 1.  **Base**: `.md` 파일의 YAML Frontmatter 추출.
-2.  **Override**: 외부 메타데이터 파일(`.yaml`/`.yml`)의 일반 필드 내용을 덮어씀.
-3.  **Target Override**: 외부 파일 내의 타겟 전역 예약어 섹션(`gemini-cli`, `claude-code`, `opencode`) 내용을 최종적으로 덮어씀.
+2.  **Validate External**: 외부 메타데이터 파일(`.yaml`/`.yml`)을 읽어, 최상위 키가 모두 타겟 예약어(`gemini-cli`, `claude-code`, `opencode`)인지 검증합니다. 예약어가 아닌 일반 필드가 발견되면 빌드 오류를 발생시킵니다.
+3.  **Target Override**: 외부 파일 내 현재 빌드 타겟(`BuildTarget`)에 해당하는 섹션 내용을 Base에 덮어씀.
 4.  **Cleanup**: 모든 타겟 예약어 키들을 최종 메타데이터 결과물에서 제거.
 
 ### 5.2 보안 및 제약 사항

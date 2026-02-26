@@ -29,6 +29,8 @@ pub struct ResourceData {
     pub plugin: String,
     pub content: String,
     pub metadata: Value,
+    /// 원본 소스 위치 (Command/Agent: .md 파일 경로, Skill: 디렉터리 경로)
+    pub source_path: PathBuf,
 }
 
 /// 스킬을 위한 확장 데이터

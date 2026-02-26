@@ -1,7 +1,7 @@
 pub mod default;
 pub mod gemini;
 
-use crate::core::{BuildTarget, Resource, TransformedFile};
+use crate::core::{BuildTarget, Resource, ResourceData, ResourceType, TransformedFile};
 use anyhow::Result;
 
 use self::default::DefaultTransformer;
@@ -14,6 +14,9 @@ pub trait Transformer {
 
     /// 전역 지침(AGENTS.md)을 타겟 규격의 메인 메모리 파일로 변환합니다.
     fn transform_root_prompt(&self, content: &str) -> Result<TransformedFile>;
+
+    /// 타겟 포맷의 파일 내용을 다시 ResourceData로 복원합니다.
+    fn detransform(&self, r_type: ResourceType, file_content: &str) -> Result<ResourceData>;
 }
 
 /// Transformer 인스턴스를 생성하는 팩토리 객체입니다.
@@ -46,5 +49,15 @@ mod tests {
 
         assert_eq!(g_res.path, PathBuf::from("GEMINI.md"));
         assert_eq!(c_res.path, PathBuf::from("CLAUDE.md"));
+    }
+
+    #[test]
+    fn test_transformer_factory_detransform() {
+        let gemini = TransformerFactory::create(&BuildTarget::GeminiCli);
+        let input = "prompt = \"hello\"\nmodel = \"gpt-4\"";
+        let res = gemini.detransform(ResourceType::Command, input).unwrap();
+
+        assert_eq!(res.content, "hello");
+        assert_eq!(res.metadata["model"], "gpt-4");
     }
 }

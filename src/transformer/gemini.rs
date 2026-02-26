@@ -1,4 +1,6 @@
-use crate::core::{BuildTarget, DIR_COMMANDS, EXT_TOML, GEMINI_MD, Resource, ResourceData, TransformedFile};
+use crate::core::{
+    BuildTarget, DIR_COMMANDS, EXT_TOML, GEMINI_MD, Resource, ResourceData, ResourceType, TransformedFile,
+};
 use crate::transformer::Transformer;
 use crate::transformer::default::DefaultTransformer;
 use crate::utils::toml::json_to_toml;
@@ -26,6 +28,35 @@ impl Transformer for GeminiTransformer {
             path: PathBuf::from(GEMINI_MD),
             content: content.to_string(),
         })
+    }
+
+    fn detransform(&self, r_type: ResourceType, file_content: &str) -> Result<ResourceData> {
+        match r_type {
+            ResourceType::Command => {
+                let mut table: toml::Table = toml::from_str(file_content)?;
+                let prompt = table
+                    .remove("prompt")
+                    .and_then(|v| v.as_str().map(|s| s.to_string()))
+                    .ok_or_else(|| anyhow!("Missing 'prompt' field in Gemini command TOML"))?;
+
+                // TOML Table을 JSON Value로 변환
+                let metadata = serde_json::to_value(table)?;
+
+                Ok(ResourceData {
+                    name: String::new(),
+                    plugin: String::new(),
+                    content: prompt,
+                    metadata,
+                    source_path: PathBuf::new(),
+                })
+            }
+            ResourceType::Agent | ResourceType::Skill => {
+                let default_transformer = DefaultTransformer {
+                    target: BuildTarget::GeminiCli,
+                };
+                default_transformer.detransform(r_type, file_content)
+            }
+        }
     }
 }
 
@@ -77,6 +108,7 @@ mod tests {
                 "model": "gemini-1.5-pro",
                 "description": "A test command"
             }),
+            source_path: PathBuf::from("src/test.md"),
         });
 
         let result = transformer.transform(&resource).unwrap();
@@ -99,6 +131,7 @@ mod tests {
             plugin: "test-plugin".to_string(),
             content: "line1\nline2".to_string(),
             metadata: json!({}),
+            source_path: PathBuf::from("src/test.md"),
         });
 
         let result = transformer.transform(&resource).unwrap();
@@ -117,6 +150,7 @@ mod tests {
                 metadata: json!({
                     "type": "expert"
                 }),
+                source_path: PathBuf::from("src/skill"),
             },
             extras: Vec::new(),
         });
@@ -143,6 +177,7 @@ mod tests {
             metadata: json!({
                 "model": "gemini-1.5-flash"
             }),
+            source_path: PathBuf::from("src/test.md"),
         });
 
         let result = transformer.transform(&resource).unwrap();
@@ -163,5 +198,20 @@ mod tests {
 
         assert_eq!(result.path, PathBuf::from(GEMINI_MD));
         assert_eq!(result.content, content);
+    }
+
+    #[test]
+    fn test_gemini_detransform_command() {
+        let transformer = GeminiTransformer;
+        let input = r#"description = "Updated desc"
+model = "gemini-2.0"
+prompt = "New Prompt"
+"#;
+
+        let result = transformer.detransform(ResourceType::Command, input).unwrap();
+
+        assert_eq!(result.content, "New Prompt");
+        assert_eq!(result.metadata["description"], "Updated desc");
+        assert_eq!(result.metadata["model"], "gemini-2.0");
     }
 }

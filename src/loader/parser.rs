@@ -37,6 +37,18 @@ impl ResourceParser {
             ScannedPaths::Skill { md, metadata, extras } => (DIR_SKILLS, md, metadata, Some(extras)),
         };
 
+        // source_path 결정: Command/Agent는 md 파일 경로, Skill은 디렉터리 경로
+        let source_path = match r_type {
+            DIR_SKILLS => md
+                .as_ref()
+                .and_then(|p| p.parent())
+                .ok_or_else(|| anyhow::anyhow!("Failed to determine skill root for '{}'", name))?
+                .to_path_buf(),
+            _ => md
+                .clone()
+                .ok_or_else(|| anyhow::anyhow!("Markdown file is missing for '{}'", name))?,
+        };
+
         let ctx = ParseContext {
             plugin: &plugin,
             name: &name,
@@ -44,7 +56,7 @@ impl ResourceParser {
             metadata,
         };
 
-        let data = self.parse_common(r_type, ctx)?;
+        let data = self.parse_common(r_type, ctx, source_path)?;
 
         match r_type {
             DIR_COMMANDS => Ok(Resource::Command(data)),
@@ -73,7 +85,7 @@ impl ResourceParser {
     }
 
     /// 공통 데이터 파싱 로직 (Markdown + Metadata)
-    fn parse_common(&self, r_type: &str, ctx: ParseContext) -> Result<ResourceData> {
+    fn parse_common(&self, r_type: &str, ctx: ParseContext, source_path: PathBuf) -> Result<ResourceData> {
         // 1. Markdown 본문 및 Frontmatter 추출
         let (mut fm_metadata, pure_content) = if let Some(ref p) = ctx.md {
             let raw_content =
@@ -100,6 +112,7 @@ impl ResourceParser {
             plugin: ctx.plugin.to_string(),
             content: pure_content,
             metadata: fm_metadata,
+            source_path,
         })
     }
 
@@ -222,7 +235,7 @@ model: fm-model
             plugin: "p1".to_string(),
             name: "foo".to_string(),
             paths: ScannedPaths::Command {
-                md: Some(md_path),
+                md: Some(md_path.clone()),
                 metadata: Some(yaml_path),
             },
         };
@@ -232,6 +245,7 @@ model: fm-model
             assert_eq!(d.name, "foo");
             assert_eq!(d.content, "# Content");
             assert_eq!(d.metadata["model"], "gemini-model");
+            assert_eq!(d.source_path, md_path);
         } else {
             panic!("Expected Command resource");
         }
@@ -268,6 +282,7 @@ model: fm-model
         if let Resource::Skill(s) = res {
             assert_eq!(s.base.name, "my-skill");
             assert_eq!(s.extras.len(), 2);
+            assert_eq!(s.base.source_path, skill_dir);
 
             let targets: Vec<String> = s
                 .extras

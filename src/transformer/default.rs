@@ -1,6 +1,6 @@
 use crate::core::{
-    BuildTarget, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD, GEMINI_MD, OPENCODE_MD, Resource, SKILL_MD,
-    TransformedFile,
+    BuildTarget, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD, GEMINI_MD, OPENCODE_MD, Resource,
+    ResourceData, ResourceType, SKILL_MD, TransformedFile,
 };
 use crate::transformer::Transformer;
 use anyhow::Result;
@@ -52,6 +52,25 @@ impl Transformer for DefaultTransformer {
             content: content.to_string(),
         })
     }
+
+    fn detransform(&self, _r_type: ResourceType, file_content: &str) -> Result<ResourceData> {
+        let (metadata, content) = crate::utils::yaml::extract_frontmatter(file_content);
+
+        // DefaultTransformer는 메타데이터를 'metadata' 키 아래에 감싸서 저장하므로 이를 꺼내줌
+        let final_metadata = if let Some(inner) = metadata.get("metadata") {
+            inner.clone()
+        } else {
+            metadata
+        };
+
+        Ok(ResourceData {
+            name: String::new(),   // detransform 시점에는 알 수 없음
+            plugin: String::new(), // detransform 시점에는 알 수 없음
+            content,
+            metadata: final_metadata,
+            source_path: PathBuf::new(), // Syncer에서 보완 예정
+        })
+    }
 }
 
 #[cfg(test)]
@@ -73,6 +92,7 @@ mod tests {
                 "description": "A test command",
                 "model": "claude-3-opus"
             }),
+            source_path: PathBuf::from("src/test.md"),
         });
 
         let result = transformer.transform(&resource).unwrap();
@@ -102,6 +122,7 @@ mod tests {
                     "description": "Skill description",
                     "type": "expert"
                 }),
+                source_path: PathBuf::from("src/skill"),
             },
             extras: Vec::new(),
         });
@@ -138,5 +159,25 @@ mod tests {
             gemini.transform_root_prompt("test").unwrap().path,
             PathBuf::from(GEMINI_MD)
         );
+    }
+
+    #[test]
+    fn test_default_detransform() {
+        let transformer = DefaultTransformer {
+            target: BuildTarget::ClaudeCode,
+        };
+        let input = "---
+metadata:
+  description: Updated description
+  model: new-model
+---
+
+# New Content";
+
+        let result = transformer.detransform(ResourceType::Command, input).unwrap();
+
+        assert_eq!(result.content, "# New Content");
+        assert_eq!(result.metadata["description"], "Updated description");
+        assert_eq!(result.metadata["model"], "new-model");
     }
 }

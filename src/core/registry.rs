@@ -49,6 +49,7 @@ mod tests {
     use super::*;
     use crate::core::{ResourceData, SkillData};
     use serde_json::Value;
+    use std::path::PathBuf;
 
     fn mock_resource(name: &str, plugin: &str, r_type: ResourceType) -> Resource {
         let data = ResourceData {
@@ -56,6 +57,7 @@ mod tests {
             plugin: plugin.to_string(),
             content: String::new(),
             metadata: Value::Null,
+            source_path: PathBuf::from("mock/path"),
         };
         match r_type {
             ResourceType::Command => Resource::Command(data),

@@ -22,6 +22,7 @@
   - `plugin`: 리소스가 소속된 플러그인 이름.
   - `content`: 마크다운 본문 내용.
   - `metadata`: YAML/Frontmatter에서 파싱된 설정 값 (`serde_json::Value`).
+  - `source_path`: 원본 소스 파일 또는 디렉터리 경로.
 - **ExtraFile**: 물리적으로 대상 디렉터리에 복사되어야 하는 추가 파일의 경로 정보(`source`, `target`)를 담는 구조체입니다.
 - **TransformedResource**: 변환된 파일들(`TransformedFile`의 목록)과 단순 복사될 추가 파일들(`ExtraFile`의 목록)을 묶은 최종 결과물 단위입니다.
 

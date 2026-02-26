@@ -17,7 +17,7 @@
         ├── commands/       # 필수: [name].md | 선택: [name].yaml
         ├── agents/         # 필수: [name].md | 선택: [name].yaml
         └── skills/         # 필수: [skill_name]/SKILL.md | 선택: SKILL.yaml
-                            # 추가 파일(예: 스크립트, 데이터 등)은 그대로 빌드 폴더로 복사됩니다.
+                            # 추가 파일(예: 스크립트, 데이터 등)은 하위 디렉터리 구조를 유지하며 빌드 폴더로 복사됩니다.
 ```
 
 ### 2.2 빌드 환경 구조 (Output)

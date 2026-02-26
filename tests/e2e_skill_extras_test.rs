@@ -88,3 +88,48 @@ resources:
     assert!(!output_skill_dir.join("junk.txt").exists());
     assert!(output_skill_dir.join("SKILL.md").exists());
 }
+
+#[test]
+fn test_e2e_skill_extra_files_nested_structure() {
+    let temp_dir = tempdir().unwrap();
+    let root = temp_dir.path();
+
+    // 1. Setup fixtures with nested extra files
+    let plugins = root.join("plugins");
+    let skill_dir = plugins.join("my_plugin/skills/nested_skill");
+    let ref_dir = skill_dir.join("ref");
+    fs::create_dir_all(&ref_dir).unwrap();
+
+    fs::write(skill_dir.join("SKILL.md"), "Nested Skill Content").unwrap();
+    fs::write(ref_dir.join("foo.md"), "Nested File Content").unwrap();
+
+    // 2. Create agb.yaml
+    let config = format!(
+        r#"
+source: {}
+target: gemini-cli
+resources:
+  skills:
+    - my_plugin:nested_skill
+"#,
+        root.display()
+    );
+    fs::write(root.join("agb.yaml"), config).unwrap();
+
+    // 3. Run build
+    let mut cmd = Command::new(assert_cmd::cargo_bin!("agb"));
+    cmd.arg("build").arg("--config").arg(root.join("agb.yaml"));
+    cmd.assert().success();
+
+    // 4. Verify outputs: nested structure should be preserved
+    let output_skill_dir = root.join("skills/nested_skill");
+    assert!(output_skill_dir.join("SKILL.md").exists());
+    assert!(
+        output_skill_dir.join("ref/foo.md").exists(),
+        "Nested file 'ref/foo.md' should exist in output"
+    );
+    assert_eq!(
+        fs::read_to_string(output_skill_dir.join("ref/foo.md")).unwrap(),
+        "Nested File Content"
+    );
+}

@@ -19,9 +19,11 @@ impl Emitter {
     /// 기존에 생성된 디렉터리 및 메인 메모리 파일을 삭제합니다.
     pub fn clean(&self) -> Result<()> {
         let targets = [
+            // directories
             DIR_COMMANDS,
             DIR_AGENTS,
             DIR_SKILLS,
+            // main memory files
             GEMINI_MD,
             CLAUDE_MD,
             OPENCODE_MD,
@@ -43,9 +45,9 @@ impl Emitter {
 
     /// 변환된 리소스들을 파일 시스템에 기록합니다.
     pub fn emit(&self, resources: &[TransformedResource]) -> Result<()> {
-        for res in resources {
+        for resource in resources {
             // 1. 변환된 텍스트 파일 쓰기
-            for file in &res.files {
+            for file in &resource.files {
                 let full_path = self.output_path.join(&file.path);
                 crate::utils::fs::ensure_dir(&full_path)?;
                 fs::write(&full_path, &file.content)
@@ -53,7 +55,7 @@ impl Emitter {
             }
 
             // 2. 추가 파일 복사
-            for extra in &res.extras {
+            for extra in &resource.extras {
                 let full_target_path = self.output_path.join(&extra.target);
                 crate::utils::fs::ensure_dir(&full_target_path)?;
                 fs::copy(&extra.source, &full_target_path).with_context(|| {

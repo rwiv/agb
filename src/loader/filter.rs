@@ -34,7 +34,7 @@ impl FileFilter {
             return Ok(false);
         }
 
-        // 2. PRD Constraint: 플러그인 내부 금지된 파일 체크
+        // 2. 플러그인 내부 금지된 파일 체크
         if crate::core::constants::FORBIDDEN_FILES.contains(&file_name) {
             anyhow::bail!("Forbidden file '{}' found in plugin: {:?}", file_name, path);
         }

@@ -40,7 +40,7 @@ impl ResourceParser {
         let ctx = ParseContext {
             plugin: &plugin,
             name: &name,
-            md,
+            md: md.clone(),
             metadata,
         };
 
@@ -50,12 +50,15 @@ impl ResourceParser {
             DIR_COMMANDS => Ok(Resource::Command(data)),
             DIR_AGENTS => Ok(Resource::Agent(data)),
             DIR_SKILLS => {
+                // 스킬 루트(SKILL.md의 부모 디렉터리)를 기준으로 상대 경로 계산
+                let skill_root = md.as_ref().and_then(|p| p.parent()).unwrap();
+
                 let skill_extras = extras
                     .unwrap_or_default()
                     .into_iter()
                     .map(|source| {
-                        let file_name = source.file_name().unwrap().to_os_string();
-                        let target = PathBuf::from(DIR_SKILLS).join(&name).join(file_name);
+                        let relative_path = source.strip_prefix(skill_root).unwrap_or(&source);
+                        let target = PathBuf::from(DIR_SKILLS).join(&name).join(relative_path);
                         ExtraFile { source, target }
                     })
                     .collect();
@@ -243,8 +246,12 @@ model: fm-model
 
         let md_path = skill_dir.join("SKILL.md");
         let extra_path = skill_dir.join("logic.py");
+        let nested_extra_path = skill_dir.join("ref/foo.md");
+        fs::create_dir_all(skill_dir.join("ref"))?;
+
         fs::write(&md_path, "# Skill")?;
         fs::write(&extra_path, "print('hello')")?;
+        fs::write(&nested_extra_path, "nested")?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
         let scanned = ScannedResource {
@@ -253,15 +260,22 @@ model: fm-model
             paths: ScannedPaths::Skill {
                 md: Some(md_path),
                 metadata: None,
-                extras: vec![extra_path],
+                extras: vec![extra_path, nested_extra_path],
             },
         };
 
         let res = parser.parse_resource(scanned)?;
         if let Resource::Skill(s) = res {
             assert_eq!(s.base.name, "my-skill");
-            assert_eq!(s.extras.len(), 1);
-            assert_eq!(s.extras[0].target.to_str().unwrap(), "skills/my-skill/logic.py");
+            assert_eq!(s.extras.len(), 2);
+
+            let targets: Vec<String> = s
+                .extras
+                .iter()
+                .map(|e| e.target.to_str().unwrap().to_string())
+                .collect();
+            assert!(targets.contains(&"skills/my-skill/logic.py".to_string()));
+            assert!(targets.contains(&"skills/my-skill/ref/foo.md".to_string()));
         } else {
             panic!("Expected Skill resource");
         }

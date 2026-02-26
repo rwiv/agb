@@ -63,7 +63,7 @@ impl Syncer {
         let new_desc = detransformed.metadata["description"].as_str().unwrap_or_default();
 
         if old_desc != new_desc {
-            patcher.update_description(new_desc);
+            patcher.update_description(new_desc)?;
             changed = true;
             println!("    - Updated description in source");
         }

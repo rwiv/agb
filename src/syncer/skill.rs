@@ -66,7 +66,7 @@ impl SkillSyncer {
 
                     // 2. description 업데이트 (있을 경우만)
                     if let Some(desc) = detransformed.metadata["description"].as_str() {
-                        patcher.update_description(desc);
+                        patcher.update_description(desc)?;
                     }
 
                     if !patcher.has_changed(&source_content) {

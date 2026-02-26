@@ -12,12 +12,17 @@ impl MdPatcher {
     }
 
     /// description 필드만 업데이트 (기존 update_description 로직)
-    pub fn update_description(&mut self, new_desc: &str) {
+    /// 멀티라인 description이 감지되면 에러를 반환합니다.
+    pub fn update_description(&mut self, new_desc: &str) -> anyhow::Result<()> {
+        if new_desc.contains('\n') {
+            anyhow::bail!("Multi-line description is not supported in sync");
+        }
+
         let content = self.raw_content.trim_start();
         if !content.starts_with("---") {
             // Frontmatter가 없는 경우 새로 생성
             self.raw_content = format!("---\ndescription: {}\n---\n\n{}", new_desc, self.raw_content);
-            return;
+            return Ok(());
         }
 
         let rest = &content[3..];
@@ -26,20 +31,33 @@ impl MdPatcher {
             let pure_content = rest[end_offset + 3..].trim_start();
 
             let mut lines: Vec<String> = yaml_part.lines().map(|s| s.to_string()).collect();
-            let mut found = false;
+            let mut found_idx = None;
 
             // description: 키를 찾아 교체 (공백 및 인용부호 허용)
             let re = Regex::new(r#"^(\s*description:\s*)(?:'[^']*'|"[^"]*"|.*)$"#).unwrap();
-            for line in lines.iter_mut() {
-                if let Some(caps) = re.captures(line) {
-                    let prefix = caps.get(1).unwrap().as_str();
-                    *line = format!("{}{}", prefix, new_desc);
-                    found = true;
+
+            for (i, line) in lines.iter().enumerate() {
+                if re.is_match(line) {
+                    // 멀티라인 마커 (| 또는 >) 감지
+                    let trimmed = line.trim();
+                    if trimmed.ends_with('|') || trimmed.ends_with('>') {
+                        anyhow::bail!("Multi-line description (YAML marker) detected in source");
+                    }
+
+                    // 다음 줄 들여쓰기 감지 (멀티라인 데이터 감지)
+                    if i + 1 < lines.len() && lines[i + 1].starts_with(' ') {
+                        anyhow::bail!("Multi-line description (Indentation) detected in source");
+                    }
+
+                    found_idx = Some(i);
                     break;
                 }
             }
 
-            if !found {
+            if let Some(i) = found_idx {
+                let prefix = re.captures(&lines[i]).unwrap().get(1).unwrap().as_str();
+                lines[i] = format!("{}{}", prefix, new_desc);
+            } else {
                 // 못 찾았다면 마지막에 추가
                 lines.push(format!("description: {}", new_desc));
             }
@@ -49,6 +67,8 @@ impl MdPatcher {
             // 닫는 ---가 없는 경우 (잘못된 형식), 안전하게 앞에 추가
             self.raw_content = format!("---\ndescription: {}\n---\n\n{}", new_desc, self.raw_content);
         }
+
+        Ok(())
     }
 
     /// 본문 영역만 교체 (기존 replace_content 로직)
@@ -116,7 +136,7 @@ description: old description
 ---
 # Content";
         let mut patcher = MdPatcher::new(source);
-        patcher.update_description("new description");
+        patcher.update_description("new description").unwrap();
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
         assert!(updated.contains("name: test"));
@@ -129,7 +149,7 @@ description: old description
 description: 'old quoted description'
 ---";
         let mut patcher = MdPatcher::new(source);
-        patcher.update_description("\"new quoted description\"");
+        patcher.update_description("\"new quoted description\"").unwrap();
         let updated = patcher.render();
         assert!(updated.contains("description: \"new quoted description\""));
     }
@@ -142,11 +162,43 @@ description: old # desc comment
 # overall comment
 ---";
         let mut patcher = MdPatcher::new(source);
-        patcher.update_description("new");
+        patcher.update_description("new").unwrap();
         let updated = patcher.render();
         assert!(updated.contains("name: test # name comment"));
         assert!(updated.contains("description: new"));
         assert!(updated.contains("# overall comment"));
+    }
+
+    #[test]
+    fn test_update_description_error_on_multiline_input() {
+        let mut patcher = MdPatcher::new("# Content");
+        let result = patcher.update_description("line1\nline2");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Multi-line description"));
+    }
+
+    #[test]
+    fn test_update_description_error_on_marker_in_source() {
+        let source = "---
+description: |
+  multi
+---";
+        let mut patcher = MdPatcher::new(source);
+        let result = patcher.update_description("new");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("YAML marker"));
+    }
+
+    #[test]
+    fn test_update_description_error_on_indentation_in_source() {
+        let source = "---
+description: 
+  multi
+---";
+        let mut patcher = MdPatcher::new(source);
+        let result = patcher.update_description("new");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Indentation"));
     }
 
     #[test]
@@ -174,7 +226,7 @@ name: test
 ---
 # Content";
         let mut patcher = MdPatcher::new(source);
-        patcher.update_description("new description");
+        patcher.update_description("new description").unwrap();
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
         assert!(updated.contains("name: test"));
@@ -184,7 +236,7 @@ name: test
     fn test_update_description_no_frontmatter() {
         let source = "# Content";
         let mut patcher = MdPatcher::new(source);
-        patcher.update_description("new description");
+        patcher.update_description("new description").unwrap();
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
         assert!(updated.contains("# Content"));
@@ -195,7 +247,7 @@ name: test
     fn test_patch_empty_source() {
         let source = "";
         let mut patcher = MdPatcher::new(source);
-        patcher.update_description("new");
+        patcher.update_description("new").unwrap();
         patcher.replace_body("# New Body");
         let updated = patcher.render();
         assert!(updated.contains("description: new"));
@@ -208,10 +260,10 @@ name: test
         let mut patcher = MdPatcher::new(source);
 
         // 여러 번 업데이트 수행
-        patcher.update_description("new1");
-        patcher.update_description("new2");
+        patcher.update_description("new1").unwrap();
+        patcher.update_description("new2").unwrap();
         patcher.replace_body("# New Body");
-        patcher.update_description("new3");
+        patcher.update_description("new3").unwrap();
 
         let updated = patcher.render();
 

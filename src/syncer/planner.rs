@@ -19,11 +19,6 @@ pub enum SyncAction {
         relative_path: PathBuf,
         source_path: PathBuf,
     },
-    PatchMarkdown {
-        relative_path: PathBuf,
-        source_path: PathBuf,
-        target_content: String,
-    },
 }
 
 pub struct SyncPlanner {
@@ -50,14 +45,8 @@ impl SyncPlanner {
 
             let relative_path = path.strip_prefix(target_dir)?;
 
-            // SKILL.md는 PatchMarkdown 대상으로 분류 (나중에 SkillSyncer에서 Patcher 사용)
+            // SKILL.md는 Syncer에서 직접 처리하므로 여기서는 무시
             if relative_path == Path::new(SKILL_MD) {
-                let target_content = std::fs::read_to_string(path)?;
-                actions.push(SyncAction::PatchMarkdown {
-                    relative_path: relative_path.to_path_buf(),
-                    source_path: source_dir.join(relative_path),
-                    target_content,
-                });
                 continue;
             }
 
@@ -158,11 +147,13 @@ mod tests {
             source_path: source_dir.join("deleted.txt"),
         }));
 
-        // SKILL.md should be PatchMarkdown
-        let has_patch = actions.iter().any(
-            |a| matches!(a, SyncAction::PatchMarkdown { relative_path, .. } if relative_path == Path::new(SKILL_MD)),
-        );
-        assert!(has_patch);
+        // SKILL.md should be ignored by the planner
+        let has_skill_md = actions.iter().any(|a| match a {
+            SyncAction::Add { relative_path, .. } => relative_path == Path::new(SKILL_MD),
+            SyncAction::Update { relative_path, .. } => relative_path == Path::new(SKILL_MD),
+            SyncAction::Delete { relative_path, .. } => relative_path == Path::new(SKILL_MD),
+        });
+        assert!(!has_skill_md, "SKILL.md should be ignored by the planner");
 
         Ok(())
     }

@@ -89,7 +89,7 @@ impl Syncer {
             let target_skill_dir = target_path
                 .parent()
                 .ok_or_else(|| anyhow::anyhow!("Failed to get parent directory of {:?}", target_path))?;
-            skill::sync_skill_dir(source_path, target_skill_dir, transformer, exclude)?;
+            skill::SkillSyncer::sync_skill_dir(source_path, target_skill_dir, exclude)?;
         }
 
         Ok(())

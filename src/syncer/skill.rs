@@ -1,7 +1,4 @@
-use crate::core::ResourceType;
-use crate::syncer::patcher::MdPatcher;
 use crate::syncer::planner::{SyncAction, SyncPlanner};
-use crate::transformer::Transformer;
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -9,12 +6,9 @@ use std::path::Path;
 pub struct SkillSyncer;
 
 impl SkillSyncer {
-    pub fn sync_skill_dir(
-        source_dir: &Path,
-        target_dir: &Path,
-        transformer: &dyn Transformer,
-        exclude_patterns: &[String],
-    ) -> Result<()> {
+    /// 스킬 디렉토리 내의 추가 파일들(Extra Files)의 변경사항을 소스로 동기화합니다.
+    /// SKILL.md는 Syncer의 공통 로직에서 처리하므로 여기서는 무시됩니다.
+    pub fn sync_skill_dir(source_dir: &Path, target_dir: &Path, exclude_patterns: &[String]) -> Result<()> {
         let planner = SyncPlanner::new(exclude_patterns)?;
         let actions = planner.plan(source_dir, target_dir)?;
 
@@ -46,48 +40,8 @@ impl SkillSyncer {
                     fs::remove_file(&source_path)?;
                     println!("Removed deleted file from source: {:?}", source_path);
                 }
-                SyncAction::PatchMarkdown {
-                    relative_path: _,
-                    source_path,
-                    target_content,
-                } => {
-                    if !source_path.exists() {
-                        continue;
-                    }
-
-                    let source_content = fs::read_to_string(&source_path)?;
-                    let mut patcher = MdPatcher::new(&source_content);
-
-                    // 타겟 파일 역변환을 통해 순수 본문과 메타데이터 추출 (중첩 Frontmatter 방지)
-                    let detransformed = transformer.detransform(ResourceType::Skill, &target_content)?;
-
-                    // 1. 본문 교체
-                    patcher.replace_body(&detransformed.content);
-
-                    // 2. description 업데이트 (있을 경우만)
-                    if let Some(desc) = detransformed.metadata["description"].as_str() {
-                        patcher.update_description(desc)?;
-                    }
-
-                    if !patcher.has_changed(&source_content) {
-                        continue;
-                    }
-
-                    let updated = patcher.render();
-                    fs::write(&source_path, updated)?;
-                    println!("Patched markdown file: {:?}", source_path);
-                }
             }
         }
         Ok(())
     }
-}
-
-pub fn sync_skill_dir(
-    source_dir: &Path,
-    target_dir: &Path,
-    transformer: &dyn Transformer,
-    exclude_patterns: &[String],
-) -> Result<()> {
-    SkillSyncer::sync_skill_dir(source_dir, target_dir, transformer, exclude_patterns)
 }

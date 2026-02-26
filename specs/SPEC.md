@@ -7,16 +7,16 @@
 ## 2. 프로젝트 구조 (Project Structure)
 
 ### 2.1 소스 리소스 구조 (Source)
-리소스는 본문(`*.md`)과 메타데이터(`*.yaml`, `*.yml`)의 조합으로 구성됩니다.
+리소스는 필수 본문(`*.md`)과 선택적 메타데이터(`*.yaml`, `*.yml`)의 조합으로 구성됩니다. **본문 파일(*.md)이 누락된 리소스는 빌드 시 에러를 유발합니다.**
 
 ```text
 [Source Repository]/
 ├── AGENTS.md               # 전역 시스템 지침 (Frontmatter 지원)
 └── plugins/
     └── [plugin_name]/
-        ├── commands/       # 파일 쌍: [name].md + [name].yaml (선택 사항)
-        ├── agents/         # 파일 쌍: [name].md + [name].yaml (선택 사항)
-        └── skills/         # 폴더 구조: [skill_name]/SKILL.md + SKILL.yaml (선택 사항)
+        ├── commands/       # 필수: [name].md | 선택: [name].yaml
+        ├── agents/         # 필수: [name].md | 선택: [name].yaml
+        └── skills/         # 필수: [skill_name]/SKILL.md | 선택: SKILL.yaml
 ```
 
 ### 2.2 빌드 환경 구조 (Output)
@@ -82,11 +82,13 @@ gemini-cli:
 ## 5. 리소스 처리 규격 (Processing Rules)
 
 ### 5.1 메타데이터 병합 알고리즘 (Metadata Merge)
-`loader::ResourceParser`가 빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 병합합니다 (Shallow Merge):
-1.  **Base**: `.md` 파일의 YAML Frontmatter 추출.
-2.  **Validate External**: 외부 메타데이터 파일(`.yaml`/`.yml`)을 읽어, 최상위 키가 모두 타겟 예약어(`gemini-cli`, `claude-code`, `opencode`)인지 검증합니다. 예약어가 아닌 일반 필드가 발견되면 빌드 오류를 발생시킵니다.
-3.  **Target Override**: 외부 파일 내 현재 빌드 타겟(`BuildTarget`)에 해당하는 섹션 내용을 Base에 덮어씀.
-4.  **Cleanup**: 모든 타겟 예약어 키들을 최종 메타데이터 결과물에서 제거.
+`loader::ResourceParser`가 빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 처리합니다 (Shallow Merge):
+1.  **Extract Base**: `.md` 파일에서 YAML Frontmatter 추출.
+2.  **External Process (Optional)**: 외부 메타데이터 파일(`.yaml`/`.yml`)이 존재하는 경우에만 다음을 수행:
+    - **Validate**: 최상위 키가 모두 타겟 예약어(`gemini-cli`, `claude-code`, `opencode`)인지 검증. 일반 필드 발견 시 빌드 오류.
+    - **Override**: 현재 빌드 타겟(`BuildTarget`) 섹션 내용을 Base에 덮어씀.
+    - **Cleanup**: 결과물에서 모든 타겟 예약어 키들을 제거.
+3.  **Finalize**: 리소스 이름은 원본 파일명을 그대로 사용하며, 병합된 메타데이터와 본문을 결합하여 리소스 객체 완성.
 
 ### 5.2 보안 및 제약 사항
 - **타겟 전용 파일 금지**: 플러그인 내부에는 `GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`와 같은 파일이 존재할 수 없습니다. 발견 시 빌드가 중단됩니다.

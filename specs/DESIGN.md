@@ -50,5 +50,5 @@ graph TD
 
 ### 2.2 리소스 로더 (`loader`)
 분산된 소스 파일들을 읽어 하나의 `Resource` 객체로 완성하는 조립 과정을 담당합니다.
-- **Metadata Merge**: `ResourceParser`는 `BuildTarget` 정보를 활용하여 Markdown Frontmatter와 외부 YAML 설정을 타겟 우선순위에 따라 최종 메타데이터로 병합합니다. (`merge_metadata` 로직)
+- **Metadata Merge**: `ResourceParser`는 `BuildTarget` 정보를 활용하여 Markdown Frontmatter와 외부 YAML 설정을 병합합니다. 외부 YAML 파일이 존재하는 경우에만 타겟별 오버라이트 로직이 활성화됩니다. (`merge_metadata` 로직)
 - **Lazy Load**: 스캔 시에는 경로만 수집하고, 실제 리소스 사용 시점에 파싱을 수행합니다.

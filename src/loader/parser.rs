@@ -22,7 +22,7 @@ impl ResourceParser {
         let ResourceKey {
             plugin,
             r_type,
-            name: mut resource_name,
+            name: resource_name,
         } = key;
         let ResourcePaths { md, metadata } = paths;
 
@@ -40,20 +40,11 @@ impl ResourceParser {
             );
         };
 
-        // 2. 외부 메타데이터 파일 파싱
-        let ext_metadata = if let Some(p) = metadata {
-            self.parse_metadata(&p, &r_type, &resource_name)?
-        } else {
-            json!({})
-        };
-
-        // 3. 타겟 규칙에 따른 병합 (FM + External)
-        self.merge_metadata(&mut fm_metadata, &ext_metadata)
-            .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, resource_name))?;
-
-        // 4. 명시된 이름이 있다면 리소스 이름으로 사용
-        if let Some(explicit_name) = fm_metadata.get("name").and_then(|v| v.as_str()) {
-            resource_name = explicit_name.to_string();
+        // 2. 외부 메타데이터 파일 파싱 및 병합
+        if let Some(p) = metadata {
+            let ext_metadata = self.parse_metadata(&p, &r_type, &resource_name)?;
+            self.merge_metadata(&mut fm_metadata, &ext_metadata)
+                .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, resource_name))?;
         }
 
         let data = ResourceData {
@@ -180,7 +171,12 @@ mod tests {
 
         let result = parser.merge_metadata(&mut base, &external);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("unauthorized top-level field: 'name'"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("unauthorized top-level field: 'name'")
+        );
     }
 
     #[test]
@@ -216,7 +212,7 @@ model: fm-model
 
         let res = parser.parse_resource(key, paths)?;
         if let Resource::Command(d) = res {
-            assert_eq!(d.name, "fm-name");
+            assert_eq!(d.name, "foo"); // Filename 'foo' should be the resource name
             assert_eq!(d.content, "# Content");
             assert_eq!(d.metadata["model"], "gemini-model");
         } else {

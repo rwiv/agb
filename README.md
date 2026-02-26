@@ -32,8 +32,8 @@ cargo install --path .
     ├── AGENTS.md           # 전역 시스템 지침 원본
     └── plugins/
         └── my_plugin/
-            ├── commands/   # [name].md + [name].yaml (파일 쌍)
-            └── skills/     # [name]/SKILL.yaml + *.md (폴더 구조)
+            ├── commands/   # [name].md (필수) + [name].yaml (선택)
+            └── skills/     # [name]/SKILL.md (필수) + SKILL.yaml (선택)
 ```
 
 ## 설정 규격

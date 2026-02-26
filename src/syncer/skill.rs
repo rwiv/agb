@@ -1,8 +1,5 @@
-pub mod markdown;
-pub mod planner;
-
-use crate::syncer::diff::markdown::MarkdownPatcher;
-use crate::syncer::diff::planner::{SyncAction, SyncPlanner};
+use crate::syncer::patcher::Patcher;
+use crate::syncer::planner::{SyncAction, SyncPlanner};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -49,7 +46,7 @@ impl SkillSyncer {
                 } => {
                     if source_path.exists() {
                         let source_content = fs::read_to_string(&source_path)?;
-                        let mut patcher = MarkdownPatcher::new(&source_content);
+                        let mut patcher = Patcher::new(&source_content);
 
                         // 현재 SKILL.md 동기화 로직은 본문만 교체하는 것이 기본 (설계에 따라 다를 수 있음)
                         // PRD/DESIGN을 보면 '본문 교체' 및 'description surgical update' 언급됨.
@@ -75,20 +72,20 @@ impl SkillSyncer {
     }
 }
 
-// Compatibility functions (re-implemented using SkillSyncer and MarkdownPatcher)
+// Compatibility functions (re-implemented using SkillSyncer and Patcher)
 pub fn update_description(source: &str, new_desc: &str) -> String {
-    let mut patcher = markdown::MarkdownPatcher::new(source);
+    let mut patcher = crate::syncer::patcher::Patcher::new(source);
     patcher.update_description(new_desc);
     patcher.render()
 }
 
 pub fn diff_content(source: &str, target: &str) -> bool {
-    let patcher = markdown::MarkdownPatcher::new(source);
+    let patcher = crate::syncer::patcher::Patcher::new(source);
     patcher.has_changed(target)
 }
 
 pub fn replace_content(source: &str, new_content: &str) -> String {
-    let mut patcher = markdown::MarkdownPatcher::new(source);
+    let mut patcher = crate::syncer::patcher::Patcher::new(source);
     patcher.replace_body(new_content);
     patcher.render()
 }

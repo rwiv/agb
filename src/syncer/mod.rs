@@ -1,4 +1,6 @@
-pub mod diff;
+pub mod patcher;
+pub mod planner;
+pub mod skill;
 pub mod sync;
 
 use crate::builder::config;

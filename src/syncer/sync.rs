@@ -1,5 +1,5 @@
 use crate::core::{Resource, SKILL_MD};
-use crate::syncer::diff;
+use crate::syncer::skill;
 use crate::transformer::Transformer;
 use anyhow::{Context, Result};
 use std::fs;
@@ -58,14 +58,14 @@ impl Syncer {
         let new_desc = detransformed.metadata["description"].as_str().unwrap_or_default();
 
         if old_desc != new_desc {
-            source_file_content = diff::update_description(&source_file_content, new_desc);
+            source_file_content = skill::update_description(&source_file_content, new_desc);
             changed = true;
             println!("    - Updated description in source");
         }
 
         // 2. Content 동기화
-        if diff::diff_content(current_content, &detransformed.content) {
-            source_file_content = diff::replace_content(&source_file_content, &detransformed.content);
+        if skill::diff_content(current_content, &detransformed.content) {
+            source_file_content = skill::replace_content(&source_file_content, &detransformed.content);
             changed = true;
             println!("    - Updated content in source");
         }
@@ -82,7 +82,7 @@ impl Syncer {
         // 3. Skill ExtraFiles 동기화
         if let Resource::Skill(_) = resource {
             let target_skill_dir = target_path.parent().unwrap();
-            diff::sync_skill_dir(source_path, target_skill_dir, &self.exclude)?;
+            skill::sync_skill_dir(source_path, target_skill_dir, &self.exclude)?;
         }
 
         Ok(())

@@ -1,10 +1,10 @@
 use regex::Regex;
 
-pub struct MarkdownPatcher {
+pub struct Patcher {
     raw_content: String,
 }
 
-impl MarkdownPatcher {
+impl Patcher {
     pub fn new(content: &str) -> Self {
         Self {
             raw_content: content.to_string(),
@@ -16,14 +16,7 @@ impl MarkdownPatcher {
         let content = self.raw_content.trim_start();
         if !content.starts_with("---") {
             // Frontmatter가 없는 경우 새로 생성
-            self.raw_content = format!(
-                "---
-description: {}
----
-
-{}",
-                new_desc, self.raw_content
-            );
+            self.raw_content = format!("---\ndescription: {}\n---\n\n{}", new_desc, self.raw_content);
             return;
         }
 
@@ -51,26 +44,10 @@ description: {}
                 lines.push(format!("description: {}", new_desc));
             }
 
-            self.raw_content = format!(
-                "---
-{}
----{}",
-                lines.join(
-                    "
-"
-                ),
-                pure_content
-            );
+            self.raw_content = format!("---\n{}\n---{}", lines.join("\n"), pure_content);
         } else {
             // 닫는 ---가 없는 경우 (잘못된 형식), 안전하게 앞에 추가
-            self.raw_content = format!(
-                "---
-description: {}
----
-
-{}",
-                new_desc, self.raw_content
-            );
+            self.raw_content = format!("---\ndescription: {}\n---\n\n{}", new_desc, self.raw_content);
         }
     }
 
@@ -87,14 +64,7 @@ description: {}
         if let Some(end_offset) = rest.find("---") {
             let yaml_part = &rest[..end_offset];
             // Frontmatter 영역을 유지하고 본문만 교체
-            self.raw_content = format!(
-                "---
-{}
----
-
-{}",
-                yaml_part, new_body
-            );
+            self.raw_content = format!("---\n{}\n---\n\n{}", yaml_part, new_body);
         } else {
             // 닫는 ---가 없는 경우 그냥 덮어씀
             self.raw_content = new_body.to_string();
@@ -118,7 +88,7 @@ mod tests {
 
     #[test]
     fn test_has_changed() {
-        let patcher = MarkdownPatcher::new("hello");
+        let patcher = Patcher::new("hello");
         assert!(patcher.has_changed("world"));
         assert!(!patcher.has_changed("hello"));
         assert!(!patcher.has_changed(
@@ -133,7 +103,7 @@ mod tests {
 name: test
 ---
 # Old Content";
-        let mut patcher = MarkdownPatcher::new(source);
+        let mut patcher = Patcher::new(source);
         patcher.replace_body("# New Content");
         let updated = patcher.render();
         assert!(updated.contains("name: test"));
@@ -148,7 +118,7 @@ name: test
 description: old description
 ---
 # Content";
-        let mut patcher = MarkdownPatcher::new(source);
+        let mut patcher = Patcher::new(source);
         patcher.update_description("new description");
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
@@ -162,7 +132,7 @@ description: old description
 name: test
 ---
 # Content";
-        let mut patcher = MarkdownPatcher::new(source);
+        let mut patcher = Patcher::new(source);
         patcher.update_description("new description");
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));
@@ -172,7 +142,7 @@ name: test
     #[test]
     fn test_update_description_no_frontmatter() {
         let source = "# Content";
-        let mut patcher = MarkdownPatcher::new(source);
+        let mut patcher = Patcher::new(source);
         patcher.update_description("new description");
         let updated = patcher.render();
         assert!(updated.contains("description: new description"));

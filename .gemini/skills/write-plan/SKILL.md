@@ -1,6 +1,6 @@
 ---
 name: write-plan
-description: plan 작성 시 읽으시오
+description: Use this skill when initiating a new feature, bug fix, or refactoring task to establish a clear implementation roadmap. This skill mandates a 'plan-before-code' workflow, guiding the development of technical designs (DESIGN.md), strategic project plans (PLAN.md), and actionable task-level documentation to ensure thorough verification and alignment before execution.
 ---
 
 코드를 작성하기 이전에 계획 문서를 작성하시오.
@@ -23,4 +23,3 @@ description: plan 작성 시 읽으시오
 - `<task-name>.md`
     - @plans/feature-1/phase-1/TASK-1-2.md
     - @plans/refactor-6/phase-1/TASK-1-2.md
-

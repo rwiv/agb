@@ -1,7 +1,7 @@
 pub mod default;
 pub mod gemini;
 
-use crate::resource::{BuildTarget, Resource, TransformedFile};
+use crate::core::{BuildTarget, Resource, TransformedFile};
 use anyhow::Result;
 
 use self::default::DefaultTransformer;
@@ -33,7 +33,7 @@ impl TransformerFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::BuildTarget;
+    use crate::core::BuildTarget;
     use std::path::PathBuf;
 
     #[test]

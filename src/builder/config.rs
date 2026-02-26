@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::fs;
 use std::path::Path;
 
-use crate::resource::BuildTarget;
+use crate::core::BuildTarget;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Resources {

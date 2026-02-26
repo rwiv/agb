@@ -2,7 +2,7 @@ pub mod filter;
 pub mod parser;
 pub mod resolver;
 
-use crate::resource::{BuildTarget, Resource};
+use crate::core::{BuildTarget, Resource};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;

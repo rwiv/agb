@@ -37,6 +37,12 @@
         └── skills/         # 폴더 구조: [skill_name]/SKILL.yaml + 기타 파일들
 ```
 
+### 내부 아키텍처 (Internal Architecture)
+- **core**: 시스템 전역에서 사용하는 공용 모델 및 타입 (`Resource`, `BuildTarget` 등).
+- **loader**: 파일 시스템에서 리소스를 스캔, 파싱하여 core 모델로 로드.
+- **builder**: 전체 빌드 파이프라인 제어, 리소스 등록(Registry) 및 결과물 출력(Emitter).
+- **transformer**: 리소스를 각 타겟 에이전트 규격에 맞게 변환.
+
 ### 빌드 환경 (Output)
 `agb.yaml`이 위치한 곳이 빌드 루트가 되며, 결과물이 해당 위치에 생성됩니다.
 

@@ -1,4 +1,4 @@
-use crate::resource::{ResourceKey, ResourcePaths};
+use crate::core::{ResourceKey, ResourcePaths};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

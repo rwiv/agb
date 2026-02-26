@@ -1,4 +1,4 @@
-use crate::resource::{BuildTarget, Resource, TransformedFile};
+use crate::core::{BuildTarget, Resource, TransformedFile};
 use crate::transformer::Transformer;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -54,7 +54,7 @@ impl Transformer for DefaultTransformer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::ResourceData;
+    use crate::core::ResourceData;
     use serde_json::json;
 
     #[test]

@@ -14,18 +14,27 @@
 ### 2. Config (`config.rs`)
 빌드 설정을 정의하고 관리합니다:
 - `agb.yaml` 파일의 역직렬화(Deserialization) 및 구조화
-- 빌드 대상 플랫폼(`resource::BuildTarget`), 소스 경로, 제외 패턴, 대상 리소스 목록 정의
+- 빌드 대상 플랫폼(`core::BuildTarget`), 소스 경로, 제외 패턴, 대상 리소스 목록 정의
 - `shellexpand`를 사용한 경로 내 물결표(`~`) 확장 지원
+
+### 3. Registry (`registry.rs`)
+로드된 리소스를 중앙 관리하며 전역적인 유효성을 검증합니다.
+- **충돌 방지**: 서로 다른 플러그인에서 동일한 이름의 리소스가 선택된 경우 빌드를 중단하여 안전성을 보장합니다.
+
+### 4. Emitter (`emitter.rs`)
+변환된 최종 결과물을 물리적 파일로 출력합니다.
+- **Clean**: 빌드 시작 전, 출력 디렉터리에서 이전 빌드의 잔재를 삭제하여 깨끗한 환경을 보장합니다.
+- **Emit**: `core::TransformedFile` 목록을 바탕으로 파일을 기록합니다.
 
 ## 빌드 프로세스 (5단계)
 
 1. **설정 로드 (Loading Config)**: `agb.yaml` 파일을 읽어 빌드 컨텍스트를 생성합니다.
-2. **리소스 스캔 (Scanning Resources)**: 소스 디렉터리의 `plugins/` 구조를 분석하여 사용 가능한 모든 리소스를 수집합니다.
-3. **리소스 등록 및 필터링 (Registering)**: 수집된 리소스 중 설정 파일에 명시된 리소스(`plugin:name` 형식)만 선별하여 `resource::Registry`에 등록합니다.
+2. **리소스 스캔 (Scanning Resources)**: 소스 디렉터리의 `plugins/` 구조를 분석하여 사용 가능한 모든 리소스를 수집합니다. (`loader` 모듈 사용)
+3. **리소스 등록 및 필터링 (Registering)**: 수집된 리소스 중 설정 파일에 명시된 리소스만 선별하여 `Registry`에 등록합니다.
 4. **변환 (Transforming)**: 
-    - 선택된 타겟 플랫폼 규격에 맞게 리소스 내용을 변환합니다.
+    - 선택된 타겟 플랫폼 규격에 맞게 리소스 내용을 변환합니다. (`transformer` 모듈 사용)
     - 소스 루트에 `AGENTS.md`가 존재할 경우, 타겟별 메인 지침 파일(예: `GEMINI.md`)로 자동 변환하여 포함합니다.
-5. **배포 (Emitting)**: 변환된 결과물을 출력 디렉터리에 파일 형태로 저장하고 이전 결과물을 정리합니다. (`resource::Emitter` 사용)
+5. **배포 (Emitting)**: 변환된 결과물을 출력 디렉터리에 파일 형태로 저장합니다. (`Emitter` 사용)
 
 ## 사용 예시
 
@@ -33,12 +42,8 @@
 use crate::builder::Builder;
 
 fn main() -> anyhow::Result<()> {
-    // Builder 인스턴스 생성 (설정 파일 경로 전달)
     let builder = Builder::new("agb.yaml");
-    
-    // 빌드 프로세스 실행
     builder.run()?;
-    
     Ok(())
 }
 ```

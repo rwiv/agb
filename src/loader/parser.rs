@@ -1,4 +1,4 @@
-use crate::resource::{BuildTarget, Resource, ResourceData, ResourceKey, ResourcePaths};
+use crate::core::{BuildTarget, Resource, ResourceData, ResourceKey, ResourcePaths};
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
 use std::fs;

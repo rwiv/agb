@@ -1,7 +1,9 @@
 prompt = """
-1. git diff를 통해 프로젝트 변경사항을 감지하시오.
-2. 변경사항을 기반으로 한국어 commit message를 작성한 뒤, 사용자에게 검수를 요청하시오.
-3. 사용자가 구체적 피드백 제공하면 이를 참고하여 commit message를 수정하시오. 피드백이 없다면 사용자는 'go'라고 대답할 것입니다.
-4. accepted commit message를 영어로 번역하시오.
-5. git commit을 사용하여 translated commit message를 커밋하시오.
+1. staging area에 있는 파일들을 감지하시오.
+    - staging area에 파일이 없다면, `git add --all`을 사용하여 모든 변경사항을 staging area에 추가하시오.
+2. staging area에 있는 파일들에 대하여 git diff를 사용하여 변경사항을 감지하시오.
+3. 변경사항을 기반으로 한국어 commit message를 작성한 뒤, 사용자에게 검수를 요청하시오.
+4. 사용자가 구체적 피드백 제공하면 이를 참고하여 commit message를 수정하시오. 피드백이 없다면 사용자는 'go'라고 대답할 것입니다.
+5. accepted commit message를 얻었다면, 이를 영어로 번역하시오.
+6. 최종 commit message를 git coomit을 사용하여 커밋하시오.
 """

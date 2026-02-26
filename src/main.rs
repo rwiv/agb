@@ -1,5 +1,6 @@
 mod builder;
-mod resource;
+mod core;
+mod loader;
 mod transformer;
 mod utils;
 

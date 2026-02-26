@@ -1,9 +1,14 @@
 pub mod config;
+pub mod emitter;
+pub mod registry;
 
-use crate::resource;
+use crate::loader::ResourceLoader;
 use crate::transformer;
 use anyhow::Context;
 use std::path::{Path, PathBuf};
+
+use self::emitter::Emitter;
+use self::registry::Registry;
 
 const PLUGINS_DIR_NAME: &str = "plugins";
 
@@ -42,7 +47,7 @@ impl Builder {
         let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
         let exclude = cfg.exclude.unwrap_or_default();
 
-        let loader = resource::ResourceLoader::new(&plugins_dir, &exclude, cfg.target.clone())?;
+        let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target.clone())?;
         let all_resources = loader.load()?;
 
         // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축
@@ -59,7 +64,7 @@ impl Builder {
             target_identifiers.extend(skills);
         }
 
-        let mut registry = resource::registry::Registry::new();
+        let mut registry = Registry::new();
         for resource in all_resources {
             let identifier = format!("{}:{}", resource.plugin(), resource.name());
             if target_identifiers.contains(&identifier) {
@@ -91,7 +96,7 @@ impl Builder {
 
         // 4. Emission
         println!("[5/5] Emitting files to {}...", self.output_dir.display());
-        let emitter = resource::Emitter::new(&self.output_dir);
+        let emitter = Emitter::new(&self.output_dir);
         emitter.clean()?;
         emitter.emit(&transformed_files)?;
 

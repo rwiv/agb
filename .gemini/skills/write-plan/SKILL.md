@@ -16,10 +16,11 @@ description: plan 작성 시 읽으시오
 
 ## 참고 자료
 - `DESIGN.md`
-    - @plans/feature-8/DESING.md
+    - @plans/refactor-6/DESING.md
 - `PLAN.md`
     - @plans/feature-1/PLAN.md
-    - @plans/refactor-3/PLAN.md
+    - @plans/refactor-6/PLAN.md
 - `<task-name>.md`
     - @plans/feature-1/phase-1/TASK-1-2.md
+    - @plans/refactor-6/phase-1/TASK-1-2.md
 

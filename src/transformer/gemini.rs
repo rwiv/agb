@@ -1,4 +1,4 @@
-use crate::resource::{BuildTarget, Resource, TransformedFile};
+use crate::core::{BuildTarget, Resource, TransformedFile};
 use crate::transformer::Transformer;
 use crate::transformer::default::DefaultTransformer;
 use anyhow::{Result, anyhow};
@@ -31,7 +31,7 @@ impl Transformer for GeminiTransformer {
 }
 
 impl GeminiTransformer {
-    fn transform_command_to_toml(&self, data: &crate::resource::ResourceData) -> Result<TransformedFile> {
+    fn transform_command_to_toml(&self, data: &crate::core::ResourceData) -> Result<TransformedFile> {
         // 1. Metadata를 TOML Value로 변환 후 Table로 캐스팅
         let json_value = &data.metadata;
         let toml_value = json_to_toml(json_value)?;
@@ -94,7 +94,7 @@ fn json_to_toml(value: &serde_json::Value) -> Result<toml::Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::ResourceData;
+    use crate::core::ResourceData;
     use serde_json::json;
 
     #[test]

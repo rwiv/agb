@@ -36,9 +36,9 @@
 | 모듈 경로 | 설명 | 문서 (README.md) |
 | :--- | :--- | :--- |
 | `src/main.rs` | CLI 엔트리포인트 및 실행 제어 | - |
-| `src/builder/` | 빌드 파이프라인 제어 및 `agb.yaml` 관리 | [`src/builder/README.md`](../../src/builder/README.md) |
-| `src/resource/` | 리소스 모델(`BuildTarget`, `Resource` 등), 로딩(Loader), 등록(Registry), 출력(Emitter) | [`src/resource/README.md`](../../src/resource/README.md) |
-| `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode). Claude/OpenCode는 `DefaultTransformer`로 통합되었으며, Gemini는 하이브리드 방식(Commands는 TOML, Agents/Skills는 DefaultTransformer 사용)으로 처리함. | [`src/transformer/README.md`](../../src/transformer/README.md) |
+| `src/builder/` | 빌드 파이프라인 제어 및 `agb.yaml` 관리 | [`src/builder/README.md`](../src/builder/README.md) |
+| `src/resource/` | 리소스 모델(`BuildTarget`, `Resource` 등), 로딩(Loader), 등록(Registry), 출력(Emitter) | [`src/resource/README.md`](../src/resource/README.md) |
+| `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode). Claude/OpenCode는 `DefaultTransformer`로 통합되었으며, Gemini는 하이브리드 방식(Commands는 TOML, Agents/Skills는 DefaultTransformer 사용)으로 처리함. | [`src/transformer/README.md`](../src/transformer/README.md) |
 | `src/utils/` | 파일 시스템 조작 등 공통 유틸리티 | - |
 
 ## 4. 데이터 모델 및 상세 설계

@@ -1,6 +1,7 @@
 prompt = """
-staging area에 있는 파일들을 기반으로 commit message를 작성한 뒤, 사용자에게 검사를 요청하시오.
-commit message는 한글로 작성해야합니다.
-사용자가 재작성을 요청하면 commit message를 다시 작성하시오.
-사용자가 go라고 대답하거나 수정본을 제공하면 commit message를 영어로 번역하 뒤, git commit을 수행하시오.
+1. git diff를 통해 프로젝트 변경사항을 감지하시오.
+2. 변경사항을 기반으로 한국어 commit message를 작성한 뒤, 사용자에게 검수를 요청하시오.
+3. 사용자가 구체적 피드백 제공하면 이를 참고하여 commit message를 수정하시오. 피드백이 없다면 사용자는 'go'라고 대답할 것입니다.
+4. accepted commit message를 영어로 번역하시오.
+5. git commit을 사용하여 translated commit message를 커밋하시오.
 """

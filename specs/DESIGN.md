@@ -10,7 +10,7 @@
 
 1. **설정 로드 (Load Config)**: `agb.yaml`을 읽어 빌드 컨텍스트(소스 경로, 타겟 에이전트 등)를 생성합니다. (`builder/config.rs`)
 2. **리소스 스캔 및 로드 (Scan & Load)**: 소스 경로 내의 플러그인 구조를 분석하여 파일들을 수집하고, 이를 `core::Resource` 객체로 로드합니다. (`loader` 모듈)
-3. **검증 및 등록 (Validate & Register)**: 로드된 리소스들의 이름 충돌 여부를 확인하고, 빌드 대상 리소스를 `core::registry::Registry`에 등록합니다. 타입과 이름을 모두 고려하여 중복을 체크합니다.
+3. **검증 및 등록 (Validate & Register)**: 로드된 리소스들의 이름 충돌 여부를 확인하고, 빌드 대상 리소스를 `loader::registry::Registry`에 등록합니다. 타입과 이름을 모두 고려하여 중복을 체크합니다.
 4. **포맷 변환 (Transform)**: 설정된 타겟(`BuildTarget`) 규격에 맞춰 각 리소스를 실제 파일 포맷(TOML, Markdown FM 등)으로 변환합니다. (`transformer` 모듈 사용)
 5. **최종 배포 (Emit)**: 기존 출력 디렉터리를 정리(Clean)한 후, 변환된 리소스들을 물리적 파일로 작성합니다. (`builder::emitter::Emitter`)
 
@@ -65,10 +65,11 @@ graph TD
   - `ExtraFile`: 복사되어야 하는 추가 파일 정보 (`source`, `target` 경로).
   - `TransformedResource`: 변환된 결과물 묶음으로 `files` (변환된 텍스트 파일들)와 `extras` (단순 복사될 파일들)를 포함.
 
-### 2.2 Loader 내부 모델 (`src/loader/mod.rs`)
-파일 시스템 스캔 및 파싱 과정의 내부 상태를 관리합니다.
+### 2.2 Loader 내부 모델 (`src/loader/mod.rs` 및 `src/loader/registry.rs`)
+파일 시스템 스캔, 파싱, 그리고 결과물 보관 과정의 내부 상태를 관리합니다.
 - **ScannedResource**: 파일 스캔 단계에서 생성되며 `plugin`, `name`, `paths`(`ScannedPaths`) 정보를 담습니다.
 - **ScannedPaths**: 리소스 타입별 파일 경로 구성을 강제하는 Enum (예: `Skill`의 경우 `md`, `metadata`, 그리고 `extras` 목록 포함).
+- **Registry**: 로드 및 검증이 완료된 `Resource` 객체들을 메모리에 보관하는 중앙 저장소입니다. 리소스의 타입과 이름에 대한 충돌을 검증합니다.
 
 ### 2.3 리소스 처리 파이프라인
 분산된 소스 파일들을 읽어 하나의 `Resource` 객체로 완성하는 조립 과정을 담당합니다.

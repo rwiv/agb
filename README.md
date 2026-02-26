@@ -48,6 +48,8 @@ cargo install --path .
 ```yaml
 source: ~/agb-resources      # 리소스 소스 저장소 경로
 target: gemini-cli           # 빌드 타겟 (gemini-cli, claude-code, opencode)
+exclude:
+  - "*.tmp"                  # (선택) 스캔/동기화에서 제외할 Glob 패턴
 resources:
   commands:
     - my_plugin:web_search   # [플러그인]:[리소스명]

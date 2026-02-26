@@ -5,14 +5,10 @@
 
 ## 2. 작업 내용
 - `src/core/mod.rs` 상단에 다음 상수들을 정의하고, `pub`으로 공개합니다:
-  - `AGENTS_MD`: `"AGENTS.md"`
-  - `SKILL_MD`: `"SKILL.md"`
-  - `GEMINI_MD`: `"GEMINI.md"`
-  - `CLAUDE_MD`: `"CLAUDE.md"`
-  - `OPENCODE_MD`: `"OPENCODE.md"`
-  - `DIR_COMMANDS`: `"commands"`
-  - `DIR_AGENTS`: `"agents"`
-  - `DIR_SKILLS`: `"skills"`
+  - 파일 이름: `AGENTS_MD`, `SKILL_MD`, `GEMINI_MD`, `CLAUDE_MD`, `OPENCODE_MD`
+  - 디렉터리 이름: `DIR_COMMANDS`, `DIR_AGENTS`, `DIR_SKILLS`
+  - 타겟 이름: `TARGET_GEMINI`, `TARGET_CLAUDE`, `TARGET_OPENCODE`
+  - 확장자: `EXT_MD`, `EXT_TOML`, `EXT_YAML`, `EXT_YML`
 - `src/core/model.rs` 파일 내에서 자기 자신 또는 다른 타입을 참조할 때 `crate::core::ResourceData`와 같은 전체 경로를 `use` 문을 사용하도록 수정합니다.
 
 ## 3. 검증 전략

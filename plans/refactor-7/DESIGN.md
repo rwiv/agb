@@ -19,6 +19,15 @@ pub const OPENCODE_MD: &str = "OPENCODE.md";
 pub const DIR_COMMANDS: &str = "commands";
 pub const DIR_AGENTS: &str = "agents";
 pub const DIR_SKILLS: &str = "skills";
+
+pub const TARGET_GEMINI: &str = "gemini-cli";
+pub const TARGET_CLAUDE: &str = "claude-code";
+pub const TARGET_OPENCODE: &str = "opencode";
+
+pub const EXT_MD: &str = ".md";
+pub const EXT_TOML: &str = ".toml";
+pub const EXT_YAML: &str = ".yaml";
+pub const EXT_YML: &str = ".yml";
 ```
 
 ### 2.2 타입 임포트 정리

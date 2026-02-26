@@ -36,7 +36,7 @@
 | 모듈 경로 | 설명 |
 | :--- | :--- |
 | `src/main.rs` | CLI 엔트리포인트 및 실행 제어 |
-| `src/core/` | 시스템 전역에서 사용하는 공용 모델 및 타입 (`Resource`, `BuildTarget`, `TransformedFile`) |
+| `src/core/` | 시스템 전역 공용 모델(`model.rs`) 및 상수(`constants.rs`) 정의 |
 | `src/loader/` | 파일 시스템 리소스 스캔, 필터링, 파싱 및 로드 로직 |
 | `src/builder/` | 빌드 파이프라인 제어, 설정(`config`), 등록(`registry`), 출력(`emitter`) |
 | `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode) |

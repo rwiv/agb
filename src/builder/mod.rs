@@ -85,7 +85,7 @@ impl Builder {
         }
 
         // AGENTS.md 처리 (Root System Prompt)
-        let agents_md_path = source_dir.join("AGENTS.md");
+        let agents_md_path = source_dir.join(crate::core::AGENTS_MD);
         if agents_md_path.exists() {
             println!("  - Found root system prompt: {}", agents_md_path.display());
             let raw_content = std::fs::read_to_string(&agents_md_path)?;

@@ -1,4 +1,7 @@
-use crate::core::{BuildTarget, Resource, ResourceData, ResourceKey, ResourcePaths};
+use crate::core::{
+    BuildTarget, Resource, ResourceData, ResourceKey, ResourcePaths, DIR_AGENTS, DIR_COMMANDS,
+    DIR_SKILLS, EXT_YAML, EXT_YML, TARGET_CLAUDE, TARGET_GEMINI, TARGET_OPENCODE,
+};
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
 use std::fs;
@@ -25,16 +28,16 @@ impl ResourceParser {
         if let Some(ext_obj) = external.as_object() {
             // 1. 외부 파일의 일반 필드들을 base에 덮어씀 (Shallow merge)
             for (k, v) in ext_obj {
-                if k != "gemini" && k != "claude" && k != "opencode" {
+                if k != TARGET_GEMINI && k != TARGET_CLAUDE && k != TARGET_OPENCODE {
                     base_obj.insert(k.clone(), v.clone());
                 }
             }
 
             // 2. 타겟 섹션 키 결정
             let target_key = match target {
-                BuildTarget::GeminiCli => "gemini",
-                BuildTarget::ClaudeCode => "claude",
-                BuildTarget::OpenCode => "opencode",
+                BuildTarget::GeminiCli => TARGET_GEMINI,
+                BuildTarget::ClaudeCode => TARGET_CLAUDE,
+                BuildTarget::OpenCode => TARGET_OPENCODE,
             };
 
             // 3. 타겟 전용 필드들로 최종 오버라이트
@@ -46,26 +49,40 @@ impl ResourceParser {
         }
 
         // 4. 결과물에서 타겟 섹션 예약어 키들 제거
-        base_obj.remove("gemini");
-        base_obj.remove("claude");
-        base_obj.remove("opencode");
+        base_obj.remove(TARGET_GEMINI);
+        base_obj.remove(TARGET_CLAUDE);
+        base_obj.remove(TARGET_OPENCODE);
     }
 
     /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
-    pub fn parse_metadata(&self, path: &Path, resource_type: &str, resource_name: &str) -> Result<Value> {
-        let meta_str = fs::read_to_string(path).with_context(|| format!("Failed to read metadata file: {:?}", path))?;
+    pub fn parse_metadata(
+        &self,
+        path: &Path,
+        resource_type: &str,
+        resource_name: &str,
+    ) -> Result<Value> {
+        let meta_str = fs::read_to_string(path)
+            .with_context(|| format!("Failed to read metadata file: {:?}", path))?;
 
-        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
+        let extension = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or_default();
 
-        match extension {
-            "yaml" | "yml" => serde_yaml::from_str(&meta_str)
-                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name)),
-            _ => anyhow::bail!(
+        if extension == &EXT_YAML[1..] || extension == &EXT_YML[1..] {
+            serde_yaml::from_str(&meta_str).with_context(|| {
+                format!(
+                    "Failed to parse YAML for resource: {}/{}",
+                    resource_type, resource_name
+                )
+            })
+        } else {
+            anyhow::bail!(
                 "Unsupported metadata extension '{}' for resource: {}/{}",
                 extension,
                 resource_type,
                 resource_name
-            ),
+            )
         }
     }
 
@@ -80,8 +97,8 @@ impl ResourceParser {
 
         // 1. Markdown 본문 및 Frontmatter 추출
         let (mut fm_metadata, pure_content) = if let Some(p) = md {
-            let raw_content =
-                fs::read_to_string(&p).with_context(|| format!("Failed to read markdown content: {:?}", p))?;
+            let raw_content = fs::read_to_string(&p)
+                .with_context(|| format!("Failed to read markdown content: {:?}", p))?;
             crate::utils::yaml::extract_frontmatter(&raw_content)
         } else {
             (json!({}), String::new())
@@ -109,11 +126,14 @@ impl ResourceParser {
             metadata: fm_metadata,
         };
 
-        match r_type.as_str() {
-            "commands" => Ok(Resource::Command(data)),
-            "agents" => Ok(Resource::Agent(data)),
-            "skills" => Ok(Resource::Skill(data)),
-            _ => anyhow::bail!("Unknown resource type: {}", r_type),
+        if r_type == DIR_COMMANDS {
+            Ok(Resource::Command(data))
+        } else if r_type == DIR_AGENTS {
+            Ok(Resource::Agent(data))
+        } else if r_type == DIR_SKILLS {
+            Ok(Resource::Skill(data))
+        } else {
+            anyhow::bail!("Unknown resource type: {}", r_type)
         }
     }
 }
@@ -133,11 +153,11 @@ mod tests {
         });
         let external = json!({
             "name": "overwritten-name",
-            "gemini": {
+            TARGET_GEMINI: {
                 "model": "gemini-3.0-pro",
                 "temperature": 0.2
             },
-            "claude": {
+            TARGET_CLAUDE: {
                 "model": "claude-3-opus"
             }
         });
@@ -147,8 +167,8 @@ mod tests {
         assert_eq!(base["name"], "overwritten-name");
         assert_eq!(base["model"], "gemini-3.0-pro");
         assert_eq!(base["temperature"], 0.2);
-        assert!(base.get("gemini").is_none());
-        assert!(base.get("claude").is_none());
+        assert!(base.get(TARGET_GEMINI).is_none());
+        assert!(base.get(TARGET_CLAUDE).is_none());
     }
 
     #[test]
@@ -167,14 +187,17 @@ model: fm-model
         )?;
         fs::write(
             &yaml_path,
-            "gemini:
+            format!(
+                "{}:
   model: gemini-model",
+                TARGET_GEMINI
+            ),
         )?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
         let key = ResourceKey {
             plugin: "p1".to_string(),
-            r_type: "commands".to_string(),
+            r_type: DIR_COMMANDS.to_string(),
             name: "foo".to_string(),
         };
         let paths = ResourcePaths {
@@ -204,7 +227,7 @@ model: fm-model
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
         let key = ResourceKey {
             plugin: "p1".to_string(),
-            r_type: "commands".to_string(),
+            r_type: DIR_COMMANDS.to_string(),
             name: "foo".to_string(),
         };
         let paths = ResourcePaths {
@@ -235,7 +258,7 @@ num: 123",
         )?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let value = parser.parse_metadata(&yaml_path, "commands", "test")?;
+        let value = parser.parse_metadata(&yaml_path, DIR_COMMANDS, "test")?;
 
         assert_eq!(value["key"], "val");
         assert_eq!(value["num"], 123);
@@ -249,7 +272,7 @@ num: 123",
         fs::write(&txt_path, "content")?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let result = parser.parse_metadata(&txt_path, "commands", "test");
+        let result = parser.parse_metadata(&txt_path, DIR_COMMANDS, "test");
 
         assert!(result.is_err());
         assert!(

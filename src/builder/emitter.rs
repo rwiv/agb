@@ -1,4 +1,6 @@
-use crate::core::TransformedFile;
+use crate::core::{
+    TransformedFile, AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD,
+};
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::PathBuf;
@@ -16,7 +18,14 @@ impl Emitter {
 
     /// 기존에 생성된 디렉터리 및 메인 메모리 파일을 삭제합니다.
     pub fn clean(&self) -> Result<()> {
-        let targets = ["commands", "agents", "skills", "GEMINI.md", "CLAUDE.md", "AGENTS.md"];
+        let targets = [
+            DIR_COMMANDS,
+            DIR_AGENTS,
+            DIR_SKILLS,
+            GEMINI_MD,
+            CLAUDE_MD,
+            AGENTS_MD,
+        ];
 
         for target in targets {
             let path = self.output_path.join(target);
@@ -58,16 +67,16 @@ mod tests {
         let root = dir.path();
 
         // 더미 파일/폴더 생성
-        fs::create_dir(root.join("commands"))?;
-        fs::write(root.join("commands/foo.toml"), "test")?;
-        fs::write(root.join("GEMINI.md"), "test")?;
+        fs::create_dir(root.join(DIR_COMMANDS))?;
+        fs::write(root.join(DIR_COMMANDS).join("foo.toml"), "test")?;
+        fs::write(root.join(GEMINI_MD), "test")?;
         fs::write(root.join("other.txt"), "keep me")?;
 
         let emitter = Emitter::new(root);
         emitter.clean()?;
 
-        assert!(!root.join("commands").exists());
-        assert!(!root.join("GEMINI.md").exists());
+        assert!(!root.join(DIR_COMMANDS).exists());
+        assert!(!root.join(GEMINI_MD).exists());
         assert!(root.join("other.txt").exists());
 
         Ok(())
@@ -81,19 +90,22 @@ mod tests {
         let emitter = Emitter::new(root);
         let files = vec![
             TransformedFile {
-                path: PathBuf::from("commands/foo.toml"),
+                path: PathBuf::from(DIR_COMMANDS).join("foo.toml"),
                 content: "content1".to_string(),
             },
             TransformedFile {
-                path: PathBuf::from("GEMINI.md"),
+                path: PathBuf::from(GEMINI_MD),
                 content: "content2".to_string(),
             },
         ];
 
         emitter.emit(&files)?;
 
-        assert_eq!(fs::read_to_string(root.join("commands/foo.toml"))?, "content1");
-        assert_eq!(fs::read_to_string(root.join("GEMINI.md"))?, "content2");
+        assert_eq!(
+            fs::read_to_string(root.join(DIR_COMMANDS).join("foo.toml"))?,
+            "content1"
+        );
+        assert_eq!(fs::read_to_string(root.join(GEMINI_MD))?, "content2");
 
         Ok(())
     }

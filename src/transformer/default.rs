@@ -1,4 +1,7 @@
-use crate::core::{BuildTarget, Resource, TransformedFile};
+use crate::core::{
+    BuildTarget, Resource, TransformedFile, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD,
+    GEMINI_MD, OPENCODE_MD, SKILL_MD,
+};
 use crate::transformer::Transformer;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -16,9 +19,9 @@ pub struct DefaultTransformer {
 impl Transformer for DefaultTransformer {
     fn transform(&self, resource: &Resource) -> Result<TransformedFile> {
         let (data, folder) = match resource {
-            Resource::Command(d) => (d, "commands"),
-            Resource::Agent(d) => (d, "agents"),
-            Resource::Skill(d) => (d, "skills"),
+            Resource::Command(d) => (d, DIR_COMMANDS),
+            Resource::Agent(d) => (d, DIR_AGENTS),
+            Resource::Skill(d) => (d, DIR_SKILLS),
         };
 
         let frontmatter = DefaultFrontmatter {
@@ -29,9 +32,9 @@ impl Transformer for DefaultTransformer {
         let content = format!("---\n{}---\n\n{}", yaml_frontmatter, data.content);
 
         let path = if matches!(resource, Resource::Skill(_)) {
-            PathBuf::from(folder).join(&data.name).join("SKILL.md")
+            PathBuf::from(folder).join(&data.name).join(SKILL_MD)
         } else {
-            PathBuf::from(folder).join(format!("{}.md", data.name))
+            PathBuf::from(folder).join(format!("{}{}", data.name, EXT_MD))
         };
 
         Ok(TransformedFile { path, content })
@@ -39,9 +42,9 @@ impl Transformer for DefaultTransformer {
 
     fn transform_root_prompt(&self, content: &str) -> Result<TransformedFile> {
         let filename = match self.target {
-            BuildTarget::GeminiCli => "GEMINI.md",
-            BuildTarget::ClaudeCode => "CLAUDE.md",
-            BuildTarget::OpenCode => "OPENCODE.md",
+            BuildTarget::GeminiCli => GEMINI_MD,
+            BuildTarget::ClaudeCode => CLAUDE_MD,
+            BuildTarget::OpenCode => OPENCODE_MD,
         };
 
         Ok(TransformedFile {
@@ -73,7 +76,10 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(result.path, PathBuf::from("commands/test-cmd.md"));
+        assert_eq!(
+            result.path,
+            PathBuf::from(DIR_COMMANDS).join(format!("test-cmd{}", EXT_MD))
+        );
 
         assert!(result.content.contains("metadata:"));
         assert!(result.content.contains("description: A test command"));
@@ -98,7 +104,10 @@ mod tests {
         });
 
         let result = transformer.transform(&resource).unwrap();
-        assert_eq!(result.path, PathBuf::from("skills/test-skill/SKILL.md"));
+        assert_eq!(
+            result.path,
+            PathBuf::from(DIR_SKILLS).join("test-skill").join(SKILL_MD)
+        );
         assert!(result.content.contains("metadata:"));
         assert!(result.content.contains("description: Skill description"));
         assert!(result.content.contains("type: expert"));
@@ -119,15 +128,15 @@ mod tests {
 
         assert_eq!(
             claude.transform_root_prompt("test").unwrap().path,
-            PathBuf::from("CLAUDE.md")
+            PathBuf::from(CLAUDE_MD)
         );
         assert_eq!(
             opencode.transform_root_prompt("test").unwrap().path,
-            PathBuf::from("OPENCODE.md")
+            PathBuf::from(OPENCODE_MD)
         );
         assert_eq!(
             gemini.transform_root_prompt("test").unwrap().path,
-            PathBuf::from("GEMINI.md")
+            PathBuf::from(GEMINI_MD)
         );
     }
 }

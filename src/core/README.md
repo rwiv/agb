@@ -5,7 +5,13 @@
 
 ## 주요 구성 요소
 
-### 1. 데이터 모델 (`model.rs`)
+### 1. 상수 정의 (`constants.rs`)
+프로젝트 전반에서 사용되는 규격 및 설정값들을 중앙 관리합니다.
+- **파일 이름**: `AGENTS.md`, `SKILL.md`, `GEMINI.md` 등
+- **디렉터리 구조**: `commands`, `agents`, `skills`
+- **타겟 및 확장자**: `gemini-cli`, `.md`, `.toml`, `.yaml` 등
+
+### 2. 데이터 모델 (`model.rs`)
 에이전트 리소스의 핵심 구조와 상태를 정의합니다.
 
 - **BuildTarget**: 빌드 대상 플랫폼 규격(`gemini-cli`, `claude-code`, `opencode`)을 정의하는 열거형입니다.

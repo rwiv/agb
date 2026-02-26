@@ -7,7 +7,7 @@ use anyhow::Context;
 use std::path::{Path, PathBuf};
 
 use self::emitter::Emitter;
-use crate::core::Registry;
+use crate::core::{Registry, TransformedResource};
 
 const PLUGINS_DIR_NAME: &str = "plugins";
 
@@ -75,12 +75,16 @@ impl Builder {
         println!("[4/5] Transforming resources for target: {:?}...", cfg.target);
         let transformer = transformer::TransformerFactory::create(&cfg.target);
 
-        let mut transformed_files = Vec::new();
+        let mut transformed_resources = Vec::new();
         for res in registry.all_resources() {
-            let transformed = transformer
+            let transformed_file = transformer
                 .transform(res)
                 .with_context(|| format!("Failed to transform resource: {}", res.name()))?;
-            transformed_files.push(transformed);
+
+            transformed_resources.push(TransformedResource {
+                files: vec![transformed_file],
+                extras: res.extras(),
+            });
         }
 
         // AGENTS.md 처리 (Root System Prompt)
@@ -89,20 +93,23 @@ impl Builder {
             println!("  - Found root system prompt: {}", agents_md_path.display());
             let raw_content = std::fs::read_to_string(&agents_md_path)?;
             let (_fm, pure_content) = crate::utils::yaml::extract_frontmatter(&raw_content);
-            let transformed = transformer.transform_root_prompt(&pure_content)?;
-            transformed_files.push(transformed);
+            let transformed_file = transformer.transform_root_prompt(&pure_content)?;
+
+            transformed_resources.push(TransformedResource {
+                files: vec![transformed_file],
+                extras: Vec::new(),
+            });
         }
 
         // 4. Emission
         println!("[5/5] Emitting files to {}...", self.output_dir.display());
         let emitter = Emitter::new(&self.output_dir);
         emitter.clean()?;
-        emitter.emit(&transformed_files)?;
+        emitter.emit(&transformed_resources)?;
 
         println!("Build successful!");
         println!("  - Target: {:?}", cfg.target);
         println!("  - Resources: {} total", registry.len());
-        println!("  - Files generated: {}", transformed_files.len());
 
         Ok(())
     }

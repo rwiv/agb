@@ -11,6 +11,32 @@ use self::filter::FileFilter;
 use self::parser::ResourceParser;
 use self::resolver::ResourcePathResolver;
 
+/// 스캔된 리소스 정보를 담는 내부 구조체
+#[derive(Debug, Clone)]
+pub struct ScannedResource {
+    pub plugin: String,
+    pub name: String,
+    pub paths: ScannedPaths,
+}
+
+/// 리소스 타입별 파일 경로 구성
+#[derive(Debug, Clone)]
+pub enum ScannedPaths {
+    Command {
+        md: Option<PathBuf>,
+        metadata: Option<PathBuf>,
+    },
+    Agent {
+        md: Option<PathBuf>,
+        metadata: Option<PathBuf>,
+    },
+    Skill {
+        md: Option<PathBuf>,
+        metadata: Option<PathBuf>,
+        extras: Vec<PathBuf>,
+    },
+}
+
 /// 플러그인 디렉터리를 탐색하고 리소스를 로드하는 객체입니다.
 pub struct ResourceLoader {
     root: PathBuf,
@@ -42,11 +68,11 @@ impl ResourceLoader {
     /// 리소스를 로드합니다.
     pub fn load(&self) -> Result<Vec<Resource>> {
         let files = self.scan()?;
-        let groups = self.resolver.resolve(&self.root, files)?;
+        let scanned_resources = self.resolver.resolve(&self.root, files)?;
 
-        groups
+        scanned_resources
             .into_iter()
-            .map(|(key, paths)| self.parser.parse_resource(key, paths))
+            .map(|scanned| self.parser.parse_resource(scanned))
             .collect()
     }
 
@@ -108,10 +134,10 @@ mod tests {
                     assert_eq!(d.metadata["key"], "val");
                     found_foo = true;
                 }
-                Resource::Skill(d) if d.name == "my_skill" => {
-                    assert_eq!(d.plugin, "plugin_b");
-                    assert_eq!(d.metadata["desc"], "skill");
-                    assert!(d.content.contains("prompt"));
+                Resource::Skill(s) if s.base.name == "my_skill" => {
+                    assert_eq!(s.base.plugin, "plugin_b");
+                    assert_eq!(s.base.metadata["desc"], "skill");
+                    assert!(s.base.content.contains("prompt"));
                     found_skill = true;
                 }
                 _ => {}

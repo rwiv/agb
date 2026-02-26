@@ -21,7 +21,7 @@ impl Transformer for DefaultTransformer {
         let (data, folder) = match resource {
             Resource::Command(d) => (d, DIR_COMMANDS),
             Resource::Agent(d) => (d, DIR_AGENTS),
-            Resource::Skill(d) => (d, DIR_SKILLS),
+            Resource::Skill(s) => (&s.base, DIR_SKILLS),
         };
 
         let frontmatter = DefaultFrontmatter {
@@ -57,7 +57,7 @@ impl Transformer for DefaultTransformer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::ResourceData;
+    use crate::core::{ResourceData, SkillData};
     use serde_json::json;
 
     #[test]
@@ -93,14 +93,17 @@ mod tests {
         let transformer = DefaultTransformer {
             target: BuildTarget::ClaudeCode,
         };
-        let resource = Resource::Skill(ResourceData {
-            name: "test-skill".to_string(),
-            plugin: "test-plugin".to_string(),
-            content: "Skill Content".to_string(),
-            metadata: json!({
-                "description": "Skill description",
-                "type": "expert"
-            }),
+        let resource = Resource::Skill(SkillData {
+            base: ResourceData {
+                name: "test-skill".to_string(),
+                plugin: "test-plugin".to_string(),
+                content: "Skill Content".to_string(),
+                metadata: json!({
+                    "description": "Skill description",
+                    "type": "expert"
+                }),
+            },
+            extras: Vec::new(),
         });
 
         let result = transformer.transform(&resource).unwrap();

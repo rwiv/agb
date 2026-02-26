@@ -16,15 +16,14 @@
 
 - **ResourceType**: 리소스의 종류(`Command`, `Agent`, `Skill`)를 정의하는 열거형입니다. `Display` 트레이트를 구현하여 에러 메시지 등에서 가독성 있는 문자열을 제공합니다.
 - **BuildTarget**: 빌드 대상 플랫폼 규격(`gemini-cli`, `claude-code`, `opencode`)을 정의하는 열거형입니다. 각 타겟별 예약어 키(`reserved_key`)와 전체 예약어 목록(`all_reserved_keys`)을 관리합니다.
-- **Resource**: `Command`, `Agent`, `Skill` 타입을 지원하는 핵심 열거형입니다. 각 타입은 `ResourceData`를 포함하며, `r_type()` 메서드를 통해 자신의 타입을 반환할 수 있습니다.
+- **Resource**: `Command`, `Agent`, `Skill` 타입을 지원하는 핵심 열거형입니다. `Skill` 타입은 `SkillData` 구조체를 통해 본문 외의 추가 파일 목록을 가질 수 있습니다. `r_type()` 메서드를 통해 자신의 타입을 반환할 수 있습니다.
 - **ResourceData**: 
   - `name`: 리소스 식별 이름.
   - `plugin`: 리소스가 소속된 플러그인 이름.
   - `content`: 마크다운 본문 내용.
   - `metadata`: YAML/Frontmatter에서 파싱된 설정 값 (`serde_json::Value`).
-- **ResourceKey**: 리소스를 고유하게 식별하기 위한 키 구조체 (`plugin`, `type`, `name`).
-- **ResourcePaths**: 리소스를 구성하는 파일 경로들의 집합 (`md` 파일 경로, `metadata` 파일 경로).
-- **TransformedFile**: 변환기(Transformer)를 거쳐 최종적으로 파일 시스템에 출력될 경로와 내용을 담는 구조체입니다.
+- **ExtraFile**: 물리적으로 대상 디렉터리에 복사되어야 하는 추가 파일의 경로 정보(`source`, `target`)를 담는 구조체입니다.
+- **TransformedResource**: 변환된 파일들(`TransformedFile`의 목록)과 단순 복사될 추가 파일들(`ExtraFile`의 목록)을 묶은 최종 결과물 단위입니다.
 
 ### 3. 리소스 레지스트리 (`registry.rs`)
 빌드 대상 리소스를 관리하고 무결성을 보장하는 중앙 저장소입니다.

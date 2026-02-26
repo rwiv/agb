@@ -39,16 +39,21 @@ graph TD
 
 ## 2. 데이터 모델 및 상세 설계
 
-### 2.1 리소스 모델 (`Resource`)
-리소스는 `ResourceData` 구조체를 포함하며, `Enum`을 통해 타입을 구분합니다.
+### 2.1 Core 데이터 모델 (`src/core/model.rs`)
+리소스는 순수 도메인 및 빌드 결과물을 표현하는 모델들로 구성됩니다.
 - **주요 타입**:
   - `BuildTarget`: 빌드 대상 플랫폼 (Gemini, Claude, OpenCode). 타겟별 예약어 및 규격 문자열 제공.
-  - `Resource`: `Command`, `Agent`, `Skill` 타입을 지원하는 Enum
-  - `ResourceKey`: 리소스 식별자 (plugin, type, name)
-  - `ResourcePaths`: 리소스를 구성하는 파일 경로들의 집합
-- **ResourceData 구성**: `name`, `plugin`, `content` (Markdown), `metadata` (`serde_json::Value`)
+  - `Resource`: `Command`, `Agent`, `Skill` 타입을 지원하는 Enum. `Skill` 타입은 `SkillData` 구조체를 포함하여 추가 파일 정보(`extras`)를 가질 수 있습니다.
+  - `ResourceData`: `name`, `plugin`, `content` (Markdown), `metadata` (`serde_json::Value`)
+  - `ExtraFile`: 복사되어야 하는 추가 파일 정보 (`source`, `target` 경로).
+  - `TransformedResource`: 변환된 결과물 묶음으로 `files` (변환된 텍스트 파일들)와 `extras` (단순 복사될 파일들)를 포함.
 
-### 2.2 리소스 로더 (`loader`)
+### 2.2 Loader 내부 모델 (`src/loader/mod.rs`)
+파일 시스템 스캔 및 파싱 과정의 내부 상태를 관리합니다.
+- **ScannedResource**: 파일 스캔 단계에서 생성되며 `plugin`, `name`, `paths`(`ScannedPaths`) 정보를 담습니다.
+- **ScannedPaths**: 리소스 타입별 파일 경로 구성을 강제하는 Enum (예: `Skill`의 경우 `md`, `metadata`, 그리고 `extras` 목록 포함).
+
+### 2.3 리소스 처리 파이프라인
 분산된 소스 파일들을 읽어 하나의 `Resource` 객체로 완성하는 조립 과정을 담당합니다.
 - **Metadata Merge**: `ResourceParser`는 `BuildTarget` 정보를 활용하여 Markdown Frontmatter와 외부 YAML 설정을 병합합니다. 외부 YAML 파일이 존재하는 경우에만 타겟별 오버라이트 로직이 활성화됩니다. (`merge_metadata` 로직)
-- **Lazy Load**: 스캔 시에는 경로만 수집하고, 실제 리소스 사용 시점에 파싱을 수행합니다.
+- **Extra Files**: `Skill` 타입 리소스 폴더 내의 `SKILL.md`와 `SKILL.yaml`을 제외한 모든 파일은 `extras`로 분류되어, 변환 단계 후 Emitter에 의해 물리적으로 대상 폴더에 복사됩니다.

@@ -23,24 +23,24 @@
 - **보안 검증 (PRD 제약)**: 플러그인 내부에 타겟 에이전트 전용 메인 파일(`GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`)이 존재할 경우 빌드 에러를 발생시킵니다.
 
 ### 3. ResourcePathResolver (`resolver.rs`)
-파일 경로를 분석하여 리소스 단위로 그룹화합니다.
-- **Commands & Agents**: `[plugin]/[type]/[name].{md,yaml,yml}` 구조 분석.
-- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화. `SKILL.{yaml,yml}`을 선택적 메타데이터로 인식합니다.
+파일 경로를 분석하여 리소스 단위(`ScannedResource`)로 그룹화합니다.
+- **Commands & Agents**: `[plugin]/[type]/[name].{md,yaml,yml}` 구조를 `ScannedPaths::Command` 또는 `Agent`로 분석합니다.
+- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화하여 `ScannedPaths::Skill` 구조로 반환합니다. `SKILL.{yaml,yml}`을 선택적 메타데이터로 인식하며, 그 외의 다른 모든 파일들은 `extras` 필드에 수집됩니다.
 - **포맷 충돌 검증**: 동일 리소스에 대해 YAML과 YML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
 
 ### 4. ResourceParser (`parser.rs`)
-메타데이터 파싱과 최종 `Resource` 객체 조립을 담당합니다.
+`ScannedResource` 정보를 기반으로 메타데이터 파싱과 최종 `Resource` 객체 조립을 담당합니다.
 - **메타데이터 파싱**: YAML, YML 형식을 `serde_json::Value`로 변환.
 - **메타데이터 병합**: 타겟 에이전트 규격에 맞춰 본문(Frontmatter)과 외부 메타데이터를 병합합니다 (`merge_metadata`).
     - **검증 규칙**: 모든 공용 메타데이터는 마크다운 Frontmatter에 위치해야 하며, 외부 YAML 파일은 타겟 에이전트 예약어 섹션만 포함할 수 있습니다. 일반 필드가 외부 파일에서 발견되면 빌드 오류가 발생합니다.
-- **리소스 조립**: 마크다운 본문과 병합된 메타데이터를 결합하여 `Resource` 타입별 객체 생성.
+- **리소스 조립**: 마크다운 본문, 병합된 메타데이터, 그리고 `Skill`의 경우 수집된 `extras` 파일 정보를 결합하여 `Resource` 타입별 객체 생성.
 
 ## 리소스 그룹화 규칙
 
-| 리소스 타입 | 구조 | 메타데이터 매칭 | 본문 매칭 |
-| :--- | :--- | :--- | :--- |
-| **Commands/Agents** | 파일 기반 | 파일 이름이 동일한 YAML/YML | 파일 이름이 동일한 `.md` |
-| **Skills** | 폴더 기반 | `SKILL.yaml/yml` | 폴더 내의 `.md` 파일 |
+| 리소스 타입 | 구조 | 메타데이터 매칭 | 본문 매칭 | 추가 파일 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Commands/Agents** | 파일 기반 | 파일 이름이 동일한 YAML/YML | 파일 이름이 동일한 `.md` | 지원하지 않음 |
+| **Skills** | 폴더 기반 | `SKILL.yaml/yml` | 폴더 내의 `.md` 파일 | 폴더 내의 기타 모든 파일 |
 
 ## 구현 상세
 

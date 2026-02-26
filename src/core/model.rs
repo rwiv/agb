@@ -23,21 +23,6 @@ impl fmt::Display for ResourceType {
     }
 }
 
-/// 리소스 식별을 위한 키
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
-pub struct ResourceKey {
-    pub plugin: String,
-    pub r_type: String,
-    pub name: String,
-}
-
-/// 리소스를 구성하는 파일 경로 그룹
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
-pub struct ResourcePaths {
-    pub md: Option<PathBuf>,
-    pub metadata: Option<PathBuf>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ResourceData {
     pub name: String,
@@ -46,12 +31,28 @@ pub struct ResourceData {
     pub metadata: Value,
 }
 
+/// 스킬을 위한 확장 데이터
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SkillData {
+    pub base: ResourceData,
+    pub extras: Vec<ExtraFile>,
+}
+
+/// 추가로 복사되어야 하는 파일 정보
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ExtraFile {
+    /// 원본 파일 경로
+    pub source: PathBuf,
+    /// 대상 상대 경로 (예: skills/my_skill/extra.txt)
+    pub target: PathBuf,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Resource {
     Command(ResourceData),
     Agent(ResourceData),
-    Skill(ResourceData),
+    Skill(SkillData),
 }
 
 impl Resource {
@@ -65,13 +66,22 @@ impl Resource {
 
     pub fn name(&self) -> &str {
         match self {
-            Resource::Command(d) | Resource::Agent(d) | Resource::Skill(d) => &d.name,
+            Resource::Command(d) | Resource::Agent(d) => &d.name,
+            Resource::Skill(s) => &s.base.name,
         }
     }
 
     pub fn plugin(&self) -> &str {
         match self {
-            Resource::Command(d) | Resource::Agent(d) | Resource::Skill(d) => &d.plugin,
+            Resource::Command(d) | Resource::Agent(d) => &d.plugin,
+            Resource::Skill(s) => &s.base.plugin,
+        }
+    }
+
+    pub fn extras(&self) -> Vec<ExtraFile> {
+        match self {
+            Resource::Skill(s) => s.extras.clone(),
+            _ => Vec::new(),
         }
     }
 }
@@ -83,4 +93,13 @@ pub struct TransformedFile {
     pub path: PathBuf,
     /// 변환이 완료된 파일의 실제 내용
     pub content: String,
+}
+
+/// 하나의 리소스에서 생성된 결과물들의 묶음
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TransformedResource {
+    /// 변환된 텍스트 파일들
+    pub files: Vec<TransformedFile>,
+    /// 단순히 복사되어야 하는 추가 파일들
+    pub extras: Vec<ExtraFile>,
 }

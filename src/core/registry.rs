@@ -47,7 +47,7 @@ impl Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::ResourceData;
+    use crate::core::{ResourceData, SkillData};
     use serde_json::Value;
 
     fn mock_resource(name: &str, plugin: &str, r_type: ResourceType) -> Resource {
@@ -60,7 +60,10 @@ mod tests {
         match r_type {
             ResourceType::Command => Resource::Command(data),
             ResourceType::Agent => Resource::Agent(data),
-            ResourceType::Skill => Resource::Skill(data),
+            ResourceType::Skill => Resource::Skill(SkillData {
+                base: data,
+                extras: Vec::new(),
+            }),
         }
     }
 

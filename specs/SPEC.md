@@ -17,6 +17,7 @@
         ├── commands/       # 필수: [name].md | 선택: [name].yaml
         ├── agents/         # 필수: [name].md | 선택: [name].yaml
         └── skills/         # 필수: [skill_name]/SKILL.md | 선택: SKILL.yaml
+                            # 추가 파일(예: 스크립트, 데이터 등)은 그대로 빌드 폴더로 복사됩니다.
 ```
 
 ### 2.2 빌드 환경 구조 (Output)
@@ -30,7 +31,8 @@
 ├── agents/                 # 변환된 에이전트 파일들
 └── skills/                 # 변환된 스킬 폴더들
     └── [skill_name]/
-        └── SKILL.md        # 변환된 스킬 본문
+        ├── SKILL.md        # 변환된 스킬 본문
+        └── extra_file.py   # 소스 폴더에서 복사된 추가 파일들
 ```
 
 ## 3. 설정 규격 (`agb.yaml`)

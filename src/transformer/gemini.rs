@@ -62,7 +62,7 @@ impl GeminiTransformer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::ResourceData;
+    use crate::core::{ResourceData, SkillData};
     use serde_json::json;
     use toml::Table;
 
@@ -109,13 +109,16 @@ mod tests {
     #[test]
     fn test_gemini_skill_transformation() {
         let transformer = GeminiTransformer;
-        let resource = Resource::Skill(ResourceData {
-            name: "test-skill".to_string(),
-            plugin: "test-plugin".to_string(),
-            content: "Skill Content".to_string(),
-            metadata: json!({
-                "type": "expert"
-            }),
+        let resource = Resource::Skill(SkillData {
+            base: ResourceData {
+                name: "test-skill".to_string(),
+                plugin: "test-plugin".to_string(),
+                content: "Skill Content".to_string(),
+                metadata: json!({
+                    "type": "expert"
+                }),
+            },
+            extras: Vec::new(),
         });
 
         let result = transformer.transform(&resource).unwrap();

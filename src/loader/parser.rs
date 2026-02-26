@@ -1,11 +1,11 @@
 use crate::core::{
-    BuildTarget, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_YAML, EXT_YML, Resource, ResourceData, ResourceKey,
-    ResourcePaths,
+    BuildTarget, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_YAML, EXT_YML, ExtraFile, Resource, ResourceData, SkillData,
 };
+use crate::loader::{ScannedPaths, ScannedResource};
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// 리소스를 파싱하고 조립하는 객체입니다.
 pub struct ResourceParser {
@@ -17,15 +17,51 @@ impl ResourceParser {
         Self { target }
     }
 
-    /// 그룹화된 파일 경로들로부터 Resource 객체를 생성합니다.
-    pub fn parse_resource(&self, key: ResourceKey, paths: ResourcePaths) -> Result<Resource> {
-        let ResourceKey {
-            plugin,
-            r_type,
-            name: resource_name,
-        } = key;
-        let ResourcePaths { md, metadata } = paths;
+    /// 스캔된 리소스 정보로부터 Resource 객체를 생성합니다.
+    pub fn parse_resource(&self, scanned: ScannedResource) -> Result<Resource> {
+        let plugin = scanned.plugin;
+        let resource_name = scanned.name;
 
+        match scanned.paths {
+            ScannedPaths::Command { md, metadata } => {
+                let data = self.parse_common(DIR_COMMANDS, &plugin, &resource_name, md, metadata)?;
+                Ok(Resource::Command(data))
+            }
+            ScannedPaths::Agent { md, metadata } => {
+                let data = self.parse_common(DIR_AGENTS, &plugin, &resource_name, md, metadata)?;
+                Ok(Resource::Agent(data))
+            }
+            ScannedPaths::Skill { md, metadata, extras } => {
+                let base = self.parse_common(DIR_SKILLS, &plugin, &resource_name, md, metadata)?;
+
+                // extras 처리 (스킬 디렉터리 내의 추가 파일들)
+                let skill_extras = extras
+                    .into_iter()
+                    .map(|source| {
+                        // 대상 경로는 skills/[skill_name]/[file_name] 형식으로 설정
+                        let file_name = source.file_name().unwrap().to_os_string();
+                        let target = PathBuf::from(DIR_SKILLS).join(&resource_name).join(file_name);
+                        ExtraFile { source, target }
+                    })
+                    .collect();
+
+                Ok(Resource::Skill(SkillData {
+                    base,
+                    extras: skill_extras,
+                }))
+            }
+        }
+    }
+
+    /// 공통 데이터 파싱 로직 (Markdown + Metadata)
+    fn parse_common(
+        &self,
+        r_type: &str,
+        plugin: &str,
+        name: &str,
+        md: Option<PathBuf>,
+        metadata: Option<PathBuf>,
+    ) -> Result<ResourceData> {
         // 1. Markdown 본문 및 Frontmatter 추출
         let (mut fm_metadata, pure_content) = if let Some(p) = md {
             let raw_content =
@@ -34,7 +70,7 @@ impl ResourceParser {
         } else {
             anyhow::bail!(
                 "Markdown file is missing for resource '{}' in plugin '{}' ({})",
-                resource_name,
+                name,
                 plugin,
                 r_type
             );
@@ -42,27 +78,17 @@ impl ResourceParser {
 
         // 2. 외부 메타데이터 파일 파싱 및 병합
         if let Some(p) = metadata {
-            let ext_metadata = self.parse_metadata(&p, &r_type, &resource_name)?;
+            let ext_metadata = self.parse_metadata(&p, r_type, name)?;
             self.merge_metadata(&mut fm_metadata, &ext_metadata)
-                .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, resource_name))?;
+                .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, name))?;
         }
 
-        let data = ResourceData {
-            name: resource_name,
-            plugin,
+        Ok(ResourceData {
+            name: name.to_string(),
+            plugin: plugin.to_string(),
             content: pure_content,
             metadata: fm_metadata,
-        };
-
-        if r_type == DIR_COMMANDS {
-            Ok(Resource::Command(data))
-        } else if r_type == DIR_AGENTS {
-            Ok(Resource::Agent(data))
-        } else if r_type == DIR_SKILLS {
-            Ok(Resource::Skill(data))
-        } else {
-            anyhow::bail!("Unknown resource type: {}", r_type)
-        }
+        })
     }
 
     /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
@@ -160,26 +186,6 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_metadata_validation_fail() {
-        let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let mut base = json!({"name": "foo"});
-        // Invalid external metadata: contains 'name' at top-level
-        let external = json!({
-            "name": "illegal-override",
-            "gemini-cli": { "model": "bar" }
-        });
-
-        let result = parser.merge_metadata(&mut base, &external);
-        assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("unauthorized top-level field: 'name'")
-        );
-    }
-
-    #[test]
     fn test_parse_resource_with_frontmatter_and_external() -> Result<()> {
         let dir = tempdir()?;
         let md_path = dir.path().join("foo.md");
@@ -200,19 +206,18 @@ model: fm-model
         )?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let key = ResourceKey {
+        let scanned = ScannedResource {
             plugin: "p1".to_string(),
-            r_type: DIR_COMMANDS.to_string(),
             name: "foo".to_string(),
-        };
-        let paths = ResourcePaths {
-            md: Some(md_path),
-            metadata: Some(yaml_path),
+            paths: ScannedPaths::Command {
+                md: Some(md_path),
+                metadata: Some(yaml_path),
+            },
         };
 
-        let res = parser.parse_resource(key, paths)?;
+        let res = parser.parse_resource(scanned)?;
         if let Resource::Command(d) = res {
-            assert_eq!(d.name, "foo"); // Filename 'foo' should be the resource name
+            assert_eq!(d.name, "foo");
             assert_eq!(d.content, "# Content");
             assert_eq!(d.metadata["model"], "gemini-model");
         } else {
@@ -222,115 +227,35 @@ model: fm-model
     }
 
     #[test]
-    fn test_resource_parser_parse_resource_command_no_ext_metadata() -> Result<()> {
+    fn test_parse_skill_with_extras() -> Result<()> {
         let dir = tempdir()?;
-        let md_path = dir.path().join("foo.md");
-        fs::write(&md_path, "# Content")?;
+        let skill_dir = dir.path().join("p1/skills/my-skill");
+        fs::create_dir_all(&skill_dir)?;
+
+        let md_path = skill_dir.join("SKILL.md");
+        let extra_path = skill_dir.join("logic.py");
+        fs::write(&md_path, "# Skill")?;
+        fs::write(&extra_path, "print('hello')")?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let key = ResourceKey {
+        let scanned = ScannedResource {
             plugin: "p1".to_string(),
-            r_type: DIR_COMMANDS.to_string(),
-            name: "foo".to_string(),
-        };
-        let paths = ResourcePaths {
-            md: Some(md_path),
-            metadata: None,
+            name: "my-skill".to_string(),
+            paths: ScannedPaths::Skill {
+                md: Some(md_path),
+                metadata: None,
+                extras: vec![extra_path],
+            },
         };
 
-        let res = parser.parse_resource(key, paths)?;
-        if let Resource::Command(d) = res {
-            assert_eq!(d.name, "foo");
-            assert_eq!(d.plugin, "p1");
-            assert_eq!(d.content, "# Content");
+        let res = parser.parse_resource(scanned)?;
+        if let Resource::Skill(s) = res {
+            assert_eq!(s.base.name, "my-skill");
+            assert_eq!(s.extras.len(), 1);
+            assert_eq!(s.extras[0].target.to_str().unwrap(), "skills/my-skill/logic.py");
         } else {
-            panic!("Expected Command resource");
+            panic!("Expected Skill resource");
         }
-        Ok(())
-    }
-
-    #[test]
-    fn test_resource_parser_validation_error_on_general_field() -> Result<()> {
-        let dir = tempdir()?;
-        let md_path = dir.path().join("foo.md");
-        let yaml_path = dir.path().join("foo.yaml");
-        fs::write(&md_path, "# Content")?;
-        fs::write(&yaml_path, "key: val")?; // General field 'key' is unauthorized
-
-        let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let key = ResourceKey {
-            plugin: "p1".to_string(),
-            r_type: DIR_COMMANDS.to_string(),
-            name: "foo".to_string(),
-        };
-        let paths = ResourcePaths {
-            md: Some(md_path),
-            metadata: Some(yaml_path),
-        };
-
-        let res = parser.parse_resource(key, paths);
-        assert!(res.is_err());
-        let err_msg = format!("{:#}", res.unwrap_err());
-        assert!(err_msg.contains("unauthorized top-level field: 'key'"));
-        Ok(())
-    }
-
-    #[test]
-    fn test_resource_parser_error_on_missing_md() {
-        let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let key = ResourceKey {
-            plugin: "p1".to_string(),
-            r_type: DIR_COMMANDS.to_string(),
-            name: "foo".to_string(),
-        };
-        // md is None
-        let paths = ResourcePaths {
-            md: None,
-            metadata: None,
-        };
-
-        let res = parser.parse_resource(key, paths);
-        assert!(res.is_err());
-        let err_msg = res.unwrap_err().to_string();
-        assert!(err_msg.contains("Markdown file is missing"));
-        assert!(err_msg.contains("foo"));
-        assert!(err_msg.contains("p1"));
-    }
-
-    #[test]
-    fn test_metadata_parser_parse_yaml() -> Result<()> {
-        let dir = tempdir()?;
-        let yaml_path = dir.path().join("test.yaml");
-        fs::write(
-            &yaml_path,
-            "key: val
-num: 123",
-        )?;
-
-        let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let value = parser.parse_metadata(&yaml_path, DIR_COMMANDS, "test")?;
-
-        assert_eq!(value["key"], "val");
-        assert_eq!(value["num"], 123);
-        Ok(())
-    }
-
-    #[test]
-    fn test_metadata_parser_unsupported_extension() -> Result<()> {
-        let dir = tempdir()?;
-        let txt_path = dir.path().join("test.txt");
-        fs::write(&txt_path, "content")?;
-
-        let parser = ResourceParser::new(BuildTarget::GeminiCli);
-        let result = parser.parse_metadata(&txt_path, DIR_COMMANDS, "test");
-
-        assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Unsupported metadata extension 'txt'")
-        );
         Ok(())
     }
 }

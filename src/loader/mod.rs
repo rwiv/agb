@@ -1,15 +1,18 @@
 pub mod filter;
 pub mod parser;
 pub mod resolver;
+pub mod registry;
 
 use crate::core::{BuildTarget, Resource};
 use anyhow::Result;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use self::filter::FileFilter;
 use self::parser::ResourceParser;
 use self::resolver::ResourcePathResolver;
+use self::registry::Registry;
 
 /// 스캔된 리소스 정보를 담는 내부 구조체
 #[derive(Debug, Clone)]
@@ -74,6 +77,21 @@ impl ResourceLoader {
             .into_iter()
             .map(|scanned| self.parser.parse_resource(scanned))
             .collect()
+    }
+
+    /// 타겟 식별자 목록에 해당하는 리소스만 로드하여 Registry를 구축합니다.
+    pub fn load_registry(&self, target_identifiers: &HashSet<String>) -> Result<Registry> {
+        let all_resources = self.load()?;
+        let mut registry = Registry::new();
+
+        for resource in all_resources {
+            let identifier = format!("{}:{}", resource.plugin(), resource.name());
+            if target_identifiers.contains(&identifier) {
+                registry.register(resource)?;
+            }
+        }
+
+        Ok(registry)
     }
 
     /// 플러그인 디렉터리를 스캔하여 유효한 파일 경로 목록을 반환합니다.

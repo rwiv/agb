@@ -4,7 +4,7 @@ pub mod skill;
 pub mod sync;
 
 use crate::builder::config;
-use crate::core::{PLUGINS_DIR_NAME, Registry};
+use crate::core::PLUGINS_DIR_NAME;
 use crate::loader::ResourceLoader;
 use crate::syncer::sync::Syncer;
 use crate::transformer::TransformerFactory;
@@ -48,26 +48,19 @@ impl SyncExecutor {
         let exclude = cfg.exclude.clone().unwrap_or_default();
 
         let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
-        let all_resources = loader.load()?;
 
         let mut target_identifiers = HashSet::new();
         if let Some(cmds) = &cfg.resources.commands {
-            target_identifiers.extend(cmds);
+            target_identifiers.extend(cmds.clone());
         }
         if let Some(agents) = &cfg.resources.agents {
-            target_identifiers.extend(agents);
+            target_identifiers.extend(agents.clone());
         }
         if let Some(skills) = &cfg.resources.skills {
-            target_identifiers.extend(skills);
+            target_identifiers.extend(skills.clone());
         }
 
-        let mut registry = Registry::new();
-        for resource in all_resources {
-            let identifier = format!("{}:{}", resource.plugin(), resource.name());
-            if target_identifiers.contains(&identifier) {
-                registry.register(resource)?;
-            }
-        }
+        let registry = loader.load_registry(&target_identifiers)?;
 
         // 2. Transformer 및 Registry 순회 동기화
         println!("[3/4] Syncing target changes to source for target: {:?}...", cfg.target);

@@ -7,7 +7,7 @@ use anyhow::Context;
 use std::path::{Path, PathBuf};
 
 use self::emitter::Emitter;
-use crate::core::{PLUGINS_DIR_NAME, Registry, TransformedResource};
+use crate::core::{PLUGINS_DIR_NAME, TransformedResource};
 
 pub struct BuildExecutor {
     config_file: String,
@@ -45,29 +45,21 @@ impl BuildExecutor {
         let exclude = cfg.exclude.unwrap_or_default();
 
         let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
-        let all_resources = loader.load()?;
 
         // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축
         println!("[3/5] Validating and registering resources...");
-
         let mut target_identifiers = std::collections::HashSet::new();
         if let Some(cmds) = &cfg.resources.commands {
-            target_identifiers.extend(cmds);
+            target_identifiers.extend(cmds.clone());
         }
         if let Some(agents) = &cfg.resources.agents {
-            target_identifiers.extend(agents);
+            target_identifiers.extend(agents.clone());
         }
         if let Some(skills) = &cfg.resources.skills {
-            target_identifiers.extend(skills);
+            target_identifiers.extend(skills.clone());
         }
 
-        let mut registry = Registry::new();
-        for resource in all_resources {
-            let identifier = format!("{}:{}", resource.plugin(), resource.name());
-            if target_identifiers.contains(&identifier) {
-                registry.register(resource)?;
-            }
-        }
+        let registry = loader.load_registry(&target_identifiers)?;
 
         // 3. Transformation
         println!("[4/5] Transforming resources for target: {:?}...", cfg.target);

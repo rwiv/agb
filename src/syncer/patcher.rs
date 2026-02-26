@@ -91,10 +91,7 @@ mod tests {
         let patcher = Patcher::new("hello");
         assert!(patcher.has_changed("world"));
         assert!(!patcher.has_changed("hello"));
-        assert!(!patcher.has_changed(
-            "hello
-"
-        ));
+        assert!(!patcher.has_changed("hello\n"));
     }
 
     #[test]

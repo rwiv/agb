@@ -5,9 +5,10 @@ mod syncer;
 mod transformer;
 mod utils;
 
-use builder::BuildExecutor;
+use builder::Builder;
 use clap::{Parser, Subcommand};
 use std::path::Path;
+use syncer::Syncer;
 
 #[derive(Parser)]
 #[command(name = "agb")]
@@ -51,14 +52,18 @@ fn main() -> anyhow::Result<()> {
     let cfg = core::load_config(config_file)?;
     let source_dir = Path::new(&cfg.source);
 
+    // Registry 및 Transformer 구축 (Build와 Sync 모두에서 공통으로 필요)
+    let registry = loader::load_registry_from_config(&cfg, source_dir)?;
+    let transformer = transformer::TransformerFactory::create(&cfg.target);
+
     match &cli.command {
         Commands::Build { .. } => {
-            let executor = BuildExecutor::new();
-            executor.run(&cfg, source_dir, output_dir)?;
+            let executor = Builder::new();
+            executor.run(&cfg, transformer.as_ref(), &registry, source_dir, output_dir)?;
         }
         Commands::Sync { .. } => {
-            let executor = syncer::SyncExecutor::new();
-            executor.run(&cfg, source_dir, output_dir)?;
+            let executor = Syncer::new();
+            executor.run(&cfg, transformer.as_ref(), &registry, output_dir)?;
         }
     }
 

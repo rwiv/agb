@@ -1,51 +1,31 @@
 pub mod emitter;
 
-use crate::loader::ResourceLoader;
-use crate::transformer;
+use crate::core::{Config, TransformedResource};
+use crate::loader::registry::Registry;
+use crate::transformer::Transformer;
 use anyhow::Context;
 use std::path::Path;
 
 use self::emitter::Emitter;
-use crate::core::{PLUGINS_DIR_NAME, TransformedResource, Config};
 
 #[derive(Default)]
-pub struct BuildExecutor;
+pub struct Builder;
 
-impl BuildExecutor {
+impl Builder {
     pub fn new() -> Self {
         Self
     }
 
-    pub fn run(&self, cfg: &Config, source_dir: &Path, output_dir: &Path) -> anyhow::Result<()> {
-        if !source_dir.exists() {
-            anyhow::bail!("Source directory does not exist: {}", source_dir.display());
-        }
-
-        // 1. 모든 플러그인 파일 스캔 및 로드
-        println!("Scanning and loading resources from {}...", source_dir.display());
-        let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
-        let exclude = cfg.exclude.as_ref().cloned().unwrap_or_default();
-
-        let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
-
-        // 2. agb.yaml에 명시된 리소스 필터링 및 Registry 구축
-        println!("Validating and registering resources...");
-        let mut target_identifiers = std::collections::HashSet::new();
-        if let Some(cmds) = &cfg.resources.commands {
-            target_identifiers.extend(cmds.clone());
-        }
-        if let Some(agents) = &cfg.resources.agents {
-            target_identifiers.extend(agents.clone());
-        }
-        if let Some(skills) = &cfg.resources.skills {
-            target_identifiers.extend(skills.clone());
-        }
-
-        let registry = loader.load_registry(&target_identifiers)?;
-
-        // 3. Transformation
+    pub fn run(
+        &self,
+        cfg: &Config,
+        transformer: &dyn Transformer,
+        registry: &Registry,
+        source_dir: &Path,
+        output_dir: &Path,
+    ) -> anyhow::Result<()> {
+        // Transformation
         println!("Transforming resources for target: {:?}...", cfg.target);
-        let transformer = transformer::TransformerFactory::create(&cfg.target);
 
         let mut transformed_resources = Vec::new();
         for res in registry.all_resources() {

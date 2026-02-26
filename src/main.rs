@@ -43,8 +43,8 @@ fn main() -> anyhow::Result<()> {
         }
         Commands::Sync { config } => {
             let config_file = config.as_deref().unwrap_or("agb.yaml");
-            let syncer = syncer::Syncer::new(config_file);
-            syncer.run()?;
+            let executor = syncer::SyncExecutor::new(config_file);
+            executor.run()?;
         }
     }
 

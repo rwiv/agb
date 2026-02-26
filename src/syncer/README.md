@@ -10,12 +10,15 @@
 
 ## 주요 구성 요소
 
-### 1. Syncer (`mod.rs`)
-동기화 프로세스를 제어하는 오케스트레이터입니다.
-- `run()`: 설정 로드, 레지스트리 구축 후 모든 리소스에 대해 동기화를 수행합니다.
-- `sync_resource()`: 개별 리소스에 대해 역변환(Detransform)을 수행하고 변경사항을 적용합니다.
+### 1. SyncExecutor (`mod.rs`)
+전체 동기화 프로세스를 제어하는 오케스트레이터입니다.
+- `run()`: 설정 로드, 레지스트리 구축 후 `syncer::Syncer`를 생성하여 모든 리소스에 대해 동기화를 수행합니다.
 
-### 2. Diff 엔진 (`diff.rs`)
+### 2. Syncer (`syncer.rs`)
+개별 리소스의 실제 동기화 로직을 수행하는 실행기입니다.
+- `sync()`: 단일 리소스에 대해 역변환(Detransform)을 수행하고 변경사항을 소스 파일에 반영합니다. 상태(`output_dir`, `exclude`)를 소유하여 동작합니다.
+
+### 3. Diff 엔진 (`diff.rs`)
 물리적인 변경 감지 및 파일 수정 로직을 포함합니다.
 - `update_description()`: 정규표현식을 사용해 마크다운 Frontmatter 내의 `description` 라인만 교체합니다.
 - `replace_content()`: Frontmatter를 유지하면서 마크다운 본문 영역만 교체합니다.
@@ -23,12 +26,10 @@
 
 ## 동기화 흐름
 
-1. **역변환**: `Transformer::detransform`을 통해 타겟 파일(TOML, MD 등)을 다시 `ResourceData` 모델로 복원합니다.
-2. **필드 비교**:
-    - `description`: 메타데이터 내의 설명 필드 비교.
-    - `content`: 마크다운 본문 비교.
-    - `extras`: 해시(SHA-256)를 통한 파일 내용 비교.
-3. **반영**: 변경이 감지된 경우에만 소스 파일 시스템에 쓰기 작업을 수행합니다.
+1. **컨텍스트 준비**: `SyncExecutor`가 `agb.yaml`을 로드하고 소스 레지스트리를 구축합니다.
+2. **동기화기 생성**: 빌드 타겟에 맞는 `Transformer`와 실행 시점의 설정을 가진 `Syncer` 객체를 생성합니다.
+3. **역변환 및 비교**: `Syncer::sync` 과정에서 `Transformer::detransform`을 통해 타겟 파일을 모델로 복원하고 소스와 비교합니다.
+4. **반영**: `diff` 모듈의 함수들을 사용하여 변경이 감지된 필드(Description, Content, Extras)만 소스 파일 시스템에 업데이트합니다.
 
 ## 주의 사항
 - `AGENTS.md` (타겟의 `GEMINI.md` 등)는 현재 동기화 대상에서 제외됩니다.

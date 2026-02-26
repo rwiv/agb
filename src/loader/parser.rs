@@ -1,6 +1,6 @@
 use crate::core::{
     BuildTarget, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_YAML, EXT_YML, Resource, ResourceData, ResourceKey,
-    ResourcePaths, TARGET_CLAUDE, TARGET_GEMINI, TARGET_OPENCODE,
+    ResourcePaths,
 };
 use anyhow::{Context, Result};
 use serde_json::{Value, json};
@@ -15,62 +15,6 @@ pub struct ResourceParser {
 impl ResourceParser {
     pub fn new(target: BuildTarget) -> Self {
         Self { target }
-    }
-
-    /// 두 개의 메타데이터 객체를 타겟 규칙에 따라 병합합니다.
-    fn merge_metadata(&self, base: &mut Value, external: &Value, target: &BuildTarget) {
-        if !base.is_object() {
-            *base = json!({});
-        }
-
-        let base_obj = base.as_object_mut().unwrap();
-
-        if let Some(ext_obj) = external.as_object() {
-            // 1. 외부 파일의 일반 필드들을 base에 덮어씀 (Shallow merge)
-            for (k, v) in ext_obj {
-                if k != TARGET_GEMINI && k != TARGET_CLAUDE && k != TARGET_OPENCODE {
-                    base_obj.insert(k.clone(), v.clone());
-                }
-            }
-
-            // 2. 타겟 섹션 키 결정
-            let target_key = match target {
-                BuildTarget::GeminiCli => TARGET_GEMINI,
-                BuildTarget::ClaudeCode => TARGET_CLAUDE,
-                BuildTarget::OpenCode => TARGET_OPENCODE,
-            };
-
-            // 3. 타겟 전용 필드들로 최종 오버라이트
-            if let Some(target_section) = ext_obj.get(target_key).and_then(|v| v.as_object()) {
-                for (k, v) in target_section {
-                    base_obj.insert(k.clone(), v.clone());
-                }
-            }
-        }
-
-        // 4. 결과물에서 타겟 섹션 예약어 키들 제거
-        base_obj.remove(TARGET_GEMINI);
-        base_obj.remove(TARGET_CLAUDE);
-        base_obj.remove(TARGET_OPENCODE);
-    }
-
-    /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
-    pub fn parse_metadata(&self, path: &Path, resource_type: &str, resource_name: &str) -> Result<Value> {
-        let meta_str = fs::read_to_string(path).with_context(|| format!("Failed to read metadata file: {:?}", path))?;
-
-        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
-
-        if extension == &EXT_YAML[1..] || extension == &EXT_YML[1..] {
-            serde_yaml::from_str(&meta_str)
-                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name))
-        } else {
-            anyhow::bail!(
-                "Unsupported metadata extension '{}' for resource: {}/{}",
-                extension,
-                resource_type,
-                resource_name
-            )
-        }
     }
 
     /// 그룹화된 파일 경로들로부터 Resource 객체를 생성합니다.
@@ -99,7 +43,7 @@ impl ResourceParser {
         };
 
         // 3. 타겟 규칙에 따른 병합 (FM + External)
-        self.merge_metadata(&mut fm_metadata, &ext_metadata, &self.target);
+        self.target.merge_metadata(&mut fm_metadata, &ext_metadata);
 
         // 4. 명시된 이름이 있다면 리소스 이름으로 사용
         if let Some(explicit_name) = fm_metadata.get("name").and_then(|v| v.as_str()) {
@@ -123,6 +67,25 @@ impl ResourceParser {
             anyhow::bail!("Unknown resource type: {}", r_type)
         }
     }
+
+    /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
+    fn parse_metadata(&self, path: &Path, resource_type: &str, resource_name: &str) -> Result<Value> {
+        let meta_str = fs::read_to_string(path).with_context(|| format!("Failed to read metadata file: {:?}", path))?;
+
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
+
+        if extension == &EXT_YAML[1..] || extension == &EXT_YML[1..] {
+            serde_yaml::from_str(&meta_str)
+                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", resource_type, resource_name))
+        } else {
+            anyhow::bail!(
+                "Unsupported metadata extension '{}' for resource: {}/{}",
+                extension,
+                resource_type,
+                resource_name
+            )
+        }
+    }
 }
 
 #[cfg(test)]
@@ -140,22 +103,22 @@ mod tests {
         });
         let external = json!({
             "name": "overwritten-name",
-            TARGET_GEMINI: {
+            "gemini-cli": {
                 "model": "gemini-3.0-pro",
                 "temperature": 0.2
             },
-            TARGET_CLAUDE: {
+            "claude-code": {
                 "model": "claude-3-opus"
             }
         });
 
-        parser.merge_metadata(&mut base, &external, &BuildTarget::GeminiCli);
+        parser.target.merge_metadata(&mut base, &external);
 
         assert_eq!(base["name"], "overwritten-name");
         assert_eq!(base["model"], "gemini-3.0-pro");
         assert_eq!(base["temperature"], 0.2);
-        assert!(base.get(TARGET_GEMINI).is_none());
-        assert!(base.get(TARGET_CLAUDE).is_none());
+        assert!(base.get("gemini-cli").is_none());
+        assert!(base.get("claude-code").is_none());
     }
 
     #[test]
@@ -174,11 +137,8 @@ model: fm-model
         )?;
         fs::write(
             &yaml_path,
-            format!(
-                "{}:
+            "gemini-cli:
   model: gemini-model",
-                TARGET_GEMINI
-            ),
         )?;
 
         let parser = ResourceParser::new(BuildTarget::GeminiCli);

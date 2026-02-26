@@ -13,11 +13,6 @@ pub const DIR_COMMANDS: &str = "commands";
 pub const DIR_AGENTS: &str = "agents";
 pub const DIR_SKILLS: &str = "skills";
 
-// 타겟 이름 상수
-pub const TARGET_GEMINI: &str = "gemini-cli";
-pub const TARGET_CLAUDE: &str = "claude-code";
-pub const TARGET_OPENCODE: &str = "opencode";
-
 // 확장자 상수
 pub const EXT_MD: &str = ".md";
 pub const EXT_TOML: &str = ".toml";

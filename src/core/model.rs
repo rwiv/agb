@@ -18,16 +18,6 @@ pub struct ResourcePaths {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum BuildTarget {
-    #[serde(rename = "gemini-cli")]
-    GeminiCli,
-    #[serde(rename = "claude-code")]
-    ClaudeCode,
-    #[serde(rename = "opencode")]
-    OpenCode,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ResourceData {
     pub name: String,
     pub plugin: String,

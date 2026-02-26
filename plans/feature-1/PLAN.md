@@ -1,6 +1,6 @@
 # Plan: Main Features
 
-이 문서는 `agb` 프로젝트의 전체 개발 여정을 관리합니다. 각 테스크는 독립적인 `docs/tasks/feature-1/phase-X/TASK-X-Y.md` 문서에 상세 가이드를 가집니다.
+이 문서는 `agb` 프로젝트의 전체 개발 여정을 관리합니다. 각 테스크는 독립적인 `plans/feature-1/phase-X/TASK-X-Y.md` 문서에 상세 가이드를 가집니다.
 
 ## Phase 1: 기반 설정 및 CLI 환경 구축 (CLI & Config)
 *   **Task 1.1: 프로젝트 초기화 및 의존성 설정**

@@ -4,24 +4,26 @@
 
 `agb`는 **파이프라인 아키텍처**를 따르며, `builder` 모듈이 전체 공정을 오케스트레이션합니다.
 
-### 1.1 데이터 흐름 (Data Flow)
+### 1.1 빌드 파이프라인 (Build Pipeline)
 
-1. **Load Config**: `agb.yaml`을 읽어 빌드 컨텍스트를 생성합니다. (`builder/config.rs`)
-2. **Scan & Load**: 소스 경로의 플러그인을 스캔하고 `core::Resource` 객체로 로드합니다. `loader` 모듈이 이 역할을 담당합니다.
-3. **Validate & Register**: 리소스 이름 충돌을 검증하고 `builder::registry::Registry`에 등록합니다.
-4. **Transform**: 선택된 타겟(`BuildTarget`)에 맞는 `Transformer`가 리소스를 변환합니다. (`transformer/`)
-5. **Emit**: 기존 결과물을 정리(Clean)하고 변환된 파일을 `builder::emitter::Emitter`를 통해 물리적 경로에 작성합니다.
+`agb`의 빌드 과정은 총 5단계의 순차적인 파이프라인을 거쳐 수행됩니다.
+
+1. **설정 로드 (Load Config)**: `agb.yaml`을 읽어 빌드 컨텍스트(소스 경로, 타겟 에이전트 등)를 생성합니다. (`builder/config.rs`)
+2. **리소스 스캔 및 로드 (Scan & Load)**: 소스 경로 내의 플러그인 구조를 분석하여 파일들을 수집하고, 이를 `core::Resource` 객체로 로드합니다. (`loader` 모듈)
+3. **검증 및 등록 (Validate & Register)**: 로드된 리소스들의 이름 충돌 여부를 확인하고, 빌드 대상 리소스를 `builder::registry::Registry`에 등록합니다.
+4. **포맷 변환 (Transform)**: 설정된 타겟(`BuildTarget`) 규격에 맞춰 각 리소스를 실제 파일 포맷(TOML, Markdown FM 등)으로 변환합니다. (`transformer` 모듈)
+5. **최종 배포 (Emit)**: 기존 출력 디렉터리를 정리(Clean)한 후, 변환된 리소스들을 물리적 파일로 작성합니다. (`builder::emitter::Emitter`)
 
 ### 1.2 모듈 구조 (Module Structure)
 
-| 모듈 경로 | 설명 |
-| :--- | :--- |
-| `src/main.rs` | CLI 엔트리포인트 및 실행 제어 |
-| `src/core/` | 시스템 전역 공용 모델(`model.rs`) 및 상수(`constants.rs`) 정의 |
-| `src/loader/` | 파일 시스템 리소스 스캔, 필터링, 파싱 및 로드 로직 |
-| `src/builder/` | 빌드 파이프라인 제어, 설정(`config`), 등록(`registry`), 출력(`emitter`) |
-| `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode) |
-| `src/utils/` | 파일 시스템 조작 등 공통 유틸리티 | [`src/utils/README.md`](../src/utils/README.md) |
+| 모듈 경로 | 설명 | 상세 문서 |
+| :--- | :--- | :--- |
+| `src/main.rs` | CLI 엔트리포인트 및 실행 제어 | - |
+| `src/core/` | 시스템 전역 공용 모델(`model.rs`) 및 상수(`constants.rs`) 정의 | [`README.md`](../src/core/README.md) |
+| `src/loader/` | 파일 시스템 리소스 스캔, 필터링, 파싱 및 로드 로직 | [`README.md`](../src/loader/README.md) |
+| `src/builder/` | 빌드 파이프라인 제어, 설정(`config`), 등록(`registry`), 출력(`emitter`) | [`README.md`](../src/builder/README.md) |
+| `src/transformer/` | 타겟별 포맷 변환 로직 (Gemini, Claude, OpenCode) | [`README.md`](../src/transformer/README.md) |
+| `src/utils/` | 파일 시스템 조작 등 공통 유틸리티 | [`README.md`](../src/utils/README.md) |
 
 ### 1.3 모듈 의존성 그래프 (Dependency Graph)
 

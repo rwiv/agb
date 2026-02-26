@@ -81,11 +81,11 @@ gemini:
 ## 5. 리소스 처리 규격 (Processing Rules)
 
 ### 5.1 메타데이터 병합 알고리즘 (Metadata Merge)
-빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 병합합니다 (Shallow Merge):
+`loader::ResourceParser`가 빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 병합합니다 (Shallow Merge):
 1.  **Base**: `.md` 파일의 YAML Frontmatter 추출.
-2.  **Override**: 외부 메타데이터 파일(`.yaml`/`.yml`)의 내용을 덮어씀.
-3.  **Target Override**: 외부 파일 내의 타겟 섹션(`gemini`, `claude`, `opencode`) 내용을 덮어씀.
-4.  **Cleanup**: `gemini`, `claude`, `opencode`와 같은 타겟 예약어 키들을 최종 결과물에서 제거.
+2.  **Override**: 외부 메타데이터 파일(`.yaml`/`.yml`)의 일반 필드 내용을 덮어씀.
+3.  **Target Override**: 외부 파일 내의 타겟 전역 예약어 섹션(`gemini-cli`, `claude-code`, `opencode`) 내용을 최종적으로 덮어씀.
+4.  **Cleanup**: 모든 타겟 예약어 키들을 최종 메타데이터 결과물에서 제거.
 
 ### 5.2 보안 및 제약 사항
 - **타겟 전용 파일 금지**: 플러그인 내부에는 `GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`와 같은 파일이 존재할 수 없습니다. 발견 시 빌드가 중단됩니다.

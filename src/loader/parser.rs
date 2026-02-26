@@ -43,7 +43,7 @@ impl ResourceParser {
         };
 
         // 3. 타겟 규칙에 따른 병합 (FM + External)
-        self.target.merge_metadata(&mut fm_metadata, &ext_metadata);
+        self.merge_metadata(&mut fm_metadata, &ext_metadata);
 
         // 4. 명시된 이름이 있다면 리소스 이름으로 사용
         if let Some(explicit_name) = fm_metadata.get("name").and_then(|v| v.as_str()) {
@@ -86,6 +86,38 @@ impl ResourceParser {
             )
         }
     }
+
+    /// 두 개의 메타데이터 객체를 타겟 규칙에 따라 병합합니다.
+    fn merge_metadata(&self, base: &mut Value, external: &Value) {
+        if !base.is_object() {
+            *base = json!({});
+        }
+
+        let base_obj = base.as_object_mut().unwrap();
+        let reserved_keys = BuildTarget::all_reserved_keys();
+
+        if let Some(ext_obj) = external.as_object() {
+            // 1. 외부 파일의 일반 필드들을 base에 덮어씀 (Shallow merge)
+            for (k, v) in ext_obj {
+                if !reserved_keys.contains(&k.as_str()) {
+                    base_obj.insert(k.clone(), v.clone());
+                }
+            }
+
+            // 2. 타겟 전용 필드들로 최종 오버라이트
+            let target_key = self.target.reserved_key();
+            if let Some(target_section) = ext_obj.get(target_key).and_then(|v| v.as_object()) {
+                for (k, v) in target_section {
+                    base_obj.insert(k.clone(), v.clone());
+                }
+            }
+        }
+
+        // 3. 결과물에서 모든 타겟 섹션 예약어 키들 제거
+        for key in reserved_keys {
+            base_obj.remove(*key);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -112,7 +144,7 @@ mod tests {
             }
         });
 
-        parser.target.merge_metadata(&mut base, &external);
+        parser.merge_metadata(&mut base, &external);
 
         assert_eq!(base["name"], "overwritten-name");
         assert_eq!(base["model"], "gemini-3.0-pro");

@@ -11,10 +11,10 @@
 - **디렉터리 구조**: `commands`, `agents`, `skills`
 - **타겟 및 확장자**: `gemini-cli`, `.md`, `.toml`, `.yaml` 등
 
-### 2. 데이터 모델 (`model.rs`)
+### 2. 데이터 모델 (`model.rs` 및 `target.rs`)
 에이전트 리소스의 핵심 구조와 상태를 정의합니다.
 
-- **BuildTarget**: 빌드 대상 플랫폼 규격(`gemini-cli`, `claude-code`, `opencode`)을 정의하는 열거형입니다.
+- **BuildTarget**: 빌드 대상 플랫폼 규격(`gemini-cli`, `claude-code`, `opencode`)을 정의하는 열거형입니다. 각 타겟별 예약어 키(`reserved_key`)와 전체 예약어 목록(`all_reserved_keys`)을 관리합니다.
 - **Resource**: `Command`, `Agent`, `Skill` 타입을 지원하는 핵심 열거형입니다. 각 타입은 `ResourceData`를 포함합니다.
 - **ResourceData**: 
   - `name`: 리소스 식별 이름.

@@ -42,8 +42,13 @@ graph TD
 ### 2.1 리소스 모델 (`Resource`)
 리소스는 `ResourceData` 구조체를 포함하며, `Enum`을 통해 타입을 구분합니다.
 - **주요 타입**:
-  - `BuildTarget`: 빌드 대상 플랫폼 (Gemini, Claude, OpenCode)
+  - `BuildTarget`: 빌드 대상 플랫폼 (Gemini, Claude, OpenCode). 타겟별 예약어 및 규격 문자열 제공.
   - `Resource`: `Command`, `Agent`, `Skill` 타입을 지원하는 Enum
   - `ResourceKey`: 리소스 식별자 (plugin, type, name)
   - `ResourcePaths`: 리소스를 구성하는 파일 경로들의 집합
 - **ResourceData 구성**: `name`, `plugin`, `content` (Markdown), `metadata` (`serde_json::Value`)
+
+### 2.2 리소스 로더 (`loader`)
+분산된 소스 파일들을 읽어 하나의 `Resource` 객체로 완성하는 조립 과정을 담당합니다.
+- **Metadata Merge**: `ResourceParser`는 `BuildTarget` 정보를 활용하여 Markdown Frontmatter와 외부 YAML 설정을 타겟 우선순위에 따라 최종 메타데이터로 병합합니다. (`merge_metadata` 로직)
+- **Lazy Load**: 스캔 시에는 경로만 수집하고, 실제 리소스 사용 시점에 파싱을 수행합니다.

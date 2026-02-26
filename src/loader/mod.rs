@@ -3,55 +3,26 @@ pub mod parser;
 pub mod registry;
 pub mod resolver;
 
-use crate::core::{BuildTarget, Config, PLUGINS_DIR_NAME, Resource};
+use crate::core::{BuildTarget, Resource};
 use anyhow::Result;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use self::filter::FileFilter;
 use self::parser::ResourceParser;
-use self::registry::Registry;
 use self::resolver::ResourcePathResolver;
-
-/// Config를 기반으로 Registry를 구축합니다.
-pub fn load_registry_from_config(cfg: &Config, source_dir: &Path) -> Result<Registry> {
-    if !source_dir.exists() {
-        anyhow::bail!("Source directory does not exist: {}", source_dir.display());
-    }
-
-    println!("Scanning and loading resources from {}...", source_dir.display());
-    let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
-    let exclude = cfg.exclude.as_ref().cloned().unwrap_or_default();
-
-    let loader = ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
-
-    println!("Validating and registering resources...");
-    let mut target_identifiers = HashSet::new();
-    if let Some(cmds) = &cfg.resources.commands {
-        target_identifiers.extend(cmds.clone());
-    }
-    if let Some(agents) = &cfg.resources.agents {
-        target_identifiers.extend(agents.clone());
-    }
-    if let Some(skills) = &cfg.resources.skills {
-        target_identifiers.extend(skills.clone());
-    }
-
-    loader.load_registry(&target_identifiers)
-}
 
 /// 스캔된 리소스 정보를 담는 내부 구조체
 #[derive(Debug, Clone)]
-pub(crate) struct ScannedResource {
-    pub(crate) plugin: String,
-    pub(crate) name: String,
-    pub(crate) paths: ScannedPaths,
+pub struct ScannedResource {
+    pub plugin: String,
+    pub name: String,
+    pub paths: ScannedPaths,
 }
 
 /// 리소스 타입별 파일 경로 구성
 #[derive(Debug, Clone)]
-pub(crate) enum ScannedPaths {
+pub enum ScannedPaths {
     Command {
         md: Option<PathBuf>,
         metadata: Option<PathBuf>,
@@ -68,7 +39,7 @@ pub(crate) enum ScannedPaths {
 }
 
 /// 플러그인 디렉터리를 탐색하고 리소스를 로드하는 객체입니다.
-struct ResourceLoader {
+pub struct ResourceLoader {
     root: PathBuf,
     filter: FileFilter,
     resolver: ResourcePathResolver,
@@ -77,7 +48,7 @@ struct ResourceLoader {
 
 impl ResourceLoader {
     /// 새로운 ResourceLoader 인스턴스를 생성합니다.
-    fn new<P: AsRef<Path>>(root: P, exclude_patterns: &[String], target: BuildTarget) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(root: P, exclude_patterns: &[String], target: BuildTarget) -> Result<Self> {
         let root = root.as_ref().to_path_buf();
         if !root.exists() {
             anyhow::bail!("Plugins directory not found: {:?}", root);
@@ -96,7 +67,7 @@ impl ResourceLoader {
     }
 
     /// 리소스를 로드합니다.
-    fn load(&self) -> Result<Vec<Resource>> {
+    pub fn load(&self) -> Result<Vec<Resource>> {
         let files = self.scan()?;
         let scanned_resources = self.resolver.resolve(&self.root, files)?;
 
@@ -104,21 +75,6 @@ impl ResourceLoader {
             .into_iter()
             .map(|scanned| self.parser.parse_resource(scanned))
             .collect()
-    }
-
-    /// 타겟 식별자 목록에 해당하는 리소스만 로드하여 Registry를 구축합니다.
-    fn load_registry(&self, target_identifiers: &HashSet<String>) -> Result<Registry> {
-        let all_resources = self.load()?;
-        let mut registry = Registry::new();
-
-        for resource in all_resources {
-            let identifier = format!("{}:{}", resource.plugin(), resource.name());
-            if target_identifiers.contains(&identifier) {
-                registry.register(resource)?;
-            }
-        }
-
-        Ok(registry)
     }
 
     /// 플러그인 디렉터리를 스캔하여 유효한 파일 경로 목록을 반환합니다.

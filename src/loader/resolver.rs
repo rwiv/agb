@@ -24,9 +24,15 @@ struct ResolveContext {
 /// 파일 경로를 분석하여 리소스별로 그룹화하는 객체입니다.
 pub struct ResourcePathResolver;
 
+impl Default for ResourcePathResolver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ResourcePathResolver {
     pub fn new() -> Self {
-        Self
+        ResourcePathResolver
     }
 
     /// 파일 목록을 받아 스캔된 리소스 목록으로 변환합니다.

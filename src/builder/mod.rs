@@ -1,12 +1,11 @@
 pub mod emitter;
 
-use crate::core::{Config, TransformedResource};
+use self::emitter::Emitter;
+use crate::core::{AGENTS_MD, TransformedResource};
 use crate::loader::registry::Registry;
 use crate::transformer::Transformer;
 use anyhow::Context;
 use std::path::Path;
-
-use self::emitter::Emitter;
 
 #[derive(Default)]
 pub struct Builder;
@@ -18,15 +17,11 @@ impl Builder {
 
     pub fn run(
         &self,
-        cfg: &Config,
         transformer: &dyn Transformer,
         registry: &Registry,
         source_dir: &Path,
         output_dir: &Path,
     ) -> anyhow::Result<()> {
-        // Transformation
-        println!("Transforming resources for target: {:?}...", cfg.target);
-
         let mut transformed_resources = Vec::new();
         for res in registry.all_resources() {
             let transformed_file = transformer
@@ -39,8 +34,8 @@ impl Builder {
             });
         }
 
-        // AGENTS.md 처리 (Root System Prompt)
-        let agents_md_path = source_dir.join(crate::core::AGENTS_MD);
+        // AGENTS.md 처리
+        let agents_md_path = source_dir.join(AGENTS_MD);
         if agents_md_path.exists() {
             println!("  - Found root system prompt: {}", agents_md_path.display());
             let raw_content = std::fs::read_to_string(&agents_md_path)?;
@@ -53,15 +48,12 @@ impl Builder {
             });
         }
 
-        // 4. Emission
         println!("Emitting files to {}...", output_dir.display());
         let emitter = Emitter::new(output_dir);
         emitter.clean()?;
         emitter.emit(&transformed_resources)?;
 
         println!("Build successful!");
-        println!("  - Target: {:?}", cfg.target);
-        println!("  - Resources: {} total", registry.len());
 
         Ok(())
     }

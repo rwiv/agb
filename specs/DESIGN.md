@@ -26,10 +26,11 @@
 
 | 모듈 경로 | 설명 | 상세 문서 |
 | :--- | :--- | :--- |
-| `src/main.rs` | CLI 엔트리포인트 및 실행 제어 | - |
+| `src/main.rs` | CLI 엔트리포인트 (Thin Wrapper) | - |
+| `src/app/` | 실행 컨텍스트(AppContext) 및 실행 제어(App) | [`README.md`](../src/app/README.md) |
 | `src/core/` | 시스템 전역 공용 모델 및 리소스 레지스트리 | [`README.md`](../src/core/README.md) |
 | `src/loader/` | 리소스 스캔 및 로드 로직 | [`README.md`](../src/loader/README.md) |
-| `src/builder/` | 빌드 파이프라인 제어 (Config, Emitter) | [`README.md`](../src/builder/README.md) |
+| `src/builder/` | 리소스 빌드 유틸리티 및 Emitter | [`README.md`](../src/builder/README.md) |
 | `src/syncer/` | 타겟-소스 동기화 엔진 및 Diff 로직 | [`README.md`](../src/syncer/README.md) |
 | `src/transformer/` | 타겟별 포맷 변환 및 역변환(Detransform) | [`README.md`](../src/transformer/README.md) |
 | `src/utils/` | 파일 시스템 및 포맷 처리 유틸리티 | [`README.md`](../src/utils/README.md) |
@@ -38,8 +39,11 @@
 
 ```mermaid
 graph TD
-    main --> builder
-    main --> syncer
+    main --> app
+    app --> loader
+    app --> builder
+    app --> syncer
+    app --> transformer
     builder --> loader
     builder --> transformer
     syncer --> loader

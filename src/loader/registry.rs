@@ -42,6 +42,10 @@ impl Registry {
     pub fn len(&self) -> usize {
         self.resources.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.resources.is_empty()
+    }
 }
 
 #[cfg(test)]

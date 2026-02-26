@@ -2,8 +2,7 @@ pub mod patcher;
 pub mod planner;
 pub mod skill;
 
-use crate::core::{Config, Resource, SKILL_MD};
-use crate::loader::registry::Registry;
+use crate::core::{Resource, SKILL_MD};
 use crate::transformer::Transformer;
 use anyhow::{Context, Result};
 use std::fs;
@@ -17,26 +16,8 @@ impl Syncer {
         Self
     }
 
-    pub fn run(
-        &self,
-        cfg: &Config,
-        transformer: &dyn Transformer,
-        registry: &Registry,
-        output_dir: &Path,
-    ) -> Result<()> {
-        println!("Syncing target changes to source for target: {:?}...", cfg.target);
-        let exclude = cfg.exclude.clone().unwrap_or_default();
-
-        for res in registry.all_resources() {
-            self.sync_resource(res, transformer, output_dir, &exclude)?;
-        }
-
-        println!("Sync successful!");
-        Ok(())
-    }
-
     /// 단일 리소스를 타겟에서 소스로 동기화합니다.
-    fn sync_resource(
+    pub fn sync_resource(
         &self,
         resource: &Resource,
         transformer: &dyn Transformer,

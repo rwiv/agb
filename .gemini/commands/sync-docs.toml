@@ -1,4 +1,4 @@
 prompt = """
 현재 진행중인 task 문서를 확인하거나 git log, git diff 등을 활용해 프로젝트 변경사항을 감지하라.
-이후 @docs/spcs/ 문서나 README.md 문서 중에 갱신할 문서가 있으면 갱신하시오.
+이후 @spcs/ 문서나 README.md 문서 중에 갱신할 문서가 있으면 갱신하시오.
 """

@@ -11,8 +11,8 @@ description: task 작성 시 읽으시오
 
 ## 참고 자료
 - `PLAN.md`
-    - @docs/tasks/feature-1/PLAN.md
-    - @docs/tasks/refactor-3/PLAN.md
+    - @plans/feature-1/PLAN.md
+    - @plans/refactor-3/PLAN.md
 - `<task-name>.md`
-    - @docs/tasks/feature-1/phase-1/TASK-1-2.md
+    - @plans/feature-1/phase-1/TASK-1-2.md
 

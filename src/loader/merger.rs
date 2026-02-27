@@ -33,21 +33,23 @@ impl MetadataMerger {
 
     /// MetadataMap을 사용하여 필드 값을 타겟에 맞게 치환합니다.
     fn apply_mapping(&self, base: &mut Value, map: &MetadataMap) -> Result<()> {
-        if let Some(obj) = base.as_object_mut() {
-            for (field, value) in obj.iter_mut() {
-                // description 필드는 매핑에서 제외
-                if field == "description" {
-                    continue;
-                }
+        let Some(obj) = base.as_object_mut() else {
+            return Ok(());
+        };
 
-                // 문자열 타입 데이터만 매핑 적용
-                if let Some(val_str) = value.as_str()
-                    && let Some(field_mappings) = map.mappings.get(field)
-                    && let Some(target_mappings) = field_mappings.get(val_str)
-                    && let Some(mapped_val) = target_mappings.get(&self.target)
-                {
-                    *value = Value::String(mapped_val.clone());
-                }
+        for (field, value) in obj.iter_mut() {
+            // description 필드는 매핑에서 제외
+            if field == "description" {
+                continue;
+            }
+
+            // 문자열 타입 데이터만 매핑 적용
+            if let Some(val_str) = value.as_str()
+                && let Some(field_mappings) = map.mappings.get(field)
+                && let Some(target_mappings) = field_mappings.get(val_str)
+                && let Some(mapped_val) = target_mappings.get(&self.target)
+            {
+                *value = Value::String(mapped_val.clone());
             }
         }
         Ok(())
@@ -62,27 +64,30 @@ impl MetadataMerger {
         let base_obj = base.as_object_mut().unwrap();
         let reserved_keys = BuildTarget::all_reserved_keys();
 
-        if let Some(ext_obj) = external.as_object() {
-            // 외부 파일의 최상위 키 검증 (예약어만 허용)
-            for k in ext_obj.keys() {
-                if !reserved_keys.contains(&k.as_str()) {
-                    anyhow::bail!(
-                        "External metadata contains unauthorized top-level field: '{}'. 
-                         Only target reserved keys ({:?}) are allowed.",
-                        k,
-                        reserved_keys
-                    );
-                }
-            }
+        let Some(ext_obj) = external.as_object() else {
+            return Ok(());
+        };
 
-            // 타겟 전용 필드들로 최종 오버라이트 (Shallow merge)
-            let target_key = self.target.reserved_key();
-            if let Some(target_section) = ext_obj.get(target_key).and_then(|v| v.as_object()) {
-                for (k, v) in target_section {
-                    base_obj.insert(k.clone(), v.clone());
-                }
+        // 외부 파일의 최상위 키 검증 (예약어만 허용)
+        for k in ext_obj.keys() {
+            if !reserved_keys.contains(&k.as_str()) {
+                anyhow::bail!(
+                    "External metadata contains unauthorized top-level field: '{}'. 
+                         Only target reserved keys ({:?}) are allowed.",
+                    k,
+                    reserved_keys
+                );
             }
         }
+
+        // 타겟 전용 필드들로 최종 오버라이트 (Shallow merge)
+        let target_key = self.target.reserved_key();
+        if let Some(target_section) = ext_obj.get(target_key).and_then(|v| v.as_object()) {
+            for (k, v) in target_section {
+                base_obj.insert(k.clone(), v.clone());
+            }
+        }
+
         Ok(())
     }
 

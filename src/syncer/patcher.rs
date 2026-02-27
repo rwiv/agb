@@ -26,47 +26,51 @@ impl MdPatcher {
         }
 
         let rest = &content[3..];
-        if let Some(end_offset) = rest.find("---") {
-            let yaml_part = rest[..end_offset].trim();
-            let pure_content = rest[end_offset + 3..].trim_start();
+        let end_offset = match rest.find("---") {
+            Some(offset) => offset,
+            None => {
+                // 닫는 ---가 없는 경우 (잘못된 형식), 안전하게 앞에 추가
+                self.raw_content = format!("---\ndescription: {}\n---\n\n{}", new_desc, self.raw_content);
+                return Ok(());
+            }
+        };
 
-            let mut lines: Vec<String> = yaml_part.lines().map(|s| s.to_string()).collect();
-            let mut found_idx = None;
+        let yaml_part = rest[..end_offset].trim();
+        let pure_content = rest[end_offset + 3..].trim_start();
 
-            // description: 키를 찾아 교체 (공백 및 인용부호 허용)
-            let re = Regex::new(r#"^(\s*description:\s*)(?:'[^']*'|"[^"]*"|.*)$"#).unwrap();
+        let mut lines: Vec<String> = yaml_part.lines().map(|s| s.to_string()).collect();
+        let mut found_idx = None;
 
-            for (i, line) in lines.iter().enumerate() {
-                if re.is_match(line) {
-                    // 멀티라인 마커 (| 또는 >) 감지
-                    let trimmed = line.trim();
-                    if trimmed.ends_with('|') || trimmed.ends_with('>') {
-                        anyhow::bail!("Multi-line description (YAML marker) detected in source");
-                    }
+        // description: 키를 찾아 교체 (공백 및 인용부호 허용)
+        let re = Regex::new(r#"^(\s*description:\s*)(?:'[^']*'|"[^"]*"|.*)$"#).unwrap();
 
-                    // 다음 줄 들여쓰기 감지 (멀티라인 데이터 감지)
-                    if i + 1 < lines.len() && lines[i + 1].starts_with(' ') {
-                        anyhow::bail!("Multi-line description (Indentation) detected in source");
-                    }
-
-                    found_idx = Some(i);
-                    break;
+        for (i, line) in lines.iter().enumerate() {
+            if re.is_match(line) {
+                // 멀티라인 마커 (| 또는 >) 감지
+                let trimmed = line.trim();
+                if trimmed.ends_with('|') || trimmed.ends_with('>') {
+                    anyhow::bail!("Multi-line description (YAML marker) detected in source");
                 }
-            }
 
-            if let Some(i) = found_idx {
-                let prefix = re.captures(&lines[i]).unwrap().get(1).unwrap().as_str();
-                lines[i] = format!("{}{}", prefix, new_desc);
-            } else {
-                // 못 찾았다면 마지막에 추가
-                lines.push(format!("description: {}", new_desc));
-            }
+                // 다음 줄 들여쓰기 감지 (멀티라인 데이터 감지)
+                if i + 1 < lines.len() && lines[i + 1].starts_with(' ') {
+                    anyhow::bail!("Multi-line description (Indentation) detected in source");
+                }
 
-            self.raw_content = format!("---\n{}\n---\n\n{}", lines.join("\n"), pure_content);
-        } else {
-            // 닫는 ---가 없는 경우 (잘못된 형식), 안전하게 앞에 추가
-            self.raw_content = format!("---\ndescription: {}\n---\n\n{}", new_desc, self.raw_content);
+                found_idx = Some(i);
+                break;
+            }
         }
+
+        if let Some(i) = found_idx {
+            let prefix = re.captures(&lines[i]).unwrap().get(1).unwrap().as_str();
+            lines[i] = format!("{}{}", prefix, new_desc);
+        } else {
+            // 못 찾았다면 마지막에 추가
+            lines.push(format!("description: {}", new_desc));
+        }
+
+        self.raw_content = format!("---\n{}\n---\n\n{}", lines.join("\n"), pure_content);
 
         Ok(())
     }

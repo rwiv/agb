@@ -15,6 +15,7 @@
 에이전트 리소스의 핵심 구조와 상태를 정의합니다.
 
 - **ResourceType**: 리소스의 종류(`Command`, `Agent`, `Skill`)를 정의하는 열거형입니다. `Display` 트레이트를 구현하여 에러 메시지 등에서 가독성 있는 문자열을 제공합니다.
+- **MetadataMap**: `map.yaml` 파일을 표현하는 모델로, 필드 이름과 원본 값을 기반으로 타겟별 치환 값을 정의합니다.
 - **BuildTarget**: 빌드 대상 플랫폼 규격(`gemini-cli`, `claude-code`, `opencode`)을 정의하는 열거형입니다. 각 타겟별 예약어 키(`reserved_key`)와 전체 예약어 목록(`all_reserved_keys`)을 관리합니다.
 - **Resource**: `Command`, `Agent`, `Skill` 타입을 지원하는 핵심 열거형입니다. `Skill` 타입은 `SkillData` 구조체를 통해 본문 외의 추가 파일 목록을 가질 수 있습니다. `r_type()` 메서드를 통해 자신의 타입을 반환할 수 있습니다.
 - **ResourceData**: 

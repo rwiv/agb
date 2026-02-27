@@ -63,7 +63,7 @@ Content",
     let result = syncer.sync_resource(
         resource,
         transformer,
-        &project_dir.path(),
+        project_dir.path(),
         &ctx.config.exclude.as_ref().cloned().unwrap_or_default(),
     );
 

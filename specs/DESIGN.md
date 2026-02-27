@@ -38,7 +38,7 @@ graph LR
 | `src/main.rs` | CLI 엔트리포인트 (Thin Wrapper) | - |
 | `src/app/` | 실행 컨텍스트(AppContext) 및 실행 제어(App) | [`README.md`](../src/app/README.md) |
 | `src/core/` | 시스템 전역 공용 모델 및 리소스 레지스트리 | [`README.md`](../src/core/README.md) |
-| `src/loader/` | 리소스 스캔 및 로드 로직 | [`README.md`](../src/loader/README.md) |
+| `src/loader/` | 리소스 스캔 및 로드 로직 (Merger 포함) | [`README.md`](../src/loader/README.md) |
 | `src/builder/` | 리소스 빌드 유틸리티 및 Emitter | [`README.md`](../src/builder/README.md) |
 | `src/syncer/` | 타겟-소스 동기화 엔진 및 Diff 로직 | [`README.md`](../src/syncer/README.md) |
 | `src/transformer/` | 타겟별 포맷 변환 및 역변환(Detransform) | [`README.md`](../src/transformer/README.md) |
@@ -87,5 +87,7 @@ graph TD
 
 ### 2.4 리소스 처리 파이프라인
 분산된 소스 파일들을 읽어 하나의 `Resource` 객체로 완성하는 조립 과정을 담당합니다.
-- **Metadata Merge**: `ResourceParser`는 `BuildTarget` 정보를 활용하여 Markdown Frontmatter와 외부 YAML 설정을 병합합니다. 외부 YAML 파일이 존재하는 경우에만 타겟별 오버라이트 로직이 활성화됩니다. (`merge_metadata` 로직)
+- **Metadata Merge & Map**: `loader::merger::MetadataMerger`는 `BuildTarget`과 소스 루트의 `map.yaml` 정보를 활용하여 메타데이터를 통합합니다.
+    - **Mapping**: Frontmatter 필드 값을 타겟에 맞게 치환합니다.
+    - **Override**: 외부 YAML 파일의 타겟 전용 섹션 내용을 최종적으로 덮어씁니다.
 - **Extra Files**: `Skill` 타입 리소스 폴더 내의 `SKILL.md`와 `SKILL.yaml`을 제외한 모든 파일은 `extras`로 분류되어, 변환 단계 후 Emitter에 의해 물리적으로 대상 폴더에 복사됩니다.

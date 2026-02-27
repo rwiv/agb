@@ -42,20 +42,17 @@ impl<'a> MetadataMerger<'a> {
                 }
 
                 // 문자열 타입 데이터만 매핑 적용
-                if let Some(val_str) = value.as_str() {
-                    if let Some(field_mappings) = map.mappings.get(field) {
-                        if let Some(target_mappings) = field_mappings.get(val_str) {
-                            if let Some(mapped_val) = target_mappings.get(&self.target) {
-                                *value = Value::String(mapped_val.clone());
-                            }
-                        }
-                    }
+                if let Some(val_str) = value.as_str()
+                    && let Some(field_mappings) = map.mappings.get(field)
+                    && let Some(target_mappings) = field_mappings.get(val_str)
+                    && let Some(mapped_val) = target_mappings.get(&self.target)
+                {
+                    *value = Value::String(mapped_val.clone());
                 }
             }
         }
         Ok(())
     }
-
     /// 외부 YAML 데이터를 병합합니다. (타겟 전용 섹션 오버라이트)
     fn apply_external_override(&self, base: &mut Value, external: &Value) -> Result<()> {
         if !base.is_object() {

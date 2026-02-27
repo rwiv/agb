@@ -14,13 +14,15 @@
 ### 1. ResourceLoader 및 모듈 인터페이스 (`mod.rs`)
 모듈의 엔트리포인트로, 스캔(`FileFilter`), 해석(`ResourcePathResolver`), 조립(`ResourceParser`) 단계를 오케스트레이션합니다.
 - **`ResourceLoader` (Public API)**: 플러그인 디렉터리를 탐색하고 실제 리소스 객체를 조립하는 핵심 객체입니다.
-    - `new()`: 새로운 로더 인스턴스 생성.
+    - `new()`: 새로운 로더 인스턴스 생성. 소스 루트에서 `map.yaml`이 있으면 자동으로 로드하여 컨텍스트에 유지합니다.
     - `load()`: 모든 유효한 리소스를 로드하여 반환.
 
-## 설계 이점
-`loader` 모듈은 파일 시스템에서 리소스를 읽어오는 기술적인 메커니즘에 집중하며, 어떤 리소스를 선택하여 사용할지에 대한 정책(예: 특정 식별자 필터링)은 `app` 모듈에서 담당하도록 책임을 분리하였습니다.
+### 2. MetadataMerger (`merger.rs`)
+Frontmatter, Metadata Map, 외부 메타데이터를 통합하는 단일 책임 모듈입니다.
+- **필드 매핑**: `map.yaml` 규칙에 따라 필드 값을 타겟별로 치환.
+- **오버라이트**: 타겟 전용 예약어 섹션 병합.
 
-### 2. FileFilter (`filter.rs`)
+### 3. FileFilter (`filter.rs`)
 스캔 과정에서 파일의 유효성을 검증합니다.
 - **제외 패턴**: `agb.yaml`의 `exclude` 필드에 정의된 Glob 패턴 지원.
 - **숨김 파일 무시**: `.`으로 시작하는 파일 및 디렉터리 제외.
@@ -32,11 +34,10 @@
 - **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화하여 `ScannedPaths::Skill` 구조로 반환합니다. `SKILL.{yaml,yml}`을 선택적 메타데이터로 인식하며, 그 외의 다른 모든 파일들은 `extras` 필드에 수집됩니다.
 - **포맷 충돌 검증**: 동일 리소스에 대해 YAML과 YML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
 
-### 4. ResourceParser (`parser.rs`)
+### 5. ResourceParser (`parser.rs`)
 `ScannedResource` 정보를 기반으로 메타데이터 파싱과 최종 `Resource` 객체 조립을 담당합니다.
 - **메타데이터 파싱**: YAML, YML 형식을 `serde_json::Value`로 변환.
-- **메타데이터 병합**: 타겟 에이전트 규격에 맞춰 본문(Frontmatter)과 외부 메타데이터를 병합합니다 (`merge_metadata`).
-    - **검증 규칙**: 모든 공용 메타데이터는 마크다운 Frontmatter에 위치해야 하며, 외부 YAML 파일은 타겟 에이전트 예약어 섹션만 포함할 수 있습니다. 일반 필드가 외부 파일에서 발견되면 빌드 오류가 발생합니다.
+- **메타데이터 통합**: `MetadataMerger`를 사용하여 본문(Frontmatter)과 외부 메타데이터, 그리고 전역 매핑 규칙을 병합합니다.
 - **리소스 조립**: 마크다운 본문, 병합된 메타데이터, 그리고 `Skill`의 경우 수집된 `extras` 파일 정보를 결합하여 `Resource` 타입별 객체 생성.
 
 ### 5. Registry (`registry.rs`)

@@ -84,19 +84,20 @@ gemini-cli:
 ## 5. 리소스 처리 규격 (Processing Rules)
 
 ### 5.1 메타데이터 병합 알고리즘 (Metadata Merge)
-`loader::ResourceParser`가 빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 처리합니다 (Shallow Merge):
+`loader::merger::MetadataMerger`가 빌드 타겟에 따라 다음과 같은 순서로 메타데이터를 처리합니다 (Shallow Merge):
 
-**병합 예시 (Target: `gemini-cli`)**:
-- **Source FM (`.md`)**: `{ "name": "researcher", "model": "default" }`
-- **External YAML**: `{ "gemini-cli": { "model": "gemini-pro" }, "claude-code": { "model": "sonnet" } }`
-- **Resulting Data**: `{ "name": "researcher", "model": "gemini-pro" }` (현재 타겟 섹션만 병합되고 다른 타겟 섹션은 제거됨)
+**병합 우선순위 (Merge Priority)**:
+1.  **Markdown Frontmatter (Base)**: 원본 소스 파일의 기본 설정.
+2.  **Metadata Map**: `map.yaml`에 정의된 매핑에 따른 변환 값 (문자열 타입 필드 전용, `description` 제외).
+3.  **외부 메타데이터 파일 ([name].yaml)**: 타겟 전용 섹션(`gemini-cli` 등)의 명시적 오버라이트.
 
+**병합 단계**:
 1.  **Extract Base**: `.md` 파일에서 YAML Frontmatter 추출.
-2.  **External Process (Optional)**: 외부 메타데이터 파일(`.yaml`/`.yml`)이 존재하는 경우에만 다음을 수행:
+2.  **Apply Mapping (Optional)**: 소스 루트에 `map.yaml`이 존재하는 경우, 정의된 규칙에 따라 필드 값을 타겟에 맞게 치환.정의가 없거나 타겟 값이 없으면 원본 유지.
+3.  **External Process (Optional)**: 외부 메타데이터 파일(`.yaml`/`.yml`)이 존재하는 경우에만 다음을 수행:
     - **Validate**: 최상위 키가 모두 타겟 예약어(`gemini-cli`, `claude-code`, `opencode`)인지 검증. 일반 필드 발견 시 빌드 오류.
-    - **Override**: 현재 빌드 타겟(`BuildTarget`) 섹션 내용을 Base에 덮어씀.
-    - **Cleanup**: 결과물에서 모든 타겟 예약어 키들을 제거.
-3.  **Finalize**: 리소스 이름은 원본 파일명을 그대로 사용하며, 병합된 메타데이터와 본문을 결합하여 리소스 객체 완성.
+    - **Override**: 현재 빌드 타겟(`BuildTarget`) 섹션 내용을 이전 결과물에 덮어씀.
+4.  **Cleanup**: 최종 결과물에서 모든 타겟 예약어 키들을 제거하여 깨끗한 메타데이터 객체 완성.
 
 ### 5.2 보안 및 제약 사항
 - **제외 패턴(`exclude`) 적용**: `agb.yaml`에 정의된 패턴은 빌드 스캔 및 동기화 시 모두 적용됩니다. 단, 리소스의 필수 본문(`*.md` 또는 `SKILL.md`)은 제외 패턴에 해당하더라도 시스템 보호를 위해 스캔에서 제외되지 않습니다.

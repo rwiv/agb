@@ -1,5 +1,4 @@
-use crate::core::SKILL_MD;
-use crate::loader::filter::FileFilter;
+use crate::core::{FileFilter, SKILL_MD};
 use crate::utils::fs::calculate_hash;
 use anyhow::Result;
 use glob::Pattern;

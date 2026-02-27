@@ -63,7 +63,9 @@ resources:
 
     #[test]
     fn test_invalid_target() {
-        let yaml = "source: /src\ntarget: unknown-agent\nresources: {}";
+        let yaml = "source: /src
+target: unknown-agent
+resources: {}";
         let result = parse_config(yaml);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("unknown variant"));
@@ -89,7 +91,8 @@ resources:
 
     #[test]
     fn test_missing_required_target() {
-        let yaml = "source: /src\nresources: {}";
+        let yaml = "source: /src
+resources: {}";
         let result = parse_config(yaml);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("missing field `target`"));
@@ -97,7 +100,8 @@ resources:
 
     #[test]
     fn test_missing_required_source() {
-        let yaml = "target: gemini-cli\nresources: {}";
+        let yaml = "target: gemini-cli
+resources: {}";
         let result = parse_config(yaml);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("missing field `source`"));

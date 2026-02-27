@@ -55,12 +55,12 @@ Content",
 
     // 4. Sync 실행 및 에러 확인
     let ctx = AppContext::init(agb_yaml.to_str().unwrap()).unwrap();
-    let syncer = Syncer::new();
+    let syncer = Syncer::new(ctx.exclude_patterns.clone());
 
     let resource = ctx.registry.all_resources().into_iter().next().unwrap();
     let transformer = ctx.transformer.as_ref();
 
-    let result = syncer.sync_resource(resource, transformer, project_dir.path(), &ctx.exclude_patterns);
+    let result = syncer.sync_resource(resource, transformer, project_dir.path());
 
     // 에러가 발생해야 함
     assert!(result.is_err());

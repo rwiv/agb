@@ -24,22 +24,23 @@ pub enum SyncAction {
     },
 }
 
-#[derive(Default)]
 pub struct ExtraSyncer {
     filter: FileFilter,
+    exclude_patterns: Vec<Pattern>,
 }
 
 impl ExtraSyncer {
-    pub fn new() -> Self {
+    pub fn new(exclude_patterns: Vec<Pattern>) -> Self {
         Self {
             filter: FileFilter::new(),
+            exclude_patterns,
         }
     }
 
     /// 두 디렉토리 간의 파일 변경사항을 동기화합니다.
     /// 특정 파일(예: SKILL.md)은 Syncer의 공통 로직에서 처리되므로 Syncer의 제외 패턴을 통해 무시되어야 합니다.
-    pub fn sync(&self, source_dir: &Path, target_dir: &Path, patterns: &[Pattern]) -> Result<()> {
-        for action in self.check_actions(source_dir, target_dir, patterns)? {
+    pub fn sync(&self, source_dir: &Path, target_dir: &Path) -> Result<()> {
+        for action in self.check_actions(source_dir, target_dir)? {
             match action {
                 SyncAction::Add {
                     relative_path,
@@ -73,19 +74,19 @@ impl ExtraSyncer {
     }
 
     /// source_dir와 target_dir를 비교하여 소스를 업데이트하기 위한 액션 목록 생성
-    fn check_actions(&self, source_dir: &Path, target_dir: &Path, patterns: &[Pattern]) -> Result<Vec<SyncAction>> {
+    fn check_actions(&self, source_dir: &Path, target_dir: &Path) -> Result<Vec<SyncAction>> {
         let mut actions = Vec::new();
 
         // 1. target_dir 스캔하여 source_dir로 동기화 (Add/Update/PatchMarkdown)
         for entry in WalkDir::new(target_dir).into_iter().filter_map(|e| e.ok()) {
-            if let Some(action) = self.check_add_or_update(source_dir, target_dir, entry.path(), patterns)? {
+            if let Some(action) = self.check_add_or_update(source_dir, target_dir, entry.path())? {
                 actions.push(action);
             }
         }
 
         // 2. source_dir 스캔하여 target_dir에 없는 파일 제거 (Delete)
         for entry in WalkDir::new(source_dir).into_iter().filter_map(|e| e.ok()) {
-            if let Some(action) = self.check_delete(source_dir, target_dir, entry.path(), patterns)? {
+            if let Some(action) = self.check_delete(source_dir, target_dir, entry.path())? {
                 actions.push(action);
             }
         }
@@ -93,13 +94,7 @@ impl ExtraSyncer {
         Ok(actions)
     }
 
-    fn check_add_or_update(
-        &self,
-        source_dir: &Path,
-        target_dir: &Path,
-        path: &Path,
-        patterns: &[Pattern],
-    ) -> Result<Option<SyncAction>> {
+    fn check_add_or_update(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
         if !path.is_file() {
             return Ok(None);
         }
@@ -112,7 +107,7 @@ impl ExtraSyncer {
         }
 
         // exclude 패턴 체크
-        if !self.filter.is_valid(target_dir, path, patterns)? {
+        if !self.filter.is_valid(target_dir, path, &self.exclude_patterns)? {
             return Ok(None);
         }
 
@@ -141,13 +136,7 @@ impl ExtraSyncer {
         Ok(None)
     }
 
-    fn check_delete(
-        &self,
-        source_dir: &Path,
-        target_dir: &Path,
-        path: &Path,
-        patterns: &[Pattern],
-    ) -> Result<Option<SyncAction>> {
+    fn check_delete(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
         if !path.is_file() {
             return Ok(None);
         }
@@ -160,7 +149,7 @@ impl ExtraSyncer {
         }
 
         // exclude 패턴 체크
-        if !self.filter.is_valid(source_dir, path, patterns)? {
+        if !self.filter.is_valid(source_dir, path, &self.exclude_patterns)? {
             return Ok(None);
         }
 
@@ -174,6 +163,12 @@ impl ExtraSyncer {
         }
 
         Ok(None)
+    }
+}
+
+impl Default for ExtraSyncer {
+    fn default() -> Self {
+        Self::new(vec![])
     }
 }
 
@@ -200,8 +195,8 @@ mod tests {
         fs::write(target_dir.join("new.txt"), "new file")?;
         fs::write(target_dir.join(SKILL_MD), "---name: test--- modified")?;
 
-        let extra = ExtraSyncer::new();
-        let actions = extra.check_actions(source_dir, target_dir, &[])?;
+        let extra = ExtraSyncer::new(vec![]);
+        let actions = extra.check_actions(source_dir, target_dir)?;
 
         assert!(actions.contains(&SyncAction::Update {
             relative_path: PathBuf::from("existing.txt"),

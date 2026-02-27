@@ -1,4 +1,4 @@
-use crate::core::Config;
+use crate::app::Config;
 use crate::loader;
 use crate::loader::registry::Registry as LoaderRegistry;
 use crate::transformer::Transformer;
@@ -27,7 +27,7 @@ impl AppContext {
         let output_dir = config_path.parent().unwrap_or(Path::new(".")).to_path_buf();
 
         info!("Loading config: {}", config_file);
-        let cfg = crate::core::load_config(config_file)?;
+        let cfg = crate::app::load_config(config_file)?;
         let source_dir = PathBuf::from(&cfg.source);
 
         if !source_dir.exists() {

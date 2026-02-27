@@ -11,26 +11,25 @@ use log::info;
 use std::fs;
 use std::path::Path;
 
-#[derive(Default)]
 pub struct Syncer {
     extra: ExtraSyncer,
 }
 
+impl Default for Syncer {
+    fn default() -> Self {
+        Self::new(vec![])
+    }
+}
+
 impl Syncer {
-    pub fn new() -> Self {
+    pub fn new(exclude_patterns: Vec<Pattern>) -> Self {
         Self {
-            extra: ExtraSyncer::new(),
+            extra: ExtraSyncer::new(exclude_patterns),
         }
     }
 
     /// 단일 리소스를 타겟에서 소스로 동기화합니다.
-    pub fn sync_resource(
-        &self,
-        resource: &Resource,
-        transformer: &dyn Transformer,
-        output_dir: &Path,
-        exclude_patterns: &[Pattern],
-    ) -> Result<()> {
+    pub fn sync_resource(&self, resource: &Resource, transformer: &dyn Transformer, output_dir: &Path) -> Result<()> {
         // 타겟 파일 경로 결정 (get_target_path 사용으로 최적화)
         let relative_target_path = transformer.get_target_path(resource.r_type(), resource.name());
         let target_path = output_dir.join(&relative_target_path);
@@ -86,8 +85,7 @@ impl Syncer {
             let target_skill_dir = target_path
                 .parent()
                 .ok_or_else(|| anyhow::anyhow!("Failed to get parent directory of {:?}", target_path))?;
-            self.extra
-                .sync(&s.base.source_path, target_skill_dir, exclude_patterns)?;
+            self.extra.sync(&s.base.source_path, target_skill_dir)?;
         }
 
         Ok(())

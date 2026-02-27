@@ -1,7 +1,9 @@
 pub mod cli;
+pub mod config;
 pub mod context;
 
 pub use cli::{Cli, Commands};
+pub use config::*;
 pub use context::AppContext;
 
 use crate::builder::Builder;
@@ -56,9 +58,9 @@ impl App {
             ctx.config.target
         );
 
-        let syncer = crate::syncer::Syncer::new();
+        let syncer = crate::syncer::Syncer::new(ctx.exclude_patterns.clone());
         for res in ctx.registry.all_resources() {
-            syncer.sync_resource(res, ctx.transformer.as_ref(), &ctx.output_dir, &ctx.exclude_patterns)?;
+            syncer.sync_resource(res, ctx.transformer.as_ref(), &ctx.output_dir)?;
         }
 
         info!("Sync successful!");

@@ -29,6 +29,12 @@ pub struct ExtraSyncer {
     exclude_patterns: Vec<Pattern>,
 }
 
+impl Default for ExtraSyncer {
+    fn default() -> Self {
+        Self::new(vec![])
+    }
+}
+
 impl ExtraSyncer {
     pub fn new(exclude_patterns: Vec<Pattern>) -> Self {
         Self {
@@ -163,12 +169,6 @@ impl ExtraSyncer {
         }
 
         Ok(None)
-    }
-}
-
-impl Default for ExtraSyncer {
-    fn default() -> Self {
-        Self::new(vec![])
     }
 }
 

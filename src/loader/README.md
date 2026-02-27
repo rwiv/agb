@@ -12,47 +12,39 @@
 ## 주요 구성 요소
 
 ### 1. ResourceLoader 및 모듈 인터페이스 (`mod.rs`)
-모듈의 엔트리포인트로, 스캔(`FileFilter`), 해석(`ResourcePathResolver`), 조립(`ResourceParser`) 단계를 오케스트레이션합니다.
+모듈의 엔트리포인트로, 스캔, 해석(`ResourcePathResolver`), 조립(`ResourceParser`) 단계를 오케스트레이션합니다.
 - **`ResourceLoader` (Public API)**: 플러그인 디렉터리를 탐색하고 실제 리소스 객체를 조립하는 핵심 객체입니다.
-    - `new()`: 새로운 로더 인스턴스 생성. 소스 루트에서 `map.yaml`이 있으면 자동으로 로드하여 컨텍스트에 유지합니다.
     - `load()`: 모든 유효한 리소스를 로드하여 반환.
 
-### 2. MetadataMerger (`merger.rs`)
+### 2. Loader 모델 (`model.rs`)
+- **`ScannedResource`**: 파일 스캔 단계에서 생성되며 플러그인, 이름, 그리고 원시 경로 정보를 담습니다.
+- **`ScannedPaths`**: 리소스 타입별 파일 경로 구성을 강제하는 Enum입니다.
+
+### 3. MetadataMerger (`merger.rs`)
 Frontmatter, Metadata Map, 외부 메타데이터를 통합하는 단일 책임 모듈입니다.
-- **필드 매핑**: `map.yaml` 규칙에 따라 필드 값을 타겟별로 치환.
-- **오버라이트**: 타겟 전용 예약어 섹션 병합.
+- **필드 매핑**: `map.yaml` 규칙에 따라 필드 값을 타겟별로 치환합니다.
+- **오버라이트**: 타겟 전용 예약어 섹션 병합을 수행합니다.
 
-### 3. FileFilter (`filter.rs`)
-스캔 과정에서 파일의 유효성을 검증합니다.
-- **제외 패턴**: `agb.yaml`의 `exclude` 필드에 정의된 Glob 패턴 지원.
-- **숨김 파일 무시**: `.`으로 시작하는 파일 및 디렉터리 제외.
-- **보안 검증 (PRD 제약)**: 플러그인 내부에 타겟 에이전트 전용 메인 파일(`GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`)이 존재할 경우 빌드 에러를 발생시킵니다.
-
-### 3. ResourcePathResolver (`resolver.rs`)
+### 4. ResourcePathResolver (`resolver.rs`)
 파일 경로를 분석하여 리소스 단위(`ScannedResource`)로 그룹화합니다.
-- **Commands & Agents**: `[plugin]/[type]/[name].{md,yaml,yml}` 구조를 `ScannedPaths::Command` 또는 `Agent`로 분석합니다.
-- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화하여 `ScannedPaths::Skill` 구조로 반환합니다. `SKILL.{yaml,yml}`을 선택적 메타데이터로 인식하며, 그 외의 다른 모든 파일들은 `extras` 필드에 수집됩니다.
-- **포맷 충돌 검증**: 동일 리소스에 대해 YAML과 YML 메타데이터가 공존할 경우 에러를 발생시켜 일관성을 유지합니다.
+- **Commands & Agents**: `[plugin]/[type]/[name].{md,yaml,yml}` 구조를 분석합니다.
+- **Skills**: `[plugin]/skills/[skill_name]/` 폴더 내의 파일들을 그룹화합니다.
+- **포맷 충돌 검증**: 동일 리소스에 대해 YAML과 YML 메타데이터가 공존할 경우 에러를 발생시킵니다.
 
 ### 5. ResourceParser (`parser.rs`)
 `ScannedResource` 정보를 기반으로 메타데이터 파싱과 최종 `Resource` 객체 조립을 담당합니다.
-- **메타데이터 파싱**: YAML, YML 형식을 `serde_json::Value`로 변환.
-- **메타데이터 통합**: `MetadataMerger`를 사용하여 본문(Frontmatter)과 외부 메타데이터, 그리고 전역 매핑 규칙을 병합합니다.
-- **리소스 조립**: 마크다운 본문, 병합된 메타데이터, 그리고 `Skill`의 경우 수집된 `extras` 파일 정보를 결합하여 `Resource` 타입별 객체 생성.
+- **메타데이터 통합**: `MetadataMerger`를 사용하여 본문(Frontmatter)과 외부 메타데이터, 전역 매핑 규칙을 병합합니다.
 
-### 5. Registry (`registry.rs`)
-로드된 `Resource` 객체들을 메모리에 보관하고 관리하는 중앙 저장소 역할을 합니다.
-- **리소스 등록**: 빌드 대상으로 선택된 리소스들을 레지스트리에 등록합니다.
-- **충돌 검증**: 동일한 리소스 타입(Command, Agent, Skill)과 이름을 가진 리소스가 여러 플러그인에서 중복으로 등록되지 않도록 사전에 방지하여 빌드의 안정성을 보장합니다.
+### 6. Registry (`registry.rs`)
+로드된 `Resource` 객체들을 메모리에 보관하고 관리하는 중앙 저장소 역할을 합니다. 동일 타입 내 이름 중복을 방지합니다.
 
 ## 리소스 그룹화 규칙
 
 | 리소스 타입 | 구조 | 메타데이터 매칭 | 본문 매칭 | 추가 파일 |
 | :--- | :--- | :--- | :--- | :--- |
 | **Commands/Agents** | 파일 기반 | 파일 이름이 동일한 YAML/YML | 파일 이름이 동일한 `.md` | 지원하지 않음 |
-| **Skills** | 폴더 기반 | `SKILL.yaml/yml` | 폴더 내의 `.md` 파일 | 폴더 내의 기타 모든 파일 (계층 구조 유지) |
+| **Skills** | 폴더 기반 | `SKILL.yaml/yml` | `SKILL.md` | 폴더 내 기타 모든 파일 (extras) |
 
-## 구현 상세
-
-- **중복 검증**: 동일한 리소스 이름에 대해 여러 메타데이터 형식이 발견되면 즉시 빌드를 중단하여 설정의 모호함을 방지합니다.
-- **확장성**: `MetadataParser`를 통해 새로운 설정 포맷을 쉽게 추가할 수 있는 구조입니다.
+## 구현 상세 및 정책
+- **필터링**: 파일 유효성 검사는 `core::FileFilter`를 사용하며, 숨김 파일 및 보안상 금지된 파일을 엄격히 걸러냅니다.
+- **중복 검증**: 동일한 리소스 이름에 대해 여러 메타데이터 형식이 발견되면 즉시 빌드를 중단합니다.

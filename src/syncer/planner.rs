@@ -38,73 +38,90 @@ impl SyncPlanner {
 
         // 1. target_dir 스캔하여 source_dir로 동기화 (Add/Update/PatchMarkdown)
         for entry in WalkDir::new(target_dir).into_iter().filter_map(|e| e.ok()) {
-            let path = entry.path();
-            if !path.is_file() {
-                continue;
-            }
-
-            let relative_path = path.strip_prefix(target_dir)?;
-
-            // SKILL.md는 Syncer에서 직접 처리하므로 여기서는 무시
-            if relative_path == Path::new(SKILL_MD) {
-                continue;
-            }
-
-            // exclude 패턴 체크
-            if !self.filter.is_valid(target_dir, path)? {
-                continue;
-            }
-
-            let source_path = source_dir.join(relative_path);
-
-            if !source_path.exists() {
-                actions.push(SyncAction::Add {
-                    relative_path: relative_path.to_path_buf(),
-                    target_path: path.to_path_buf(),
-                });
-            } else {
-                // 기존 파일 수정 여부 체크 (해시 비교)
-                let target_hash = calculate_hash(path)?;
-                let source_hash = calculate_hash(&source_path)?;
-
-                if target_hash != source_hash {
-                    actions.push(SyncAction::Update {
-                        relative_path: relative_path.to_path_buf(),
-                        target_path: path.to_path_buf(),
-                    });
-                }
+            if let Some(action) = self.plan_add_or_update(source_dir, target_dir, entry.path())? {
+                actions.push(action);
             }
         }
 
         // 2. source_dir 스캔하여 target_dir에 없는 파일 제거 (Delete)
         for entry in WalkDir::new(source_dir).into_iter().filter_map(|e| e.ok()) {
-            let path = entry.path();
-            if !path.is_file() {
-                continue;
-            }
-
-            let relative_path = path.strip_prefix(source_dir)?;
-
-            // SKILL.md는 삭제 대상 아님
-            if relative_path == Path::new(SKILL_MD) {
-                continue;
-            }
-
-            // exclude 패턴 체크
-            if !self.filter.is_valid(source_dir, path)? {
-                continue;
-            }
-
-            let target_path = target_dir.join(relative_path);
-            if !target_path.exists() {
-                actions.push(SyncAction::Delete {
-                    relative_path: relative_path.to_path_buf(),
-                    source_path: path.to_path_buf(),
-                });
+            if let Some(action) = self.plan_delete(source_dir, target_dir, entry.path())? {
+                actions.push(action);
             }
         }
 
         Ok(actions)
+    }
+
+    fn plan_add_or_update(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
+        if !path.is_file() {
+            return Ok(None);
+        }
+
+        let relative_path = path.strip_prefix(target_dir)?;
+
+        // SKILL.md는 Syncer에서 직접 처리하므로 여기서는 무시
+        if relative_path == Path::new(SKILL_MD) {
+            return Ok(None);
+        }
+
+        // exclude 패턴 체크
+        if !self.filter.is_valid(target_dir, path)? {
+            return Ok(None);
+        }
+
+        let source_path = source_dir.join(relative_path);
+
+        // 파일이 존재하지 않으면 추가
+        if !source_path.exists() {
+            return Ok(Some(SyncAction::Add {
+                relative_path: relative_path.to_path_buf(),
+                target_path: path.to_path_buf(),
+            }));
+        }
+
+        // 기존 파일 수정 여부 체크 (해시 비교)
+        let target_hash = calculate_hash(path)?;
+        let source_hash = calculate_hash(&source_path)?;
+
+        // 내용이 다르면 업데이트
+        if target_hash != source_hash {
+            return Ok(Some(SyncAction::Update {
+                relative_path: relative_path.to_path_buf(),
+                target_path: path.to_path_buf(),
+            }));
+        }
+
+        Ok(None)
+    }
+
+    fn plan_delete(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
+        if !path.is_file() {
+            return Ok(None);
+        }
+
+        let relative_path = path.strip_prefix(source_dir)?;
+
+        // SKILL.md는 삭제 대상 아님
+        if relative_path == Path::new(SKILL_MD) {
+            return Ok(None);
+        }
+
+        // exclude 패턴 체크
+        if !self.filter.is_valid(source_dir, path)? {
+            return Ok(None);
+        }
+
+        let target_path = target_dir.join(relative_path);
+        // 대상 경로에 파일이 없으면 삭제
+        if !target_path.exists() {
+            return Ok(Some(SyncAction::Delete {
+                relative_path: relative_path.to_path_buf(),
+                source_path: path.to_path_buf(),
+            }));
+        }
+
+        Ok(None)
     }
 }
 

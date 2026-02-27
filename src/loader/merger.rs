@@ -53,6 +53,7 @@ impl<'a> MetadataMerger<'a> {
         }
         Ok(())
     }
+
     /// 외부 YAML 데이터를 병합합니다. (타겟 전용 섹션 오버라이트)
     fn apply_external_override(&self, base: &mut Value, external: &Value) -> Result<()> {
         if !base.is_object() {

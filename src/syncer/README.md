@@ -12,21 +12,18 @@
 
 ### 1. Syncer (`mod.rs`)
 전체 동기화 프로세스를 조율하는 실행기입니다.
-- **`sync_resource` (Public API)**: 단일 리소스에 대해 타겟 파일을 읽고, `Transformer::detransform`을 통해 모델로 복원한 뒤, `MdPatcher` 및 `DirectorySyncer`를 사용하여 소스에 반영합니다.
+- **`sync_resource` (Public API)**: 단일 리소스에 대해 타겟 파일을 읽고, `Transformer::detransform`을 통해 모델로 복원한 뒤, `MdPatcher` 및 `ExtraSyncer`를 사용하여 소스에 반영합니다.
 
 ### 2. MdPatcher (`patcher.rs`)
 마크다운 파일의 구조와 포맷을 최대한 보존하면서 특정 부분만 수정하는 역할을 수행합니다.
 - **부분적 업데이트 (Partial Update)**: 정규표현식을 사용하여 YAML Frontmatter의 `description` 필드만 교체하거나, 본문(`Body`) 영역을 전체 교체합니다.
 - **안전성**: 멀티라인 `description`이나 복잡한 YAML 마커가 소스에서 감지될 경우, 원본 파손을 방지하기 위해 에러를 발생시킵니다.
 
-### 3. SyncPlanner (`planner.rs`)
-두 디렉터리(Source와 Target)를 비교하여 수행해야 할 작업 목록(`SyncAction`)을 생성합니다.
+### 3. ExtraSyncer (`extra.rs`)
+두 디렉터리(Source와 Target)를 비교하여 수행해야 할 작업 목록(`SyncAction`)을 생성하고 실제 파일 시스템 작업을 수행합니다.
 - **해시 기반 비교**: 파일의 SHA-256 해시를 비교하여 변경 여부를 판단합니다.
-- **예외 처리**: `SKILL.md`와 같은 핵심 파일은 플래너 단계에서 제외하여 개별 로직에서 안전하게 처리될 수 있도록 합니다.
-
-### 4. DirectorySyncer (`directory.rs`)
-`SyncPlanner`가 수립한 계획(`SyncAction`)에 따라 실제 파일 시스템 작업을 수행합니다.
-- 스킬 리소스의 `extras` 파일들을 동기화하는 데 주로 사용됩니다.
+- **예외 처리**: `SKILL.md`와 같은 핵심 파일은 플래닝 단계에서 제외하여 개별 로직에서 안전하게 처리될 수 있도록 합니다.
+- **작업 수행**: 스킬 리소스의 `extras` 파일들을 동기화(추가, 수정, 삭제)하는 데 사용됩니다.
 
 ## 동기화 흐름
 
@@ -35,7 +32,7 @@
 3. `sync_resource` 내부 동작:
     - 타겟 경로에서 파일을 읽어 `Transformer::detransform`으로 데이터 복원.
     - `MdPatcher`를 통해 소스 마크다운의 `description`과 본문 업데이트.
-    - 리소스가 `Skill` 타입인 경우, `DirectorySyncer`를 호출하여 하위 디렉터리 파일들을 동기화.
+    - 리소스가 `Skill` 타입인 경우, `ExtraSyncer`를 호출하여 하위 디렉터리 파일들을 동기화.
 
 ## 설계 원칙
 - **원본 보존 (Preservation)**: 소스 파일의 주석이나 포맷을 최대한 유지하기 위해 전체 파일을 다시 쓰지 않고 부분적 패치를 우선합니다.

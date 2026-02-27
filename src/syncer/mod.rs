@@ -1,8 +1,8 @@
-pub mod directory;
+pub mod extra;
 pub mod patcher;
-pub mod planner;
 
 use crate::core::Resource;
+use crate::syncer::extra::ExtraSyncer;
 use crate::syncer::patcher::MdPatcher;
 use crate::transformer::Transformer;
 use anyhow::{Context, Result};
@@ -11,11 +11,15 @@ use std::fs;
 use std::path::Path;
 
 #[derive(Default)]
-pub struct Syncer;
+pub struct Syncer {
+    extra: ExtraSyncer,
+}
 
 impl Syncer {
     pub fn new() -> Self {
-        Self
+        Self {
+            extra: ExtraSyncer::new(),
+        }
     }
 
     /// 단일 리소스를 타겟에서 소스로 동기화합니다.
@@ -81,7 +85,7 @@ impl Syncer {
             let target_skill_dir = target_path
                 .parent()
                 .ok_or_else(|| anyhow::anyhow!("Failed to get parent directory of {:?}", target_path))?;
-            directory::DirectorySyncer::sync(&s.base.source_path, target_skill_dir, exclude)?;
+            self.extra.sync(&s.base.source_path, target_skill_dir, exclude)?;
         }
 
         Ok(())

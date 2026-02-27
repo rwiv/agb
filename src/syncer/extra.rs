@@ -1,9 +1,12 @@
 use crate::core::SKILL_MD;
 use crate::loader::filter::FileFilter;
 use crate::utils::fs::calculate_hash;
-use anyhow::Result;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
+
+use anyhow::Result;
+use log::info;
+use std::fs;
 
 #[derive(Debug, PartialEq)]
 pub enum SyncAction {
@@ -21,31 +24,67 @@ pub enum SyncAction {
     },
 }
 
-pub struct SyncPlanner {
-    filter: FileFilter,
-}
+#[derive(Default)]
+pub struct ExtraSyncer;
 
-impl SyncPlanner {
-    pub fn new(exclude_patterns: &[String]) -> Result<Self> {
-        Ok(Self {
-            filter: FileFilter::new(exclude_patterns)?,
-        })
+impl ExtraSyncer {
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// 두 디렉토리 간의 파일 변경사항을 동기화합니다.
+    /// 특정 파일(예: SKILL.md)은 Syncer의 공통 로직에서 처리되므로 Syncer의 제외 패턴을 통해 무시되어야 합니다.
+    pub fn sync(&self, source_dir: &Path, target_dir: &Path, exclude_patterns: &[String]) -> Result<()> {
+        let filter = FileFilter::new(exclude_patterns)?;
+        let actions = self.plan(&filter, source_dir, target_dir)?;
+
+        for action in actions {
+            match action {
+                SyncAction::Add {
+                    relative_path,
+                    target_path,
+                } => {
+                    let source_path = source_dir.join(relative_path);
+                    if let Some(parent) = source_path.parent() {
+                        fs::create_dir_all(parent)?;
+                    }
+                    fs::copy(target_path, &source_path)?;
+                    info!("Added new file to source: {:?}", source_path);
+                }
+                SyncAction::Update {
+                    relative_path,
+                    target_path,
+                } => {
+                    let source_path = source_dir.join(relative_path);
+                    fs::copy(target_path, &source_path)?;
+                    info!("Updated file in source: {:?}", source_path);
+                }
+                SyncAction::Delete {
+                    relative_path: _,
+                    source_path,
+                } => {
+                    fs::remove_file(&source_path)?;
+                    info!("Removed deleted file from source: {:?}", source_path);
+                }
+            }
+        }
+        Ok(())
     }
 
     /// source_dir와 target_dir를 비교하여 소스를 업데이트하기 위한 액션 목록 생성
-    pub fn plan(&self, source_dir: &Path, target_dir: &Path) -> Result<Vec<SyncAction>> {
+    fn plan(&self, filter: &FileFilter, source_dir: &Path, target_dir: &Path) -> Result<Vec<SyncAction>> {
         let mut actions = Vec::new();
 
         // 1. target_dir 스캔하여 source_dir로 동기화 (Add/Update/PatchMarkdown)
         for entry in WalkDir::new(target_dir).into_iter().filter_map(|e| e.ok()) {
-            if let Some(action) = self.plan_add_or_update(source_dir, target_dir, entry.path())? {
+            if let Some(action) = self.plan_add_or_update(filter, source_dir, target_dir, entry.path())? {
                 actions.push(action);
             }
         }
 
         // 2. source_dir 스캔하여 target_dir에 없는 파일 제거 (Delete)
         for entry in WalkDir::new(source_dir).into_iter().filter_map(|e| e.ok()) {
-            if let Some(action) = self.plan_delete(source_dir, target_dir, entry.path())? {
+            if let Some(action) = self.plan_delete(filter, source_dir, target_dir, entry.path())? {
                 actions.push(action);
             }
         }
@@ -53,7 +92,13 @@ impl SyncPlanner {
         Ok(actions)
     }
 
-    fn plan_add_or_update(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
+    fn plan_add_or_update(
+        &self,
+        filter: &FileFilter,
+        source_dir: &Path,
+        target_dir: &Path,
+        path: &Path,
+    ) -> Result<Option<SyncAction>> {
         if !path.is_file() {
             return Ok(None);
         }
@@ -66,7 +111,7 @@ impl SyncPlanner {
         }
 
         // exclude 패턴 체크
-        if !self.filter.is_valid(target_dir, path)? {
+        if !filter.is_valid(target_dir, path)? {
             return Ok(None);
         }
 
@@ -95,7 +140,13 @@ impl SyncPlanner {
         Ok(None)
     }
 
-    fn plan_delete(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
+    fn plan_delete(
+        &self,
+        filter: &FileFilter,
+        source_dir: &Path,
+        target_dir: &Path,
+        path: &Path,
+    ) -> Result<Option<SyncAction>> {
         if !path.is_file() {
             return Ok(None);
         }
@@ -108,7 +159,7 @@ impl SyncPlanner {
         }
 
         // exclude 패턴 체크
-        if !self.filter.is_valid(source_dir, path)? {
+        if !filter.is_valid(source_dir, path)? {
             return Ok(None);
         }
 
@@ -148,8 +199,9 @@ mod tests {
         fs::write(target_dir.join("new.txt"), "new file")?;
         fs::write(target_dir.join(SKILL_MD), "---name: test--- modified")?;
 
-        let planner = SyncPlanner::new(&[])?;
-        let actions = planner.plan(source_dir, target_dir)?;
+        let extra = ExtraSyncer::new();
+        let filter = FileFilter::new(&[])?;
+        let actions = extra.plan(&filter, source_dir, target_dir)?;
 
         assert!(actions.contains(&SyncAction::Update {
             relative_path: PathBuf::from("existing.txt"),

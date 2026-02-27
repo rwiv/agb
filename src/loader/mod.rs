@@ -4,9 +4,9 @@ pub mod parser;
 pub mod registry;
 pub mod resolver;
 
-use crate::core::{BuildTarget, PLUGINS_DIR_NAME, Resource};
-use crate::utils::yaml::load_metadata_map;
+use crate::core::{BuildTarget, MetadataMap, PLUGINS_DIR_NAME, Resource};
 use anyhow::Result;
+use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -66,7 +66,7 @@ impl ResourceLoader {
 
         // map.yaml 로드
         let map_path = source_root.join("map.yaml");
-        let metadata_map = load_metadata_map(&map_path).ok();
+        let metadata_map = Self::load_metadata_map(&map_path).ok();
 
         let parser = ResourceParser::new(target, metadata_map);
 
@@ -101,6 +101,16 @@ impl ResourceLoader {
         }
 
         Ok(files)
+    }
+
+    /// map.yaml 파일을 로드하여 MetadataMap 객체로 변환합니다.
+    fn load_metadata_map(path: &Path) -> Result<MetadataMap> {
+        if !path.exists() {
+            return Ok(MetadataMap::default());
+        }
+        let content = fs::read_to_string(path)?;
+        let map: MetadataMap = serde_yaml::from_str(&content)?;
+        Ok(map)
     }
 }
 

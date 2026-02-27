@@ -6,6 +6,7 @@ use crate::syncer::extra::ExtraSyncer;
 use crate::syncer::patcher::MdPatcher;
 use crate::transformer::Transformer;
 use anyhow::{Context, Result};
+use glob::Pattern;
 use log::info;
 use std::fs;
 use std::path::Path;
@@ -28,7 +29,7 @@ impl Syncer {
         resource: &Resource,
         transformer: &dyn Transformer,
         output_dir: &Path,
-        exclude: &[String],
+        exclude_patterns: &[Pattern],
     ) -> Result<()> {
         // 타겟 파일 경로 결정 (get_target_path 사용으로 최적화)
         let relative_target_path = transformer.get_target_path(resource.r_type(), resource.name());
@@ -85,7 +86,8 @@ impl Syncer {
             let target_skill_dir = target_path
                 .parent()
                 .ok_or_else(|| anyhow::anyhow!("Failed to get parent directory of {:?}", target_path))?;
-            self.extra.sync(&s.base.source_path, target_skill_dir, exclude)?;
+            self.extra
+                .sync(&s.base.source_path, target_skill_dir, exclude_patterns)?;
         }
 
         Ok(())

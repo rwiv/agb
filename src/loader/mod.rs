@@ -6,6 +6,7 @@ pub mod resolver;
 
 use crate::core::{BuildTarget, MetadataMap, PLUGINS_DIR_NAME, Resource};
 use anyhow::Result;
+use glob::Pattern;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -46,11 +47,12 @@ pub struct ResourceLoader {
     filter: FileFilter,
     resolver: ResourcePathResolver,
     parser: ResourceParser,
+    exclude_patterns: Vec<Pattern>,
 }
 
 impl ResourceLoader {
     /// 새로운 ResourceLoader 인스턴스를 생성합니다.
-    pub fn new<P: AsRef<Path>>(source_root: P, exclude_patterns: &[String], target: BuildTarget) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(source_root: P, exclude_patterns: Vec<Pattern>, target: BuildTarget) -> Result<Self> {
         let source_root = source_root.as_ref().to_path_buf();
         if !source_root.exists() {
             anyhow::bail!("Source root directory not found: {:?}", source_root);
@@ -61,7 +63,7 @@ impl ResourceLoader {
             anyhow::bail!("Plugins directory not found: {:?}", plugins_dir);
         }
 
-        let filter = FileFilter::new(exclude_patterns)?;
+        let filter = FileFilter::new();
         let resolver = ResourcePathResolver::new();
 
         // map.yaml 로드
@@ -75,6 +77,7 @@ impl ResourceLoader {
             filter,
             resolver,
             parser,
+            exclude_patterns,
         })
     }
 
@@ -95,7 +98,7 @@ impl ResourceLoader {
 
         for entry in WalkDir::new(&self.root).into_iter().filter_map(|e| e.ok()) {
             let path = entry.path();
-            if self.filter.is_valid(&self.root, path)? {
+            if self.filter.is_valid(&self.root, path, &self.exclude_patterns)? {
                 files.push(path.to_path_buf());
             }
         }
@@ -142,7 +145,8 @@ mod tests {
         fs::write(skill_dir.join("SKILL.yaml"), "gemini-cli:\n  desc: skill")?;
         fs::write(skill_dir.join("SKILL.md"), "prompt")?;
 
-        let loader = ResourceLoader::new(source_root, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;
+        let patterns = vec![Pattern::new("*.tmp")?];
+        let loader = ResourceLoader::new(source_root, patterns, BuildTarget::GeminiCli)?;
         let resources = loader.load()?;
 
         assert_eq!(resources.len(), 2);

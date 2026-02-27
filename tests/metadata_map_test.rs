@@ -1,6 +1,7 @@
 use agb::core::{BuildTarget, Resource};
 use agb::loader::ResourceLoader;
 use anyhow::Result;
+use glob::Pattern;
 use std::fs;
 use tempfile::tempdir;
 
@@ -30,7 +31,7 @@ model: sonnet
     fs::write(cmd_dir.join("my-cmd.md"), md_content)?;
 
     // 3. ResourceLoader로 로드 (Gemini 타겟)
-    let loader = ResourceLoader::new(source_root, &[], BuildTarget::GeminiCli)?;
+    let loader = ResourceLoader::new(source_root, Vec::<Pattern>::new(), BuildTarget::GeminiCli)?;
     let resources = loader.load()?;
 
     assert_eq!(resources.len(), 1);
@@ -41,7 +42,7 @@ model: sonnet
     }
 
     // 4. ResourceLoader로 로드 (Claude 타겟)
-    let loader = ResourceLoader::new(source_root, &[], BuildTarget::ClaudeCode)?;
+    let loader = ResourceLoader::new(source_root, Vec::<Pattern>::new(), BuildTarget::ClaudeCode)?;
     let resources = loader.load()?;
     if let Resource::Command(d) = &resources[0] {
         assert_eq!(d.metadata["model"], "sonnet-v3");
@@ -81,7 +82,7 @@ gemini-cli:
     fs::write(cmd_dir.join("my-cmd.yaml"), ext_yaml)?;
 
     // 3. ResourceLoader로 로드
-    let loader = ResourceLoader::new(source_root, &[], BuildTarget::GeminiCli)?;
+    let loader = ResourceLoader::new(source_root, Vec::<Pattern>::new(), BuildTarget::GeminiCli)?;
     let resources = loader.load()?;
 
     if let Resource::Command(d) = &resources[0] {

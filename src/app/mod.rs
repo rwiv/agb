@@ -55,11 +55,10 @@ impl App {
             "Syncing target changes to source for target: {:?}...",
             ctx.config.target
         );
-        let exclude = ctx.config.exclude.clone().unwrap_or_default();
 
         let syncer = crate::syncer::Syncer::new();
         for res in ctx.registry.all_resources() {
-            syncer.sync_resource(res, ctx.transformer.as_ref(), &ctx.output_dir, &exclude)?;
+            syncer.sync_resource(res, ctx.transformer.as_ref(), &ctx.output_dir, &ctx.exclude_patterns)?;
         }
 
         info!("Sync successful!");

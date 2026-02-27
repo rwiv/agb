@@ -60,12 +60,7 @@ Content",
     let resource = ctx.registry.all_resources().into_iter().next().unwrap();
     let transformer = ctx.transformer.as_ref();
 
-    let result = syncer.sync_resource(
-        resource,
-        transformer,
-        project_dir.path(),
-        &ctx.config.exclude.as_ref().cloned().unwrap_or_default(),
-    );
+    let result = syncer.sync_resource(resource, transformer, project_dir.path(), &ctx.exclude_patterns);
 
     // 에러가 발생해야 함
     assert!(result.is_err());

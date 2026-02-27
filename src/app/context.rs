@@ -3,6 +3,8 @@ use crate::loader;
 use crate::loader::registry::Registry as LoaderRegistry;
 use crate::transformer::Transformer;
 use crate::transformer::TransformerFactory;
+use anyhow::Context;
+use glob::Pattern;
 use log::info;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -13,6 +15,7 @@ pub struct AppContext {
     pub transformer: Box<dyn Transformer>,
     pub source_dir: PathBuf,
     pub output_dir: PathBuf,
+    pub exclude_patterns: Vec<Pattern>,
 }
 
 impl AppContext {
@@ -43,11 +46,15 @@ impl AppContext {
             target_identifiers.extend(skills.clone());
         }
 
-        let exclude = cfg.exclude.as_ref().cloned().unwrap_or_default();
+        let exclude_strings = cfg.exclude.as_ref().cloned().unwrap_or_default();
+        let mut exclude_patterns = Vec::new();
+        for p in &exclude_strings {
+            exclude_patterns.push(Pattern::new(p).with_context(|| format!("Invalid glob pattern: {}", p))?);
+        }
 
         // ResourceLoader를 통한 리소스 로드 및 필터링
         info!("Scanning and loading resources from {}...", source_dir.display());
-        let loader = loader::ResourceLoader::new(&source_dir, &exclude, cfg.target)?;
+        let loader = loader::ResourceLoader::new(&source_dir, exclude_patterns.clone(), cfg.target)?;
 
         info!("Validating and registering resources...");
         let all_resources = loader.load()?;
@@ -68,6 +75,7 @@ impl AppContext {
             transformer,
             source_dir,
             output_dir,
+            exclude_patterns,
         })
     }
 }

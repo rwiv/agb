@@ -2,22 +2,21 @@ use crate::core::{BuildTarget, MetadataMap};
 use anyhow::Result;
 use serde_json::{Value, json};
 
-pub struct MetadataMerger<'a> {
+pub struct MetadataMerger {
     target: BuildTarget,
-    map: Option<&'a MetadataMap>,
 }
 
-impl<'a> MetadataMerger<'a> {
-    pub fn new(target: BuildTarget, map: Option<&'a MetadataMap>) -> Self {
-        Self { target, map }
+impl MetadataMerger {
+    pub fn new(target: BuildTarget) -> Self {
+        Self { target }
     }
 
     /// Frontmatter(base)와 외부 YAML(external)을 병합합니다.
-    pub fn merge(&self, base: &Value, external: Option<&Value>) -> Result<Value> {
+    pub fn merge(&self, base: &Value, external: Option<&Value>, map_req: Option<&MetadataMap>) -> Result<Value> {
         let mut merged = base.clone();
 
         // 1. Metadata Map 적용
-        if let Some(map) = self.map {
+        if let Some(map) = map_req {
             self.apply_mapping(&mut merged, map)?;
         }
 
@@ -104,7 +103,7 @@ mod tests {
 
     #[test]
     fn test_merge_metadata_target_only_override() -> Result<()> {
-        let merger = MetadataMerger::new(BuildTarget::GeminiCli, None);
+        let merger = MetadataMerger::new(BuildTarget::GeminiCli);
         let base = json!({
             "name": "my-agent",
             "model": "default-model",
@@ -120,7 +119,7 @@ mod tests {
             }
         });
 
-        let result = merger.merge(&base, Some(&external))?;
+        let result = merger.merge(&base, Some(&external), None)?;
 
         assert_eq!(result["name"], "my-agent");
         assert_eq!(result["model"], "gemini-3.0-pro");
@@ -140,14 +139,14 @@ mod tests {
         mappings.insert("model".to_string(), model_map);
 
         let map = MetadataMap { mappings };
-        let merger = MetadataMerger::new(BuildTarget::GeminiCli, Some(&map));
+        let merger = MetadataMerger::new(BuildTarget::GeminiCli);
 
         let base = json!({
             "model": "sonnet",
             "description": "sonnet model"
         });
 
-        let result = merger.merge(&base, None)?;
+        let result = merger.merge(&base, None, Some(&map))?;
 
         assert_eq!(result["model"], "gemini-flash");
         assert_eq!(result["description"], "sonnet model"); // description should not be mapped
@@ -164,7 +163,7 @@ mod tests {
         mappings.insert("model".to_string(), model_map);
 
         let map = MetadataMap { mappings };
-        let merger = MetadataMerger::new(BuildTarget::GeminiCli, Some(&map));
+        let merger = MetadataMerger::new(BuildTarget::GeminiCli);
 
         // FM -> Map -> External
         let base = json!({
@@ -179,7 +178,7 @@ mod tests {
             }
         });
 
-        let result = merger.merge(&base, Some(&external))?;
+        let result = merger.merge(&base, Some(&external), Some(&map))?;
 
         assert_eq!(result["model"], "gemini-pro-override");
         assert_eq!(result["temperature"], 0.5);

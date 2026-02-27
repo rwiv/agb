@@ -2,8 +2,8 @@ use crate::core::{
     BuildTarget, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_YAML, EXT_YML, ExtraFile, MetadataMap, Resource,
     ResourceData, SkillData,
 };
+use crate::loader::ScannedResource;
 use crate::loader::merger::MetadataMerger;
-use crate::loader::{ScannedPaths, ScannedResource};
 use anyhow::{Context, Result};
 use serde_json::Value;
 use std::fs;
@@ -13,67 +13,71 @@ use std::path::{Path, PathBuf};
 pub struct ResourceParser {
     pub target: BuildTarget,
     pub metadata_map: Option<MetadataMap>,
-}
-
-/// 파싱 과정에서 공통으로 사용되는 정보를 담는 내부 컨텍스트입니다.
-struct ParseContext<'a> {
-    plugin: &'a str,
-    name: &'a str,
-    md: Option<PathBuf>,
-    metadata: Option<PathBuf>,
+    merger: MetadataMerger,
 }
 
 impl ResourceParser {
     pub fn new(target: BuildTarget, metadata_map: Option<MetadataMap>) -> Self {
-        Self { target, metadata_map }
+        Self {
+            target,
+            metadata_map,
+            merger: MetadataMerger::new(target),
+        }
     }
 
     /// 스캔된 리소스 정보로부터 Resource 객체를 생성합니다.
     pub fn parse_resource(&self, scanned: ScannedResource) -> Result<Resource> {
-        let plugin = scanned.plugin;
-        let name = scanned.name;
+        let r_type = scanned.resource_type();
+        let source_path = scanned.source_path()?;
+        let (md_path, metadata_path, extras) = scanned.paths.unpack();
 
-        // 리소스 타입에 따른 정보 추출
-        let (r_type, md, metadata, extras) = match scanned.paths {
-            ScannedPaths::Command { md, metadata } => (DIR_COMMANDS, md, metadata, None),
-            ScannedPaths::Agent { md, metadata } => (DIR_AGENTS, md, metadata, None),
-            ScannedPaths::Skill { md, metadata, extras } => (DIR_SKILLS, md, metadata, Some(extras)),
+        // 1. Markdown 본문 및 Frontmatter 추출
+        let (fm_metadata, pure_content) = if let Some(ref p) = md_path {
+            let raw_content =
+                fs::read_to_string(p).with_context(|| format!("Failed to read markdown content: {:?}", p))?;
+            crate::utils::yaml::extract_frontmatter(&raw_content)
+        } else {
+            anyhow::bail!(
+                "Markdown file is missing for resource '{}' in plugin '{}' ({})",
+                scanned.name,
+                scanned.plugin,
+                r_type
+            );
         };
 
-        // source_path 결정: Command/Agent는 md 파일 경로, Skill은 디렉터리 경로
-        let source_path = match r_type {
-            DIR_SKILLS => md
-                .as_ref()
-                .and_then(|p| p.parent())
-                .ok_or_else(|| anyhow::anyhow!("Failed to determine skill root for '{}'", name))?
-                .to_path_buf(),
-            _ => md
-                .clone()
-                .ok_or_else(|| anyhow::anyhow!("Markdown file is missing for '{}'", name))?,
+        // 2. 외부 메타데이터 파일 파싱
+        let ext_metadata = if let Some(ref p) = metadata_path {
+            Some(self.parse_metadata(p, r_type, &scanned.name)?)
+        } else {
+            None
         };
 
-        let ctx = ParseContext {
-            plugin: &plugin,
-            name: &name,
-            md: md.clone(),
-            metadata,
-        };
+        // 3. 메타데이터 병합 및 매핑 (MetadataMerger 사용)
+        let final_metadata = self
+            .merger
+            .merge(&fm_metadata, ext_metadata.as_ref(), self.metadata_map.as_ref())
+            .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, scanned.name))?;
 
-        let data = self.parse_common(r_type, ctx, source_path)?;
+        let data = ResourceData {
+            name: scanned.name.clone(),
+            plugin: scanned.plugin.clone(),
+            content: pure_content,
+            metadata: final_metadata,
+            source_path,
+        };
 
         match r_type {
             DIR_COMMANDS => Ok(Resource::Command(data)),
             DIR_AGENTS => Ok(Resource::Agent(data)),
             DIR_SKILLS => {
                 // 스킬 루트(SKILL.md의 부모 디렉터리)를 기준으로 상대 경로 계산
-                let skill_root = md.as_ref().and_then(|p| p.parent()).unwrap();
+                let skill_root = md_path.as_ref().and_then(|p| p.parent()).unwrap();
 
                 let skill_extras = extras
-                    .unwrap_or_default()
                     .into_iter()
                     .map(|source| {
                         let relative_path = source.strip_prefix(skill_root).unwrap_or(&source);
-                        let target = PathBuf::from(DIR_SKILLS).join(&name).join(relative_path);
+                        let target = PathBuf::from(DIR_SKILLS).join(&scanned.name).join(relative_path);
                         ExtraFile { source, target }
                     })
                     .collect();
@@ -87,59 +91,21 @@ impl ResourceParser {
         }
     }
 
-    /// 공통 데이터 파싱 로직 (Markdown + Metadata)
-    fn parse_common(&self, r_type: &str, ctx: ParseContext, source_path: PathBuf) -> Result<ResourceData> {
-        // 1. Markdown 본문 및 Frontmatter 추출
-        let (fm_metadata, pure_content) = if let Some(ref p) = ctx.md {
-            let raw_content =
-                fs::read_to_string(p).with_context(|| format!("Failed to read markdown content: {:?}", p))?;
-            crate::utils::yaml::extract_frontmatter(&raw_content)
-        } else {
-            anyhow::bail!(
-                "Markdown file is missing for resource '{}' in plugin '{}' ({})",
-                ctx.name,
-                ctx.plugin,
-                r_type
-            );
-        };
-
-        // 2. 외부 메타데이터 파일 파싱
-        let ext_metadata = if let Some(ref p) = ctx.metadata {
-            Some(self.parse_metadata(p, r_type, &ctx)?)
-        } else {
-            None
-        };
-
-        // 3. 메타데이터 병합 및 매핑 (MetadataMerger 사용)
-        let merger = MetadataMerger::new(self.target, self.metadata_map.as_ref());
-        let final_metadata = merger
-            .merge(&fm_metadata, ext_metadata.as_ref())
-            .with_context(|| format!("Failed to merge metadata for resource: {}/{}", r_type, ctx.name))?;
-
-        Ok(ResourceData {
-            name: ctx.name.to_string(),
-            plugin: ctx.plugin.to_string(),
-            content: pure_content,
-            metadata: final_metadata,
-            source_path,
-        })
-    }
-
     /// 파일 경로로부터 메타데이터를 파싱하여 serde_json::Value로 반환합니다.
-    fn parse_metadata(&self, path: &Path, r_type: &str, ctx: &ParseContext) -> Result<Value> {
+    fn parse_metadata(&self, path: &Path, r_type: &str, name: &str) -> Result<Value> {
         let meta_str = fs::read_to_string(path).with_context(|| format!("Failed to read metadata file: {:?}", path))?;
 
         let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
 
         if extension == &EXT_YAML[1..] || extension == &EXT_YML[1..] {
             serde_yaml::from_str(&meta_str)
-                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", r_type, ctx.name))
+                .with_context(|| format!("Failed to parse YAML for resource: {}/{}", r_type, name))
         } else {
             anyhow::bail!(
                 "Unsupported metadata extension '{}' for resource: {}/{}",
                 extension,
                 r_type,
-                ctx.name
+                name
             )
         }
     }
@@ -148,8 +114,8 @@ impl ResourceParser {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::loader::ScannedPaths;
     use tempfile::tempdir;
-
     #[test]
     fn test_parse_resource_with_frontmatter_and_external() -> Result<()> {
         let dir = tempdir()?;

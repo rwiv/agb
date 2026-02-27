@@ -1,9 +1,11 @@
 pub mod filter;
+pub mod merger;
 pub mod parser;
 pub mod registry;
 pub mod resolver;
 
-use crate::core::{BuildTarget, Resource};
+use crate::core::{BuildTarget, PLUGINS_DIR_NAME, Resource};
+use crate::utils::yaml::load_metadata_map;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -48,18 +50,28 @@ pub struct ResourceLoader {
 
 impl ResourceLoader {
     /// 새로운 ResourceLoader 인스턴스를 생성합니다.
-    pub fn new<P: AsRef<Path>>(root: P, exclude_patterns: &[String], target: BuildTarget) -> Result<Self> {
-        let root = root.as_ref().to_path_buf();
-        if !root.exists() {
-            anyhow::bail!("Plugins directory not found: {:?}", root);
+    pub fn new<P: AsRef<Path>>(source_root: P, exclude_patterns: &[String], target: BuildTarget) -> Result<Self> {
+        let source_root = source_root.as_ref().to_path_buf();
+        if !source_root.exists() {
+            anyhow::bail!("Source root directory not found: {:?}", source_root);
+        }
+
+        let plugins_dir = source_root.join(PLUGINS_DIR_NAME);
+        if !plugins_dir.exists() {
+            anyhow::bail!("Plugins directory not found: {:?}", plugins_dir);
         }
 
         let filter = FileFilter::new(exclude_patterns)?;
         let resolver = ResourcePathResolver::new();
-        let parser = ResourceParser::new(target);
+
+        // map.yaml 로드
+        let map_path = source_root.join("map.yaml");
+        let metadata_map = load_metadata_map(&map_path).ok();
+
+        let parser = ResourceParser::new(target, metadata_map);
 
         Ok(Self {
-            root,
+            root: plugins_dir,
             filter,
             resolver,
             parser,
@@ -101,7 +113,8 @@ mod tests {
     #[test]
     fn test_resource_loader_load_integration() -> Result<()> {
         let dir = tempdir()?;
-        let plugins_path = dir.path().join("plugins");
+        let source_root = dir.path();
+        let plugins_path = source_root.join("plugins");
 
         // 샘플 구조 생성
         let cmd_dir = plugins_path.join("plugin_a/commands");
@@ -119,7 +132,7 @@ mod tests {
         fs::write(skill_dir.join("SKILL.yaml"), "gemini-cli:\n  desc: skill")?;
         fs::write(skill_dir.join("SKILL.md"), "prompt")?;
 
-        let loader = ResourceLoader::new(&plugins_path, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;
+        let loader = ResourceLoader::new(source_root, &["*.tmp".to_string()], BuildTarget::GeminiCli)?;
         let resources = loader.load()?;
 
         assert_eq!(resources.len(), 2);

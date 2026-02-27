@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::fmt;
 use std::path::PathBuf;
+
+use crate::core::BuildTarget;
 
 /// 리소스 타입 정의
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -21,6 +24,13 @@ impl fmt::Display for ResourceType {
         };
         write!(f, "{}", s)
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct MetadataMap {
+    /// Field mappings: { field_name: { original_value: { target: mapped_value } } }
+    #[serde(flatten)]
+    pub mappings: HashMap<String, HashMap<String, HashMap<BuildTarget, String>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

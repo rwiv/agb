@@ -1,4 +1,4 @@
-use crate::core::{Config, PLUGINS_DIR_NAME};
+use crate::core::Config;
 use crate::loader;
 use crate::loader::registry::Registry as LoaderRegistry;
 use crate::transformer::Transformer;
@@ -47,8 +47,7 @@ impl AppContext {
 
         // ResourceLoader를 통한 리소스 로드 및 필터링
         info!("Scanning and loading resources from {}...", source_dir.display());
-        let plugins_dir = source_dir.join(PLUGINS_DIR_NAME);
-        let loader = loader::ResourceLoader::new(&plugins_dir, &exclude, cfg.target)?;
+        let loader = loader::ResourceLoader::new(&source_dir, &exclude, cfg.target)?;
 
         info!("Validating and registering resources...");
         let all_resources = loader.load()?;

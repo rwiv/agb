@@ -1,7 +1,9 @@
+use crate::core::MetadataMap;
 use serde_json::json;
+use std::fs;
+use std::path::Path;
 
 /// 마크다운 본문에서 Frontmatter를 추출하여 (메타데이터, 순수 본문) 쌍으로 반환합니다.
-/// Frontmatter가 없거나 유효하지 않은 경우 빈 객체와 원본 본문을 반환합니다.
 pub fn extract_frontmatter(content: &str) -> (serde_json::Value, String) {
     let content = content.trim_start();
     if !content.starts_with("---") {
@@ -21,6 +23,16 @@ pub fn extract_frontmatter(content: &str) -> (serde_json::Value, String) {
     } else {
         (json!({}), content.to_string())
     }
+}
+
+/// map.yaml 파일을 로드하여 MetadataMap 객체로 변환합니다.
+pub fn load_metadata_map(path: &Path) -> anyhow::Result<MetadataMap> {
+    if !path.exists() {
+        return Ok(MetadataMap::default());
+    }
+    let content = fs::read_to_string(path)?;
+    let map: MetadataMap = serde_yaml::from_str(&content)?;
+    Ok(map)
 }
 
 #[cfg(test)]

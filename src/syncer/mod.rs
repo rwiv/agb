@@ -15,12 +15,6 @@ pub struct Syncer {
     extra: ExtraSyncer,
 }
 
-impl Default for Syncer {
-    fn default() -> Self {
-        Self::new(vec![])
-    }
-}
-
 impl Syncer {
     pub fn new(exclude_patterns: Vec<Pattern>) -> Self {
         Self {

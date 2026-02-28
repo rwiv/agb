@@ -1,4 +1,5 @@
 use crate::app::Config;
+use crate::core::ResourceType;
 use crate::loader;
 use crate::loader::registry::Registry as LoaderRegistry;
 use crate::transformer::Transformer;
@@ -34,16 +35,22 @@ impl AppContext {
             anyhow::bail!("Source directory does not exist: {}", source_dir.display());
         }
 
-        // 설정으로부터 식별자 추출
+        // 설정으로부터 식별자 추출 (타입 포함)
         let mut target_identifiers = HashSet::new();
         if let Some(cmds) = &cfg.resources.commands {
-            target_identifiers.extend(cmds.clone());
+            for cmd in cmds {
+                target_identifiers.insert((ResourceType::Command, cmd.clone()));
+            }
         }
         if let Some(agents) = &cfg.resources.agents {
-            target_identifiers.extend(agents.clone());
+            for agent in agents {
+                target_identifiers.insert((ResourceType::Agent, agent.clone()));
+            }
         }
         if let Some(skills) = &cfg.resources.skills {
-            target_identifiers.extend(skills.clone());
+            for skill in skills {
+                target_identifiers.insert((ResourceType::Skill, skill.clone()));
+            }
         }
 
         let exclude_strings = cfg.exclude.as_ref().cloned().unwrap_or_default();
@@ -59,12 +66,26 @@ impl AppContext {
         info!("Validating and registering resources...");
         let all_resources = loader.load()?;
         let mut registry = LoaderRegistry::new();
+        let mut found_identifiers = HashSet::new();
 
         for resource in all_resources {
             let identifier = format!("{}:{}", resource.plugin(), resource.name());
-            if target_identifiers.contains(&identifier) {
+            let key = (resource.r_type(), identifier);
+            if target_identifiers.contains(&key) {
+                found_identifiers.insert(key.clone());
                 registry.register(resource)?;
             }
+        }
+
+        // 누락된 리소스 확인
+        let missing: Vec<_> = target_identifiers.difference(&found_identifiers).collect();
+
+        if !missing.is_empty() {
+            let mut msg = String::from("Missing resources specified in agb.yaml:\n");
+            for (r_type, id) in missing {
+                msg.push_str(&format!("  - {}: '{}' (Not found)\n", r_type, id));
+            }
+            anyhow::bail!(msg);
         }
 
         let transformer = TransformerFactory::create(&cfg.target);

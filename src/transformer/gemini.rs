@@ -174,7 +174,7 @@ mod tests {
                 .join("test-skill")
                 .join(crate::core::SKILL_MD)
         );
-        assert!(result.content.contains("metadata:"));
+        assert!(!result.content.contains("metadata:"));
         assert!(result.content.contains("type: expert"));
         assert!(result.content.contains("Skill Content"));
     }
@@ -197,7 +197,7 @@ mod tests {
             result.path,
             PathBuf::from(crate::core::DIR_AGENTS).join(format!("test-agent{}", crate::core::EXT_MD))
         );
-        assert!(result.content.contains("metadata:"));
+        assert!(!result.content.contains("metadata:"));
         assert!(result.content.contains("model: gemini-1.5-flash"));
         assert!(result.content.contains("Agent Content"));
     }

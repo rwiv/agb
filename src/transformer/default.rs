@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
 struct DefaultFrontmatter {
+    #[serde(flatten)]
     metadata: serde_json::Value,
 }
 
@@ -56,18 +57,11 @@ impl Transformer for DefaultTransformer {
     fn detransform(&self, _r_type: ResourceType, file_content: &str) -> Result<ResourceData> {
         let (metadata, content) = crate::utils::yaml::extract_frontmatter(file_content);
 
-        // DefaultTransformer는 메타데이터를 'metadata' 키 아래에 감싸서 저장하므로 이를 꺼내줌
-        let final_metadata = if let Some(inner) = metadata.get("metadata") {
-            inner.clone()
-        } else {
-            metadata
-        };
-
         Ok(ResourceData {
             name: String::new(),   // detransform 시점에는 알 수 없음
             plugin: String::new(), // detransform 시점에는 알 수 없음
             content,
-            metadata: final_metadata,
+            metadata,
             source_path: PathBuf::new(), // Syncer에서 보완 예정
         })
     }
@@ -115,7 +109,7 @@ mod tests {
             PathBuf::from(DIR_COMMANDS).join(format!("test-cmd{}", EXT_MD))
         );
 
-        assert!(result.content.contains("metadata:"));
+        assert!(!result.content.contains("metadata:"));
         assert!(result.content.contains("description: A test command"));
         assert!(result.content.contains("model: claude-3-opus"));
         assert!(result.content.contains("# Hello World"));
@@ -143,7 +137,7 @@ mod tests {
 
         let result = transformer.transform(&resource).unwrap();
         assert_eq!(result.path, PathBuf::from(DIR_SKILLS).join("test-skill").join(SKILL_MD));
-        assert!(result.content.contains("metadata:"));
+        assert!(!result.content.contains("metadata:"));
         assert!(result.content.contains("description: Skill description"));
         assert!(result.content.contains("type: expert"));
         assert!(result.content.contains("Skill Content"));
@@ -181,9 +175,8 @@ mod tests {
             target: BuildTarget::ClaudeCode,
         };
         let input = "---
-metadata:
-  description: Updated description
-  model: new-model
+description: Updated description
+model: new-model
 ---
 
 # New Content";

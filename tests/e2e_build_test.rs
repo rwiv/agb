@@ -40,7 +40,7 @@ resources:
     assert!(content.contains("model = \"gemini-1.5-pro\""));
 
     let skill_content = fs::read_to_string(root.join("skills/python_expert/SKILL.md")).unwrap();
-    assert!(skill_content.contains("metadata:"));
+    assert!(!skill_content.contains("metadata:"));
     assert!(skill_content.contains("type: expert"));
     assert!(skill_content.contains("Python Expert Content"));
 }
@@ -70,7 +70,7 @@ resources:
 
     assert!(root.join("commands/foo.md").exists());
     let content = fs::read_to_string(root.join("commands/foo.md")).unwrap();
-    assert!(content.contains("metadata:"));
+    assert!(!content.contains("metadata:"));
     assert!(content.contains("description: Foo command description"));
     assert!(content.contains("# Foo Command"));
 }
@@ -100,7 +100,7 @@ resources:
 
     assert!(root.join("commands/foo.md").exists());
     let content = fs::read_to_string(root.join("commands/foo.md")).unwrap();
-    assert!(content.contains("metadata:"));
+    assert!(!content.contains("metadata:"));
     assert!(content.contains("# Foo Command"));
 }
 

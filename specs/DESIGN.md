@@ -6,17 +6,7 @@
 
 ### 1.1 빌드 파이프라인 (Build Pipeline)
 
-`agb`의 빌드 과정은 총 5단계의 순차적인 파이프라인을 거쳐 수행됩니다.
-
-```mermaid
-graph LR
-    Config[agb.yaml] --> Loader[ResourceLoader]
-    Loader -->|Scan| Files[Raw Files]
-    Files -->|Parse| Registry[Registry]
-    Registry -->|Dep Check| Registry
-    Registry -->|Transform| Transformed[TransformedResource]
-    Transformed -->|Emit| Output[Target Files]
-```
+`agb`의 빌드 과정은 순차적인 파이프라인을 거쳐 수행됩니다.
 
 1. **설정 로드 (Load Config)**: `agb.yaml`을 읽어 빌드 컨텍스트(소스 경로, 타겟 에이전트 등)를 생성합니다. (`builder/config.rs`)
 2. **리소스 스캔 및 로드 (Scan & Load)**: 소스 경로 내의 플러그인 구조를 분석하여 파일들을 수집하고, 이를 `core::Resource` 객체로 로드합니다. (`loader` 모듈)

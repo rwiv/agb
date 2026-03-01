@@ -85,8 +85,15 @@ gemini-cli:
 ### 4.3 의존성 정의 (`deps.yaml`)
 플러그인 루트에 위치한 `deps.yaml`을 통해 리소스 간의 의존성을 명시적으로 정의할 수 있습니다. 빌드 시 `agb.yaml`에 포함되지 않은 리소스를 의존하고 있을 경우 빌드가 실패합니다.
 
-- **포맷**: `ResourceType(plural)` -> `ResourceName` -> `DependencyType(plural)` -> `[Plugin:Name]`
-- **예시**:
+**포맷**:
+```yaml
+[resource_type_plural]:
+  [resource_name]:
+    [dependency_type_plural]:
+      - [plugin_name]:[resource_name]
+```
+
+**예시**:
 ```yaml
 agents:
   researcher:

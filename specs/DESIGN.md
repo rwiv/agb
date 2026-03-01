@@ -38,6 +38,9 @@
 
 ### 1.4 모듈 의존성 그래프 (Dependency Graph)
 
+#### 1.4.1 애플리케이션 계층 (App Layer)
+`main` 및 `app` 모듈이 다른 하위 모듈들을 오케스트레이션하는 구조입니다.
+
 ```mermaid
 graph TD
     main --> app
@@ -45,6 +48,13 @@ graph TD
     app --> builder
     app --> syncer
     app --> transformer
+```
+
+#### 1.4.2 모듈 간 내부 의존성 (Module Dependencies)
+각 하위 모듈들이 서로를 참조하거나 공용 `core` 모듈을 참조하는 구조입니다.
+
+```mermaid
+graph TD
     builder --> loader
     builder --> transformer
     syncer --> loader

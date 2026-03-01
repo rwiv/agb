@@ -2,7 +2,7 @@
 
 ## 1. 프로젝트 개요 (Overview)
 
-`agb`는 다양한 AI 코딩 에이전트(Claude-code, Gemini-cli, OpenCode 등)를 위한 워크플로우 리소스(Commands, Agents, Skills)를 단일 소스에서 관리하고, 각 에이전트의 규격에 맞게 변환하여 빌드하는 CLI 도구입니다.
+`agb`는 여러 플러그인에 분산된 AI 에이전트 리소스(Commands, Agents, Skills)를 중앙에서 통합 관리하고, 각 타겟 에이전트(Gemini-cli, Claude-code 등)의 규격에 맞춰 자동으로 변환 및 빌드하는 CLI 도구입니다. 프로젝트 로컬에서의 변경사항을 원본 리소스로 안전하게 환원하는 양방향 동기화 기능을 핵심 가치로 제공합니다.
 
 ## 2. 배경 및 목적 (Background)
 

@@ -88,8 +88,10 @@ agb sync
 
 ## 관련 문서
 
-상세한 기술 규격과 설계 내용은 다음 문서를 참조하십시오.
+상세한 요구사항, 규격 및 설계 내용은 다음 문서를 참조하십시오.
 
-- [**PRD.md**](./specs/PRD.md): 제품 요구사항 및 비즈니스 목표
-- [**SPEC.md**](./specs/SPEC.md): 기술 규격 및 변환 규칙
-- [**DESIGN.md**](./specs/DESIGN.md): 시스템 아키텍처 및 상세 설계
+- [**prd.md**](./specs/prd.md): 제품 요구사항 및 비즈니스 목표
+- [**format.md**](./specs/format.md): 리소스 구조 및 설정 규격 (사용자/개발자 가이드)
+- [**design.md**](./specs/design.md): 시스템 아키텍처 및 상세 알고리즘
+- [**spec.md**](./specs/spec.md): 기술 규격 및 처리 규칙
+- [**model.md**](./specs/model.md): 핵심 데이터 모델 정의 (Rust 코드 스니펫 포함)

@@ -5,7 +5,7 @@ pub const GEMINI_MD: &str = "GEMINI.md";
 pub const CLAUDE_MD: &str = "CLAUDE.md";
 
 // 금지된 파일 목록 (플러그인 내부에 존재할 수 없음)
-pub const FORBIDDEN_FILES: &[&str] = &[GEMINI_MD, CLAUDE_MD];
+pub const FORBIDDEN_FILES: &[&str] = &[GEMINI_MD, CLAUDE_MD, AGENTS_MD];
 
 // 디렉터리 이름 상수
 pub const DIR_COMMANDS: &str = "commands";

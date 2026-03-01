@@ -32,53 +32,77 @@ impl DependencyChecker {
         let mut errors = Vec::new();
 
         for resource in registry.all_resources() {
-            let plugin = resource.plugin();
-            let r_type = resource.r_type();
-            let name = resource.name();
-
-            if let Some(config) = self.get_or_load_config(source_dir, plugin)? {
-                let r_type_plural = r_type.to_plural();
-
-                if let Some(deps_map) = config.types.get(r_type_plural).and_then(|t| t.get(name)) {
-                    for (dep_type_plural, dep_ids) in deps_map {
-                        let dep_type = ResourceType::from_plural(dep_type_plural);
-
-                        if let Some(dt) = dep_type {
-                            for dep_id in dep_ids {
-                                // "plugin:name" 형식 파싱
-                                let parts: Vec<&str> = dep_id.split(':').collect();
-                                if parts.len() != 2 {
-                                    errors.push(format!(
-                                        "Invalid dependency ID '{}' in {} '{}' (Expected 'plugin:name')",
-                                        dep_id, r_type, name
-                                    ));
-                                    continue;
-                                }
-
-                                let dep_plugin = parts[0];
-                                let dep_name = parts[1];
-
-                                if !registry.contains_by_id(dt, dep_plugin, dep_name) {
-                                    errors.push(format!(
-                                        "{} '{}:{}' requires {} '{}' but it is missing in agb.yaml",
-                                        r_type, plugin, name, dt, dep_id
-                                    ));
-                                }
-                            }
-                        } else {
-                            errors.push(format!(
-                                "Unknown resource type '{}' in deps.yaml for {} '{}'",
-                                dep_type_plural, r_type, name
-                            ));
-                        }
-                    }
-                }
-            }
+            self.check_single_resource_dependencies(resource, registry, source_dir, &mut errors)?;
         }
 
         if !errors.is_empty() {
             let msg = format!("Dependency check failed:\n  - {}", errors.join("\n  - "));
             return Err(anyhow!(msg));
+        }
+
+        Ok(())
+    }
+
+    /// 단일 리소스의 의존성을 검사하고 발견된 오류를 errors 벡터에 수집합니다.
+    fn check_single_resource_dependencies(
+        &self,
+        resource: &crate::core::Resource,
+        registry: &Registry,
+        source_dir: &Path,
+        errors: &mut Vec<String>,
+    ) -> Result<()> {
+        let plugin = resource.plugin();
+        let r_type = resource.r_type();
+        let name = resource.name();
+
+        // 1. 해당 플러그인의 설정 로드 (없으면 종료)
+        let config = match self.get_or_load_config(source_dir, plugin)? {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+
+        // 2. 해당 리소스의 의존성 맵 추출 (없으면 종료)
+        let r_type_plural = r_type.to_plural();
+        let deps_map = match config.types.get(r_type_plural).and_then(|t| t.get(name)) {
+            Some(m) => m,
+            None => return Ok(()),
+        };
+
+        for (dep_type_plural, dep_ids) in deps_map {
+            // 3. 의존성 타입 유효성 확인
+            let dt = match ResourceType::from_plural(dep_type_plural) {
+                Some(t) => t,
+                None => {
+                    errors.push(format!(
+                        "Unknown resource type '{}' in deps.yaml for {} '{}'",
+                        dep_type_plural, r_type, name
+                    ));
+                    continue;
+                }
+            };
+
+            for dep_id in dep_ids {
+                // 4. 의존성 ID 형식 확인 ("plugin:name")
+                let parts: Vec<&str> = dep_id.split(':').collect();
+                if parts.len() != 2 {
+                    errors.push(format!(
+                        "Invalid dependency ID '{}' in {} '{}' (Expected 'plugin:name')",
+                        dep_id, r_type, name
+                    ));
+                    continue;
+                }
+
+                let dep_plugin = parts[0];
+                let dep_name = parts[1];
+
+                // 5. 실제 존재 여부 확인
+                if !registry.contains_by_id(dt, dep_plugin, dep_name) {
+                    errors.push(format!(
+                        "{} '{}:{}' requires {} '{}' but it is missing in agb.yaml",
+                        r_type, plugin, name, dt, dep_id
+                    ));
+                }
+            }
         }
 
         Ok(())

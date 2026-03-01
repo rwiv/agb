@@ -32,7 +32,7 @@ impl DependencyChecker {
         let mut errors = Vec::new();
 
         for resource in registry.all_resources() {
-            self.check_single_resource_dependencies(resource, registry, source_dir, &mut errors)?;
+            self.check_resource_dependencies(resource, registry, source_dir, &mut errors)?;
         }
 
         if !errors.is_empty() {
@@ -44,7 +44,7 @@ impl DependencyChecker {
     }
 
     /// 단일 리소스의 의존성을 검사하고 발견된 오류를 errors 벡터에 수집합니다.
-    fn check_single_resource_dependencies(
+    fn check_resource_dependencies(
         &self,
         resource: &crate::core::Resource,
         registry: &Registry,

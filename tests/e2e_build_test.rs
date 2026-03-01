@@ -99,6 +99,11 @@ resources:
     cmd.assert().success();
 
     assert!(root.join("commands/foo.md").exists());
+    assert!(root.join("AGENTS.md").exists());
+
+    let agents_content = fs::read_to_string(root.join("AGENTS.md")).unwrap();
+    assert!(agents_content.contains("# Global Instructions"));
+
     let content = fs::read_to_string(root.join("commands/foo.md")).unwrap();
     assert!(!content.contains("metadata:"));
     assert!(content.contains("# Foo Command"));

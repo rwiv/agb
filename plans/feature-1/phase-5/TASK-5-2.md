@@ -20,7 +20,7 @@
 OpenCode는 Claude-code와 유사한 마크다운 기반 형식을 사용하지만, 특정 메타데이터 필드 처리가 다를 수 있습니다.
 
 - `src/transformers/opencode.rs`를 생성하고 `Transformer` 트레이트를 구현하세요.
-- `AGENTS.md`는 `OPENCODE.md`로 변환되도록 설정합니다.
+- `AGENTS.md`는 `AGENTS.md`로 변환되도록 설정합니다.
 
 ### Step 2: 엔드투엔드(E2E) 테스트 작성
 

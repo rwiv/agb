@@ -6,7 +6,7 @@
 ## 2. 작업 내용
 - `src/transformer/default.rs`: `commands`, `agents`, `skills`, `SKILL.md` 리터럴을 상수로 교체합니다.
 - `src/transformer/gemini.rs`: `commands`, `GEMINI.md` 리터럴을 상수로 교체합니다.
-- `src/transformer/mod.rs`: `CLAUDE.md`, `OPENCODE.md` 관련 로직이 있다면 상수를 사용하도록 수정합니다.
+- `src/transformer/mod.rs`: `CLAUDE.md`, `AGENTS.md` 관련 로직이 있다면 상수를 사용하도록 수정합니다.
 - 모든 `transformer` 모듈 파일 내에서 `crate::core::ResourceData` 등을 `use` 문을 사용하도록 수정합니다.
 
 ## 3. 검증 전략

@@ -14,7 +14,7 @@ pub const AGENTS_MD: &str = "AGENTS.md";
 pub const SKILL_MD: &str = "SKILL.md";
 pub const GEMINI_MD: &str = "GEMINI.md";
 pub const CLAUDE_MD: &str = "CLAUDE.md";
-pub const OPENCODE_MD: &str = "OPENCODE.md";
+pub const AGENTS_MD: &str = "AGENTS.md";
 
 pub const DIR_COMMANDS: &str = "commands";
 pub const DIR_AGENTS: &str = "agents";

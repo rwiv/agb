@@ -5,7 +5,7 @@
 
 ## 2. 작업 내용
 - `src/core/mod.rs` 상단에 다음 상수들을 정의하고, `pub`으로 공개합니다:
-  - 파일 이름: `AGENTS_MD`, `SKILL_MD`, `GEMINI_MD`, `CLAUDE_MD`, `OPENCODE_MD`
+  - 파일 이름: `AGENTS_MD`, `SKILL_MD`, `GEMINI_MD`, `CLAUDE_MD`, `AGENTS_MD`
   - 디렉터리 이름: `DIR_COMMANDS`, `DIR_AGENTS`, `DIR_SKILLS`
   - 타겟 이름: `TARGET_GEMINI`, `TARGET_CLAUDE`, `TARGET_OPENCODE`
   - 확장자: `EXT_MD`, `EXT_TOML`, `EXT_YAML`, `EXT_YML`

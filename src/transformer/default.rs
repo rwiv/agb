@@ -1,5 +1,5 @@
 use crate::core::{
-    BuildTarget, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD, GEMINI_MD, OPENCODE_MD, Resource,
+    BuildTarget, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_MD, GEMINI_MD, AGENTS_MD, Resource,
     ResourceData, ResourceType, SKILL_MD, TransformedFile,
 };
 use crate::transformer::Transformer;
@@ -45,7 +45,7 @@ impl Transformer for DefaultTransformer {
         let filename = match self.target {
             BuildTarget::GeminiCli => GEMINI_MD,
             BuildTarget::ClaudeCode => CLAUDE_MD,
-            BuildTarget::OpenCode => OPENCODE_MD,
+            BuildTarget::OpenCode => AGENTS_MD,
         };
 
         Ok(TransformedFile {
@@ -161,7 +161,7 @@ mod tests {
         );
         assert_eq!(
             opencode.transform_root_prompt("test").unwrap().path,
-            PathBuf::from(OPENCODE_MD)
+            PathBuf::from(AGENTS_MD)
         );
         assert_eq!(
             gemini.transform_root_prompt("test").unwrap().path,

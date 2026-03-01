@@ -1,5 +1,5 @@
 use crate::core::{
-    AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD, OPENCODE_MD, TransformedResource,
+    AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD, TransformedResource,
 };
 use anyhow::{Context, Result};
 use std::fs;
@@ -26,7 +26,6 @@ impl Emitter {
             // main memory files
             GEMINI_MD,
             CLAUDE_MD,
-            OPENCODE_MD,
             AGENTS_MD,
         ];
 

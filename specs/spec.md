@@ -42,7 +42,7 @@
 | :--- | :--- | :--- | :--- |
 | **Gemini-cli** | `*.toml` (Prompt 필드 포함) | `*.md` (메타데이터 포함) | `GEMINI.md` |
 | **Claude-code** | `*.md` (Frontmatter 포함) | `*.md` (Frontmatter 포함) | `CLAUDE.md` |
-| **OpenCode** | `*.md` (Frontmatter 포함) | `*.md` (Frontmatter 포함) | `OPENCODE.md` |
+| **OpenCode** | `*.md` (Frontmatter 포함) | `*.md` (Frontmatter 포함) | `AGENTS.md` |
 
 ## 5. 동기화 규격 (Sync Specifications)
 

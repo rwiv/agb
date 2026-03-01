@@ -18,7 +18,7 @@
     ```
 3.  **변환 로직 구현**:
     - `transform`: 메타데이터를 YAML Frontmatter로 변환하고 본문과 결합. `.md` 확장자로 경로 설정.
-    - `transform_root_prompt`: 타겟 에이전트에 맞는 루트 파일명(`CLAUDE.md`, `OPENCODE.md`, `GEMINI.md` 등) 반환.
+    - `transform_root_prompt`: 타겟 에이전트에 맞는 루트 파일명(`CLAUDE.md`, `AGENTS.md`, `GEMINI.md` 등) 반환.
 
 ## 성공 기준
 - `DefaultTransformer`가 성공적으로 컴파일된다.

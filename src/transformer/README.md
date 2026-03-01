@@ -6,7 +6,7 @@
 
 1. **포맷 변환**: 내부 메타데이터와 Markdown 컨텐츠를 타겟 에이전트가 이해할 수 있는 형식(예: TOML, Frontmatter Markdown)으로 변환합니다.
 2. **경로 결정**: 각 리소스가 타겟 에이전트의 파일 시스템 구조에서 어디에 위치해야 하는지 정의합니다. (예: `commands/foo.toml`)
-3. **전역 지침 처리**: 루트의 `AGENTS.md`를 각 에이전트의 메인 메모리 파일(Gemini: `GEMINI.md`, Claude/OpenCode: `CLAUDE.md`)로 변환합니다.
+3. **전역 지침 처리**: 루트의 `AGENTS.md`를 각 에이전트의 메인 메모리 파일(Gemini: `GEMINI.md`, Claude: `CLAUDE.md`, OpenCode: `AGENTS.md`)로 변환합니다.
 
 ## 모듈 구조
 
@@ -40,9 +40,12 @@ pub trait Transformer {
   - **Commands**: 메타데이터 -> TOML Key-Value 매핑, 본문 -> TOML `prompt` 필드로 삽입하여 `*.toml` 생성.
   - **Agents / Skills**: `DefaultTransformer`를 사용하여 메타데이터가 포함된 마크다운 `*.md` 생성.
   - 전역 지침: `GEMINI.md` 생성.
-- **Claude-code / OpenCode**: 
+- **Claude-code**: 
   - `DefaultTransformer` 사용. 메타데이터 -> YAML Frontmatter, 본문 -> 마크다운 본문 결합하여 `*.md` 생성.
-  - 전역 지침: `CLAUDE.md` 또는 `OPENCODE.md` 생성.
+  - 전역 지침: `CLAUDE.md` 생성.
+- **OpenCode**: 
+  - `DefaultTransformer` 사용. 메타데이터 -> YAML Frontmatter, 본문 -> 마크다운 본문 결합하여 `*.md` 생성.
+  - 전역 지침: `AGENTS.md` 생성.
 
 ## 새로운 에이전트 추가 방법
 

@@ -12,7 +12,7 @@
 
 ### 2. `FileFilter` 구현 (`filter.rs`)
 - `exclude_patterns`를 컴파일된 `glob::Pattern`으로 유지.
-- 금지된 파일(`GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`) 및 숨김 파일 체크 로직 포함.
+- 금지된 파일(`GEMINI.md`, `CLAUDE.md`, `AGENTS.md`) 및 숨김 파일 체크 로직 포함.
 - 인터페이스 설계:
   ```rust
   pub struct FileFilter {

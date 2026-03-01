@@ -92,5 +92,5 @@ fn update_description(source_content: &str, new_desc: &str) -> String {
 
 ## 6. 제약 및 예외 사항
 - **중단점**: 타겟 파일이 파싱 불가능하거나 손상된 경우, 해당 리소스의 동기화는 실패 처리하고 에러 로그를 남긴 후 다음 리소스로 진행합니다.
-- **제외 파일**: `GEMINI.md`, `CLAUDE.md`, `OPENCODE.md` 등은 명시적으로 무시합니다.
+- **제외 파일**: `GEMINI.md`, `CLAUDE.md`, `AGENTS.md` 등은 명시적으로 무시합니다.
 - **보안**: `source` 경로 외부의 파일을 수정하거나 삭제하지 않도록 절대 경로 검증을 수행합니다.

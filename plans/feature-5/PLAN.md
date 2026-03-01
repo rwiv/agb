@@ -4,7 +4,7 @@
 
 ## Phase 1: `DefaultTransformer` 구현 (Core Unification)
 *   [x] **Task 1.1: `DefaultTransformer` 정의 및 구현**
-    *   *성공 기준:* `metadata` 키 기반의 Frontmatter 구조를 가지며, 타겟별 루트 파일명(`CLAUDE.md`, `OPENCODE.md` 등)을 처리하는 통합 변환기를 구현한다.
+    *   *성공 기준:* `metadata` 키 기반의 Frontmatter 구조를 가지며, 타겟별 루트 파일명(`CLAUDE.md`, `AGENTS.md` 등)을 처리하는 통합 변환기를 구현한다.
 *   [x] **Task 1.2: 기존 Claude/OpenCode 로직 이관 및 테스트**
     *   *성공 기준:* 기존 `claude.rs`, `opencode.rs`의 테스트 케이스를 `DefaultTransformer`로 성공적으로 이관하고 통과시킨다.
 

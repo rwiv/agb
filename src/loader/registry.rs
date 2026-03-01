@@ -46,6 +46,14 @@ impl Registry {
     pub fn is_empty(&self) -> bool {
         self.resources.is_empty()
     }
+
+    /// 특정 타입과 식별자(plugin:name)를 가진 리소스가 있는지 확인합니다.
+    pub fn contains_by_id(&self, r_type: ResourceType, plugin: &str, name: &str) -> bool {
+        self.resources
+            .get(&(r_type, name.to_string()))
+            .map(|r| r.plugin() == plugin)
+            .unwrap_or(false)
+    }
 }
 
 #[cfg(test)]
@@ -100,5 +108,25 @@ mod tests {
         assert!(registry.register(res1).is_ok());
         assert!(registry.register(res2).is_ok());
         assert_eq!(registry.len(), 2);
+    }
+
+    #[test]
+    fn test_contains_by_id() {
+        let mut registry = Registry::new();
+        let res1 = mock_resource("foo", "plugin_a", ResourceType::Command);
+        let res2 = mock_resource("bar", "plugin_b", ResourceType::Agent);
+
+        registry.register(res1).unwrap();
+        registry.register(res2).unwrap();
+
+        assert!(registry.contains_by_id(ResourceType::Command, "plugin_a", "foo"));
+        assert!(registry.contains_by_id(ResourceType::Agent, "plugin_b", "bar"));
+
+        // Wrong plugin
+        assert!(!registry.contains_by_id(ResourceType::Command, "plugin_b", "foo"));
+        // Wrong type
+        assert!(!registry.contains_by_id(ResourceType::Agent, "plugin_a", "foo"));
+        // Non-existent
+        assert!(!registry.contains_by_id(ResourceType::Skill, "plugin_a", "foo"));
     }
 }

@@ -12,6 +12,27 @@ pub enum ResourceType {
     Skill,
 }
 
+impl ResourceType {
+    /// 복수형 문자열(예: "agents", "skills")로부터 ResourceType을 생성합니다.
+    pub fn from_plural(s: &str) -> Option<Self> {
+        match s {
+            "commands" => Some(ResourceType::Command),
+            "agents" => Some(ResourceType::Agent),
+            "skills" => Some(ResourceType::Skill),
+            _ => None,
+        }
+    }
+
+    /// 현재 타입을 복수형 문자열로 반환합니다.
+    pub fn to_plural(&self) -> &'static str {
+        match self {
+            ResourceType::Command => "commands",
+            ResourceType::Agent => "agents",
+            ResourceType::Skill => "skills",
+        }
+    }
+}
+
 impl fmt::Display for ResourceType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
@@ -109,5 +130,22 @@ impl Resource {
             Resource::Command(d) | Resource::Agent(d) => &d.content,
             Resource::Skill(s) => &s.base.content,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_resource_type_plural_conversion() {
+        assert_eq!(ResourceType::Command.to_plural(), "commands");
+        assert_eq!(ResourceType::Agent.to_plural(), "agents");
+        assert_eq!(ResourceType::Skill.to_plural(), "skills");
+
+        assert_eq!(ResourceType::from_plural("commands"), Some(ResourceType::Command));
+        assert_eq!(ResourceType::from_plural("agents"), Some(ResourceType::Agent));
+        assert_eq!(ResourceType::from_plural("skills"), Some(ResourceType::Skill));
+        assert_eq!(ResourceType::from_plural("unknown"), None);
     }
 }

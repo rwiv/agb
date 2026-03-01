@@ -1,5 +1,7 @@
+pub mod dependency;
 pub mod emitter;
 
+use self::dependency::DependencyChecker;
 use self::emitter::Emitter;
 use crate::core::{AGENTS_MD, TransformedResource};
 use crate::loader::registry::Registry;
@@ -23,6 +25,10 @@ impl Builder {
         source_dir: &Path,
         output_dir: &Path,
     ) -> anyhow::Result<()> {
+        // 의존성 검사
+        let checker = DependencyChecker::new();
+        checker.check_dependencies(registry, source_dir)?;
+
         let mut transformed_resources = Vec::new();
         for res in registry.all_resources() {
             let transformed_file = transformer

@@ -13,6 +13,7 @@ graph LR
     Config[agb.yaml] --> Loader[ResourceLoader]
     Loader -->|Scan| Files[Raw Files]
     Files -->|Parse| Registry[Registry]
+    Registry -->|Dep Check| Registry
     Registry -->|Transform| Transformed[TransformedResource]
     Transformed -->|Emit| Output[Target Files]
 ```
@@ -20,8 +21,9 @@ graph LR
 1. **설정 로드 (Load Config)**: `agb.yaml`을 읽어 빌드 컨텍스트(소스 경로, 타겟 에이전트 등)를 생성합니다. (`builder/config.rs`)
 2. **리소스 스캔 및 로드 (Scan & Load)**: 소스 경로 내의 플러그인 구조를 분석하여 파일들을 수집하고, 이를 `core::Resource` 객체로 로드합니다. (`loader` 모듈)
 3. **검증 및 등록 (Validate & Register)**: 로드된 리소스들의 이름 충돌 여부를 확인하고, 빌드 대상 리소스를 `loader::registry::Registry`에 등록합니다. 타입과 이름을 모두 고려하여 중복을 체크합니다.
-4. **포맷 변환 (Transform)**: 설정된 타겟(`BuildTarget`) 규격에 맞춰 각 리소스를 실제 파일 포맷(TOML, Markdown FM 등)으로 변환합니다. (`transformer` 모듈 사용)
-5. **최종 배포 (Emit)**: 기존 출력 디렉터리를 정리(Clean)한 후, 변환된 리소스들을 물리적 파일로 작성합니다. (`builder::emitter::Emitter`)
+4. **의존성 검증 (Dependency Check)**: 각 리소스의 `deps.yaml`을 확인하여 모든 의존 리소스가 `Registry`에 존재하는지 확인합니다. (`builder::dependency::DependencyChecker`)
+5. **포맷 변환 (Transform)**: 설정된 타겟(`BuildTarget`) 규격에 맞춰 각 리소스를 실제 파일 포맷(TOML, Markdown FM 등)으로 변환합니다. (`transformer` 모듈 사용)
+6. **최종 배포 (Emit)**: 기존 출력 디렉터리를 정리(Clean)한 후, 변환된 리소스들을 물리적 파일로 작성합니다. (`builder::emitter::Emitter`)
 
 ### 1.2 동기화 파이프라인 (Sync Pipeline)
 

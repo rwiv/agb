@@ -14,6 +14,7 @@
 ├── AGENTS.md               # 전역 시스템 지침 (Frontmatter 지원)
 └── plugins/
     └── [plugin_name]/
+        ├── deps.yaml       # 선택: 리소스 간 의존성 정의
         ├── commands/       # 필수: [name].md | 선택: [name].yaml
         ├── agents/         # 필수: [name].md | 선택: [name].yaml
         └── skills/         # 필수: [skill_name]/SKILL.md | 선택: SKILL.yaml
@@ -81,6 +82,20 @@ gemini-cli:
   model: gemini-3.0-pro
 ```
 
+### 4.3 의존성 정의 (`deps.yaml`)
+플러그인 루트에 위치한 `deps.yaml`을 통해 리소스 간의 의존성을 명시적으로 정의할 수 있습니다. 빌드 시 `agb.yaml`에 포함되지 않은 리소스를 의존하고 있을 경우 빌드가 실패합니다.
+
+- **포맷**: `ResourceType(plural)` -> `ResourceName` -> `DependencyType(plural)` -> `[Plugin:Name]`
+- **예시**:
+```yaml
+agents:
+  researcher:
+    skills:
+      - shared:web_search
+    commands:
+      - core:google_search
+```
+
 ## 5. 리소스 처리 규격 (Processing Rules)
 
 ### 5.1 메타데이터 병합 알고리즘 (Metadata Merge)
@@ -99,7 +114,12 @@ gemini-cli:
     - **Override**: 현재 빌드 타겟(`BuildTarget`) 섹션 내용을 이전 결과물에 덮어씀.
 4.  **Cleanup**: 최종 결과물에서 모든 타겟 예약어 키들을 제거하여 깨끗한 메타데이터 객체 완성.
 
-### 5.2 보안 및 제약 사항
+### 5.2 의존성 검증 (Dependency Validation)
+빌드 파이프라인의 변환(Transform) 단계 직전에 모든 리소스의 의존성을 검증합니다.
+- **Fail-fast**: 하나 이상의 의존성이 누락된 경우, 누락된 모든 항목을 리포트하고 빌드를 즉시 중단합니다.
+- **비재귀적 검사**: 현재 빌드 대상 리소스가 직접적으로 명시한 의존성만 확인합니다.
+
+### 5.3 보안 및 제약 사항
 - **제외 패턴(`exclude`) 적용**: `agb.yaml`에 정의된 패턴은 빌드 스캔 및 동기화 시 모두 적용됩니다. 단, 리소스의 필수 본문(`*.md` 또는 `SKILL.md`)은 제외 패턴에 해당하더라도 시스템 보호를 위해 스캔에서 제외되지 않습니다.
 - **타겟 전용 파일 금지**: 플러그인 내부에는 `GEMINI.md`, `CLAUDE.md`, `OPENCODE.md`와 같은 파일이 존재할 수 없습니다. 발견 시 빌드가 중단됩니다.
 - **충돌 검사 (Conflict Check)**: 서로 다른 플러그인에서 동일한 **타입**과 **이름**을 가진 리소스가 동시에 빌드 대상으로 선택된 경우 빌드를 실패 처리합니다. 리소스의 타입이 다르면 동일한 이름을 가질 수 있습니다 (예: `command/write-plan`과 `skill/write-plan`은 공존 가능).

@@ -36,7 +36,7 @@ resources:
   commands:
     - my_plugin:web_search   # [플러그인]:[리소스명]
   skills:
-    - shared:python_expert
+    - shared_plugin:python_expert
 ```
 
 ### 3. 빌드 (Base → Project)
@@ -65,9 +65,11 @@ agb sync
 
 ```text
 [Base Directory]/
-├── AGENTS.md               # 공용 시스템 지침 (원본)
+├── AGENTS.md               # 공용 시스템 지침
+├── map.yaml                # 타겟별 메타데이터 매핑 규칙 (선택)
 └── plugins/                # 플러그인 단위 리소스 모음
     └── my_plugin/
+        ├── deps.yaml       # 리소스 간 의존성 정의 (선택)
         ├── commands/       # [name].md (+ 선택적 .yaml)
         ├── agents/         # [name].md (+ 선택적 .yaml)
         └── skills/         # [name]/SKILL.md (+ 추가 파일들)

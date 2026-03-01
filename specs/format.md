@@ -8,13 +8,14 @@
 
 ```text
 [Source Repository]/
-├── AGENTS.md               # 전역 시스템 지침 (Frontmatter 지원)
+├── AGENTS.md               # 전역 시스템 지침
+├── map.yaml                # 타겟별 메타데이터 매핑 규칙 (선택)
 └── plugins/
     └── [plugin_name]/
-        ├── deps.yaml       # 선택: 리소스 간 의존성 정의
-        ├── commands/       # 필수: [name].md | 선택: [name].yaml
-        ├── agents/         # 필수: [name].md | 선택: [name].yaml
-        └── skills/         # 필수: [skill_name]/SKILL.md | 선택: SKILL.yaml
+        ├── deps.yaml       # 리소스 간 의존성 정의 (선택)
+        ├── commands/       # [name].md (+ 선택적 .yaml)
+        ├── agents/         # [name].md (+ 선택적 .yaml)
+        └── skills/         # [name]/SKILL.md (+ 추가 파일들)
                             # 추가 파일(예: 스크립트, 데이터 등)은 하위 디렉터리 구조를 유지하며 빌드 폴더로 복사됩니다.
 ```
 
@@ -34,7 +35,9 @@
         └── extra_file.py   # 소스 폴더에서 복사된 추가 파일들
 ```
 
-## 3. 설정 규격 (`agb.yaml`)
+## 3. 설정 및 매핑 규격
+
+### 3.1 프로젝트 설정 (`agb.yaml`)
 
 프로젝트 루트에서 빌드 및 동기화 동작을 제어하는 메인 설정 파일입니다.
 
@@ -56,6 +59,27 @@ resources:
     - my_plugin:web_search
   skills:
     - shared_plugin:python_expert
+```
+
+### 3.2 메타데이터 매핑 (`map.yaml`)
+
+소스 루트에서 정의하며, 특정 메타데이터 필드의 값을 타겟 에이전트에 맞춰 일괄 치환할 때 사용합니다.
+
+**포맷**:
+```yaml
+mappings:
+  [field_name]:
+    [original_value]:
+      [target_agent]: [replacement_value]
+```
+
+**작성 예시**:
+```yaml
+mappings:
+  model:
+    default-model:
+      gemini-cli: gemini-1.5-pro
+      claude-code: claude-3-5-sonnet
 ```
 
 ## 4. 리소스 작성 상세 규격

@@ -48,6 +48,7 @@
 | `exclude` | 스캔/동기화에서 제외할 패턴 | Glob 패턴 지원 |
 | `resources` | 대상 리소스 명시 | `[플러그인명]:[리소스명]` 형식 |
 
+
 **작성 예시**:
 ```yaml
 source: ~/projects/agb-resources
@@ -67,19 +68,17 @@ resources:
 
 **포맷**:
 ```yaml
-mappings:
-  [field_name]:
-    [original_value]:
-      [target_agent]: [replacement_value]
+[field_name]:
+  [original_value]:
+    [target_agent]: [replacement_value]
 ```
 
-**작성 예시**:
+**예시**:
 ```yaml
-mappings:
-  model:
-    default-model:
-      gemini-cli: gemini-1.5-pro
-      claude-code: claude-3-5-sonnet
+model:
+  sonnet:
+    gemini-cli: gemini-3.0-flash
+    opencode: glm-4.7
 ```
 
 ## 4. 리소스 작성 상세 규격
@@ -96,16 +95,16 @@ mappings:
 ```markdown
 ---
 name: researcher
-model: default-model
+model: sonnet
 ---
 You are a professional researcher.
 ```
 
 `plugins/my_plugin/agents/researcher.yaml`:
 ```yaml
-# 타겟 전용 섹션만 허용됩니다. 일반 필드(name 등)는 무시되거나 빌드 에러를 유발합니다.
 gemini-cli:
-  model: gemini-3.0-pro
+  temperature: 0.2
+  max_turns: 10
 ```
 
 ### 4.3 의존성 정의 (`deps.yaml`)
@@ -118,6 +117,14 @@ gemini-cli:
   [resource_name]:
     [dependency_type_plural]:
       - [plugin_name]:[resource_name]
+```
+
+**예시**:
+```yaml
+agents:
+  skill-writer:
+    skills:
+      - documentation:documentation-guidelines
 ```
 
 ## 5. 추가 파일 (Extra Files)

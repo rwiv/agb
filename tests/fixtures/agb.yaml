@@ -1,7 +1,6 @@
 source: tests/fixtures
 target: gemini-cli
 exclude:
-  - "*.kor.md"
   - "*.tmp"
 resources:
   commands:

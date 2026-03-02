@@ -1,6 +1,4 @@
-use crate::core::{
-    AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD, TransformedResource,
-};
+use crate::core::{AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD, TransformedResource};
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::PathBuf;

@@ -45,7 +45,7 @@ impl Transformer for GeminiTransformer {
                 Ok(ResourceData {
                     name: String::new(),
                     plugin: String::new(),
-                    content: prompt,
+                    content: prompt.replace("{{args}}", "$ARGUMENTS"),
                     metadata,
                     source_path: PathBuf::new(),
                 })
@@ -86,7 +86,7 @@ impl GeminiTransformer {
         };
 
         // 2. Markdown content를 'prompt' 필드에 추가
-        let mut prompt = data.content.clone();
+        let mut prompt = data.content.replace("$ARGUMENTS", "{{args}}");
         if prompt.contains('\n') && !prompt.ends_with('\n') {
             prompt.push('\n');
         }
@@ -115,7 +115,7 @@ mod tests {
         let resource = Resource::Command(ResourceData {
             name: "test-cmd".to_string(),
             plugin: "test-plugin".to_string(),
-            content: "Hello World".to_string(),
+            content: "Hello World $ARGUMENTS".to_string(),
             metadata: json!({
                 "model": "gemini-1.5-pro",
                 "description": "A test command"
@@ -132,7 +132,10 @@ mod tests {
         let toml_val: Table = toml::from_str(&result.content).unwrap();
         assert_eq!(toml_val.get("model").unwrap().as_str().unwrap(), "gemini-1.5-pro");
         assert_eq!(toml_val.get("description").unwrap().as_str().unwrap(), "A test command");
-        assert_eq!(toml_val.get("prompt").unwrap().as_str().unwrap(), "Hello World");
+        assert_eq!(
+            toml_val.get("prompt").unwrap().as_str().unwrap(),
+            "Hello World {{args}}"
+        );
     }
 
     #[test]
@@ -217,12 +220,12 @@ mod tests {
         let transformer = GeminiTransformer;
         let input = r#"description = "Updated desc"
 model = "gemini-2.0"
-prompt = "New Prompt"
+prompt = "New Prompt {{args}}"
 "#;
 
         let result = transformer.detransform(ResourceType::Command, input).unwrap();
 
-        assert_eq!(result.content, "New Prompt");
+        assert_eq!(result.content, "New Prompt $ARGUMENTS");
         assert_eq!(result.metadata["description"], "Updated desc");
         assert_eq!(result.metadata["model"], "gemini-2.0");
     }

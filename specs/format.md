@@ -89,7 +89,7 @@ model:
 - **외부 메타데이터**: 마크다운과 동일한 이름의 `.yaml` 또는 `.yml` 파일. **타겟 에이전트 전용 예약어 섹션만 포함할 수 있습니다.**
 - **우선순위**: 외부 파일 내의 타겟 전역 예약어 섹션 내용이 Frontmatter의 공용 설정을 최종적으로 오버라이트합니다. 상세 알고리즘은 [design.md](./design.md) 및 [spec.md](./spec.md)를 참조하십시오.
 
-### 4.2 작성 예시 (Agents)
+### 4.2 작성 예시 (Subagent)
 
 `plugins/my_plugin/agents/researcher.md`:
 ```markdown

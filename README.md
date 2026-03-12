@@ -1,4 +1,4 @@
-# agb (Agents Builder)
+# agb (Agent Builder)
 
 `agb`는 여러 AI 코딩 에이전트(Claude Code, Gemini CLI 등)의 프롬프트와 스킬을 단일 소스에서 관리하고, 각 환경의 규격에 맞춰 최적화하여 배포하는 **AI 에이전트 리소스 오케스트레이터**입니다.
 

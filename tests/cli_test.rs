@@ -7,7 +7,7 @@ fn test_help() {
     cmd.arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("Agents Builder"))
+        .stdout(predicate::str::contains("Agent Builder"))
         .stdout(predicate::str::contains("Usage: agb"));
 }
 

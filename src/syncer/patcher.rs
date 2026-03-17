@@ -116,7 +116,7 @@ impl MdPatcher {
         }
     }
 
-    /// 텍스트가 1글자라도 다르면 true를 반환합니다. (기존 diff_content 로직)
+    /// 텍스트가 1글자라도 다르면 true를 반환합니다.
     pub fn has_changed(&self, other: &str) -> bool {
         self.get_body() != other
     }

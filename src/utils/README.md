@@ -12,7 +12,7 @@
 
 ### 2. YAML & Frontmatter (`yaml.rs`)
 마크다운 파일에서 메타데이터를 추출하는 기능을 제공합니다.
-- **`extract_frontmatter`**: 마크다운 본문 상단의 YAML Frontmatter(`---`로 구분된 영역)를 파싱하여 JSON 객체(`serde_json::Value`)와 순수 본문 내용을 분리합니다.
+- **`extract_frontmatter`**: 마크다운 본문 상단의 YAML Frontmatter(`---`로 구분된 영역)를 파싱하여 JSON 객체(`serde_json::Value`)와 순수 본문 내용을 분리합니다. **본문 내의 마지막 개행 문자를 포함한 모든 공백을 보존합니다.**
 
 ### 3. TOML 변환 (`toml.rs`)
 데이터 포맷 간 변환 기능을 제공합니다.

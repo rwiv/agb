@@ -57,6 +57,7 @@
 - **설명 동기화**: `description` 필드를 라인 단위로 패치합니다. **단, 멀티라인 description은 지원되지 않으며 감지 시 에러를 반환합니다.**
   - **참고 (Codex)**: Codex Agent의 경우 `description`이 개별 TOML이 아닌 `.codex/config.toml`에 위치하므로, 해당 파일을 파싱하여 원본 소스에 반영합니다.
 - **스킬 파일 동기화**: 해시(SHA-256) 비교를 통해 추가 파일(`extras`)을 동기화합니다. `exclude` 대상 및 필수 파일(`SKILL.md`)은 삭제되지 않습니다.
+- **고정밀 무결성 보존 (High-Fidelity Preservation)**: 타겟의 변경 사항이 없을 경우, 원본 소스 파일의 마지막 개행 문자(Trailing Newline)를 포함한 모든 바이트를 100% 보존하여 `git diff` 노이즈를 방지합니다.
 
 ## 6. 예외 처리 전략
 

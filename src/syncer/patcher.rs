@@ -79,7 +79,6 @@ impl MdPatcher {
     pub fn replace_body(&mut self, new_body: &str) {
         let content = self.raw_content.trim_start();
         if !content.starts_with("---") {
-            // Frontmatter가 없는 경우 그냥 덮어씀 (단, Frontmatter가 없으므로 new_body만)
             self.raw_content = new_body.to_string();
             return;
         }
@@ -87,10 +86,11 @@ impl MdPatcher {
         let rest = &content[3..];
         if let Some(end_offset) = rest.find("---") {
             let yaml_part = rest[..end_offset].trim();
-            // Frontmatter 영역을 유지하고 본문만 교체 (--- 뒤에 개행 추가 보장)
-            self.raw_content = format!("---\n{}\n---\n\n{}", yaml_part, new_body.trim_start());
+            // Frontmatter 영역을 유지하고 본문만 교체
+            // new_body 앞에 개행 문자가 중복되는 것을 방지하기 위해 trim_start_matches 사용
+            let new_body = new_body.trim_start_matches(|c: char| c == '\r' || c == '\n');
+            self.raw_content = format!("---\n{}\n---\n\n{}", yaml_part, new_body);
         } else {
-            // 닫는 ---가 없는 경우 그냥 덮어씀
             self.raw_content = new_body.to_string();
         }
     }
@@ -100,9 +100,25 @@ impl MdPatcher {
         self.raw_content.clone()
     }
 
+    /// 본문 영역만 추출합니다.
+    fn get_body(&self) -> &str {
+        let content = self.raw_content.trim_start();
+        if !content.starts_with("---") {
+            return content;
+        }
+
+        let rest = &content[3..];
+        if let Some(end_offset) = rest.find("---") {
+            let pure_content = &rest[end_offset + 3..];
+            pure_content.trim_start_matches(|c: char| c == '\r' || c == '\n')
+        } else {
+            content
+        }
+    }
+
     /// 텍스트가 1글자라도 다르면 true를 반환합니다. (기존 diff_content 로직)
     pub fn has_changed(&self, other: &str) -> bool {
-        self.raw_content.trim() != other.trim()
+        self.get_body() != other
     }
 }
 
@@ -115,7 +131,7 @@ mod tests {
         let patcher = MdPatcher::new("hello");
         assert!(patcher.has_changed("world"));
         assert!(!patcher.has_changed("hello"));
-        assert!(!patcher.has_changed("hello\n"));
+        assert!(patcher.has_changed("hello\n"));
     }
 
     #[test]

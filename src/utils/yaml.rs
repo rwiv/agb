@@ -14,7 +14,11 @@ pub fn extract_frontmatter(content: &str) -> (serde_json::Value, String) {
         let pure_content = &rest[end_offset + 3..];
 
         match serde_yaml::from_str::<serde_json::Value>(yaml_str) {
-            Ok(metadata) => (metadata, pure_content.trim().to_string()),
+            Ok(metadata) => {
+                // 앞쪽 개행문자만 제거 (Frontmatter와 본문 사이의 구분용 개행)
+                let pure_content = pure_content.trim_start_matches(|c: char| c == '\r' || c == '\n');
+                (metadata, pure_content.to_string())
+            }
             Err(_) => (json!({}), content.to_string()),
         }
     } else {

@@ -121,10 +121,33 @@ description: old description
         let mut patcher = MdPatcher::new(source);
         patcher.update_description("new description").unwrap();
         let updated = patcher.render();
-        // YAML 파서에 의해 필드 순서가 바뀔 수 있으므로 렌더링 결과 포함 여부로 확인
+        // preserve_order 피처가 활성화되어 필드 순서가 유지되어야 함
         assert!(updated.contains("description: new description"));
         assert!(updated.contains("name: test"));
         assert!(updated.contains("# Content"));
+    }
+
+    #[test]
+    fn test_update_description_preserves_order() {
+        let source = "---
+z_field: first
+a_field: second
+description: old
+m_field: last
+---";
+        let mut patcher = MdPatcher::new(source);
+        patcher.update_description("new").unwrap();
+        let updated = patcher.render();
+
+        // 순서가 z -> a -> description -> m 순으로 유지되는지 확인
+        let z_pos = updated.find("z_field").unwrap();
+        let a_pos = updated.find("a_field").unwrap();
+        let d_pos = updated.find("description").unwrap();
+        let m_pos = updated.find("m_field").unwrap();
+
+        assert!(z_pos < a_pos);
+        assert!(a_pos < d_pos);
+        assert!(d_pos < m_pos);
     }
 
     #[test]

@@ -59,7 +59,7 @@
 `agb sync` 실행 시 프로젝트 세션의 변경사항을 다음 규칙에 따라 소스로 업데이트합니다. 상세 구현 방식은 [design.md](./design.md)를 참조하십시오.
 
 - **본문 동기화**: 마크다운 본문(Frontmatter 제외) 전체를 교체합니다.
-- **설명 동기화**: `description` 필드를 라인 단위로 패치합니다. **단, 멀티라인 description은 지원되지 않으며 감지 시 에러를 반환합니다.**
+- **설명 동기화**: `description` 필드를 업데이트합니다. YAML 파서를 사용하여 한 줄 또는 멀티라인(`|`) 설명을 모두 안전하게 처리합니다.
   - **참고 (Codex)**: Codex Agent의 경우 `description`이 개별 TOML이 아닌 `.codex/config.toml`에 위치하므로, 해당 파일을 파싱하여 원본 소스에 반영합니다.
 - **스킬 파일 동기화**: 해시(SHA-256) 비교를 통해 추가 파일(`extras`)을 동기화합니다. `exclude` 대상 및 필수 파일(`SKILL.md`)은 삭제되지 않습니다.
 - **고정밀 무결성 보존 (High-Fidelity Preservation)**: 타겟의 변경 사항이 없을 경우, 원본 소스 파일의 마지막 개행 문자(Trailing Newline)를 포함한 모든 바이트를 100% 보존하여 `git diff` 노이즈를 방지합니다.

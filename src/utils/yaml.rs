@@ -69,4 +69,20 @@ Hello world";
         let (_meta, content) = extract_frontmatter(input);
         assert_eq!(content, "Hello world");
     }
+
+    #[test]
+    fn test_extract_multiline_yaml() {
+        let input = "---
+description: |
+  Line 1
+  Line 2
+name: test
+---
+Body content";
+        let (meta, content) = extract_frontmatter(input);
+        // YAML | 마커는 마지막 개행을 포함함
+        assert_eq!(meta["description"], "Line 1\nLine 2\n");
+        assert_eq!(meta["name"], "test");
+        assert_eq!(content, "Body content");
+    }
 }

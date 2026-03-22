@@ -1,19 +1,19 @@
 # atb (Agent ToolKit Builder)
 
-`atb`는 여러 AI 코딩 에이전트(Claude Code, Gemini CLI 등)의 프롬프트와 스킬을 단일 소스에서 관리하고, 각 환경의 규격에 맞춰 최적화하여 배포하는 **AI 에이전트 리소스 오케스트레이터**입니다.
+`atb`는 여러 AI 코딩 에이전트(Claude Code, Gemini CLI 등)의 도구 목록을 단일 소스에서 관리하고, 각 환경의 규격에 맞춰 최적화하여 배포하는 **AI 에이전트 툴킷 오케스트레이터**입니다.
 
 ## 주요 기능
 
-- **중앙화된 리소스 관리 (Base)**: 프로젝트마다 파편화된 설정을 방지하고, 하나의 베이스 디렉토리에서 플러그인 단위로 리소스를 통합 관리합니다.
-- **양방향 동기화 (Sync)**: 프로젝트 진행 중 로컬에서 개선된 프롬프트나 스킬을 다시 베이스 디렉토리로 안전하게 반영합니다.
+- **중앙화된 리소스 관리**: 프로젝트마다 파편화된 설정을 방지하고, 하나의 베이스 디렉토리에서 플러그인 단위로 리소스를 통합 관리합니다.
+- **양방향 동기화**: 프로젝트 진행 중 로컬에서 개선된 프롬프트나 스킬을 다시 베이스 디렉토리로 안전하게 반영합니다.
 - **멀티 타겟 빌드**: 단일 마크다운 소스를 기반으로 타겟 에이전트의 규격(TOML, YAML, JSON 등)에 맞춰 자동으로 변환 및 빌드합니다.
 
 ## 지원 에이전트 리스트
 
 - **Claude Code** (`claude-code`)
 - **Gemini CLI** (`gemini-cli`)
-- **OpenCode** (`opencode`)
 - **Codex** (`codex`)
+- **OpenCode** (`opencode`)
 
 ## 시작하기
 
@@ -28,15 +28,17 @@ cargo install --path .
 프로젝트 루트에 `toolkit.yaml`을 생성하여 베이스 디렉토리와 타겟 에이전트를 지정합니다.
 
 ```yaml
-source: ~/atb-resources      # 리소스 소스 저장소(Base) 경로
-target: gemini-cli           # 빌드 타겟 (gemini-cli, claude-code 등)
+source: ~/my-agents          # 리소스 소스 저장소(Base) 경로
+target: gemini-cli           # 빌드 타겟 에이전트 (claude-code, gemini-cli 등)
 exclude:
-  - "*.tmp"                  # 제외할 패턴 (선택 사항)
+  - "*.ko.md"                # 제외할 패턴 (선택 사항)
 resources:
   commands:
-    - my_plugin:web_search   # [플러그인]:[리소스명]
+    - agentic-workflows:brainstorm   # [플러그인]:[리소스명]
+  agents:
+    - web-crawling:web-explorer
   skills:
-    - shared_plugin:python_expert
+    - coding-standards:python-guidelines
 ```
 
 ### 3. 빌드 (Base → Project)

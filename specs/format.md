@@ -50,15 +50,17 @@
 
 **작성 예시**:
 ```yaml
-source: ~/projects/atb-resources
+source: ~/my-agents
 target: gemini-cli
 exclude:
-  - "*.tmp"
+  - "*.ko.md"
 resources:
   commands:
-    - my_plugin:web_search
+    - agentic-workflows:brainstorm
+  agents:
+    - web-crawling:web-explorer
   skills:
-    - shared_plugin:python_expert
+    - coding-standards:python-guidelines
 ```
 
 ### 3.2 메타데이터 매핑 (`overrides.yaml`)
@@ -77,7 +79,7 @@ resources:
 model:
   sonnet:
     gemini-cli: gemini-3.0-flash
-    opencode: glm-4.7
+    codex: gpt-5.4
 ```
 
 ## 4. 리소스 작성 상세 규격

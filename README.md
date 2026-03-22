@@ -32,7 +32,6 @@ source: ~/atb-resources      # 리소스 소스 저장소(Base) 경로
 target: gemini-cli           # 빌드 타겟 (gemini-cli, claude-code 등)
 exclude:
   - "*.tmp"                  # 제외할 패턴 (선택 사항)
-
 resources:
   commands:
     - my_plugin:web_search   # [플러그인]:[리소스명]
@@ -81,7 +80,7 @@ atb sync
 
 ```text
 [Project Root]/
-├── toolkit.yaml                # 프로젝트 빌드 및 동기화 설정
+├── toolkit.yaml            # 프로젝트 빌드 및 동기화 설정
 ├── GEMINI.md               # 변환된 전역 지침 (타겟에 따라 이름 변경)
 ├── commands/               # 변환된 커맨드들
 ├── agents/                 # 변환된 에이전트들

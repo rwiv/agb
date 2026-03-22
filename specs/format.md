@@ -9,13 +9,13 @@
 ```text
 [Source Repository]/
 ├── AGENTS.md               # 전역 시스템 지침
-├── overrides.yaml                # 타겟별 메타데이터 매핑 규칙 (선택)
+├── overrides.yaml          # 타겟별 메타데이터 매핑 규칙 (선택)
 └── [plugin_name]/
-    ├── requirements.yaml       # 리소스 간 의존성 정의 (선택)
-    ├── commands/       # [name].md (+ 선택적 .yaml)
-    ├── agents/         # [name].md (+ 선택적 .yaml)
-    └── skills/         # [name]/SKILL.md (+ 추가 파일들)
-                        # 추가 파일(예: 스크립트, 데이터 등)은 하위 디렉터리 구조를 유지하며 빌드 폴더로 복사됩니다.
+    ├── requirements.yaml   # 리소스 간 의존성 정의 (선택)
+    ├── commands/           # [name].md (+ 선택적 .yaml)
+    ├── agents/             # [name].md (+ 선택적 .yaml)
+    └── skills/             # [name]/SKILL.md (+ 추가 파일들)
+                            # 추가 파일(예: 스크립트, 데이터 등)은 하위 디렉터리 구조를 유지하며 빌드 폴더로 복사됩니다.
 ```
 
 ## 2. 빌드 환경 구조 (Output)
@@ -24,7 +24,7 @@
 
 ```text
 [Output Workspace]/
-├── toolkit.yaml                # 빌드 설정 파일
+├── toolkit.yaml            # 빌드 설정 파일
 ├── GEMINI.md               # 변환된 전역 지침 (타겟에 따라 이름 변경)
 ├── commands/               # 변환된 커맨드 파일들 (Claude, Gemini 등)
 ├── agents/                 # 변환된 에이전트 파일들

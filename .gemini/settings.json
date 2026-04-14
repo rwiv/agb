@@ -2,7 +2,10 @@
   "tools": {
     "sandbox": "sandbox-exec"
   },
-  "experimental": {
-    "enableAgents": true
+  "context": {
+    "fileFiltering": {
+      "respectGitIgnore": false,
+      "respectGeminiIgnore": true
+    }
   }
 }

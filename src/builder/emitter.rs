@@ -1,6 +1,5 @@
-use crate::core::{
-    AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_CODEX, DIR_COMMANDS, DIR_PROMPTS, DIR_SKILLS, GEMINI_MD, TransformedResource,
-};
+#[allow(unused_imports)]
+use crate::core::{AGENTS_MD, CLAUDE_MD, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD, TransformedResource};
 use crate::utils::fs::ensure_dir;
 use anyhow::{Context, Result};
 use std::fs;
@@ -17,31 +16,44 @@ impl Emitter {
         }
     }
 
-    /// 기존에 생성된 디렉터리 및 메인 메모리 파일을 삭제합니다.
-    pub fn clean(&self) -> Result<()> {
-        let targets = [
-            // directories
-            DIR_CODEX,
-            DIR_COMMANDS,
-            DIR_PROMPTS,
-            DIR_AGENTS,
-            DIR_SKILLS,
-            // main memory files
-            GEMINI_MD,
-            CLAUDE_MD,
-            AGENTS_MD,
-        ];
-
-        for target in targets {
-            let path = self.output_path.join(target);
+    /// 빌드 대상 리소스에 해당하는 파일/디렉터리를 선택적으로 삭제합니다.
+    /// 전역 파일(GEMINI.md, CLAUDE.md, AGENTS.md)은 항상 삭제됩니다.
+    pub fn clean(&self, resources: &[TransformedResource]) -> Result<()> {
+        // Step 1: 전역 파일 항상 삭제
+        for global in [GEMINI_MD, CLAUDE_MD, AGENTS_MD] {
+            let path = self.output_path.join(global);
             if path.exists() {
-                if path.is_dir() {
-                    fs::remove_dir_all(&path).with_context(|| format!("Failed to remove directory: {:?}", path))?;
-                } else {
-                    fs::remove_file(&path).with_context(|| format!("Failed to remove file: {:?}", path))?;
+                fs::remove_file(&path).with_context(|| format!("Failed to remove file: {:?}", path))?;
+            }
+        }
+
+        // Step 2: resources 순회하며 선택적 삭제
+        for resource in resources {
+            let Some(first_file) = resource.files.first() else {
+                continue;
+            };
+
+            if first_file.path.starts_with(DIR_SKILLS) {
+                // Skill: 서브디렉터리 전체 삭제 (예: "skills/my_skill/")
+                if let Some(skill_dir) = first_file.path.parent() {
+                    let full_path = self.output_path.join(skill_dir);
+                    if full_path.exists() {
+                        fs::remove_dir_all(&full_path)
+                            .with_context(|| format!("Failed to remove directory: {:?}", full_path))?;
+                    }
+                }
+            } else {
+                // Command/Agent/기타: 개별 파일 삭제
+                for file in &resource.files {
+                    let full_path = self.output_path.join(&file.path);
+                    if full_path.exists() {
+                        fs::remove_file(&full_path)
+                            .with_context(|| format!("Failed to remove file: {:?}", full_path))?;
+                    }
                 }
             }
         }
+
         Ok(())
     }
 
@@ -77,27 +89,127 @@ mod tests {
     use super::*;
     use crate::core::{ExtraFile, TransformedFile};
     use std::fs;
+    use std::path::PathBuf;
     use tempfile::tempdir;
 
+    fn make_command_resource(path: impl Into<PathBuf>) -> TransformedResource {
+        TransformedResource {
+            files: vec![TransformedFile {
+                path: path.into(),
+                content: String::new(),
+            }],
+            extras: vec![],
+        }
+    }
+
+    fn make_skill_resource(skill_file_path: impl Into<PathBuf>) -> TransformedResource {
+        TransformedResource {
+            files: vec![TransformedFile {
+                path: skill_file_path.into(),
+                content: String::new(),
+            }],
+            extras: vec![],
+        }
+    }
+
+    /// Command 파일만 선택적으로 삭제되고 다른 Command 파일은 유지됨을 확인한다.
     #[test]
-    fn test_clean() -> Result<()> {
+    fn test_clean_removes_only_specified_command() -> Result<()> {
         let dir = tempdir()?;
         let root = dir.path();
 
-        // 더미 파일/폴더 생성
         fs::create_dir(root.join(DIR_COMMANDS))?;
-        fs::create_dir(root.join(DIR_CODEX))?;
-        fs::write(root.join(DIR_COMMANDS).join("foo.toml"), "test")?;
-        fs::write(root.join(GEMINI_MD), "test")?;
-        fs::write(root.join("other.txt"), "keep me")?;
+        fs::write(root.join(DIR_COMMANDS).join("foo.md"), "foo")?;
+        fs::write(root.join(DIR_COMMANDS).join("bar.md"), "bar")?;
 
         let emitter = Emitter::new(root);
-        emitter.clean()?;
+        let resources = vec![make_command_resource(PathBuf::from(DIR_COMMANDS).join("foo.md"))];
+        emitter.clean(&resources)?;
 
-        assert!(!root.join(DIR_COMMANDS).exists());
-        assert!(!root.join(DIR_CODEX).exists());
+        assert!(!root.join(DIR_COMMANDS).join("foo.md").exists());
+        assert!(root.join(DIR_COMMANDS).join("bar.md").exists());
+
+        Ok(())
+    }
+
+    /// Skill 리소스에 해당하는 서브디렉터리 전체가 삭제됨을 확인한다.
+    #[test]
+    fn test_clean_removes_entire_skill_directory() -> Result<()> {
+        let dir = tempdir()?;
+        let root = dir.path();
+
+        let skill_dir = root.join(DIR_SKILLS).join("my_skill");
+        fs::create_dir_all(&skill_dir)?;
+        fs::write(skill_dir.join("SKILL.md"), "content")?;
+        fs::write(skill_dir.join("extra.py"), "script")?;
+
+        let emitter = Emitter::new(root);
+        let resources = vec![make_skill_resource(PathBuf::from(DIR_SKILLS).join("my_skill/SKILL.md"))];
+        emitter.clean(&resources)?;
+
+        assert!(!skill_dir.exists());
+
+        Ok(())
+    }
+
+    /// 빌드 대상이 아닌 출력 디렉터리 내 파일은 삭제되지 않음을 확인한다.
+    #[test]
+    fn test_clean_preserves_unrelated_files() -> Result<()> {
+        let dir = tempdir()?;
+        let root = dir.path();
+
+        fs::write(root.join("unrelated.txt"), "keep me")?;
+        fs::create_dir(root.join(DIR_COMMANDS))?;
+        fs::write(root.join(DIR_COMMANDS).join("other.md"), "other")?;
+
+        let emitter = Emitter::new(root);
+        // 빌드 대상 없음
+        emitter.clean(&[])?;
+
+        assert!(root.join("unrelated.txt").exists());
+        assert!(root.join(DIR_COMMANDS).join("other.md").exists());
+
+        Ok(())
+    }
+
+    /// resources에 항목이 있더라도 전역 파일(GEMINI.md 등)이 함께 항상 삭제됨을 확인한다.
+    #[test]
+    fn test_clean_always_removes_global_files() -> Result<()> {
+        let dir = tempdir()?;
+        let root = dir.path();
+
+        fs::write(root.join(GEMINI_MD), "gemini")?;
+        fs::write(root.join(CLAUDE_MD), "claude")?;
+        fs::write(root.join(AGENTS_MD), "agents")?;
+        fs::create_dir(root.join(DIR_COMMANDS))?;
+        fs::write(root.join(DIR_COMMANDS).join("foo.md"), "foo")?;
+
+        let emitter = Emitter::new(root);
+        let resources = vec![make_command_resource(PathBuf::from(DIR_COMMANDS).join("foo.md"))];
+        emitter.clean(&resources)?;
+
         assert!(!root.join(GEMINI_MD).exists());
-        assert!(root.join("other.txt").exists());
+        assert!(!root.join(CLAUDE_MD).exists());
+        assert!(!root.join(AGENTS_MD).exists());
+
+        Ok(())
+    }
+
+    /// 빈 resources 슬라이스로 호출 시 전역 파일만 삭제되고 나머지는 유지됨을 확인한다.
+    #[test]
+    fn test_clean_with_empty_resources_removes_only_global_files() -> Result<()> {
+        let dir = tempdir()?;
+        let root = dir.path();
+
+        fs::write(root.join(GEMINI_MD), "gemini")?;
+        fs::create_dir(root.join(DIR_COMMANDS))?;
+        fs::write(root.join(DIR_COMMANDS).join("foo.md"), "foo")?;
+
+        let emitter = Emitter::new(root);
+        emitter.clean(&[])?;
+
+        assert!(!root.join(GEMINI_MD).exists());
+        assert!(root.join(DIR_COMMANDS).join("foo.md").exists());
 
         Ok(())
     }

@@ -1,5 +1,5 @@
 source: ~/projects/agents/plugins
-target: gemini-cli
+target: claude-code
 exclude:
   - "*.ko.md"
 resources:

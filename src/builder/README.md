@@ -15,7 +15,7 @@
 
 ### 3. Emitter (`emitter.rs`)
 변환된 최종 결과물을 물리적 파일로 출력합니다.
-- **Clean (삭제 범위)**: 빌드 시작 전, `toolkit.yaml`이 위치한 타겟 루트 디렉터리 내의 `commands/`, `agents/`, `skills/` 디렉터리와 타겟 메인 파일(`GEMINI.md` 등)을 삭제합니다. 타겟 루트 내의 다른 사용자 파일(예: `.git`, `toolkit.yaml`)은 삭제되지 않습니다.
+- **Clean (삭제 범위)**: 빌드 시작 전, 현재 빌드 대상 리소스에 해당하는 파일/디렉터리만 선택적으로 삭제합니다. Command/Agent는 해당 파일만, Skill은 서브디렉터리 전체를 삭제하며, 전역 파일(`GEMINI.md`, `CLAUDE.md`, `AGENTS.md`)은 항상 삭제됩니다. 빌드 대상이 아닌 기존 파일은 출력 디렉터리에 그대로 유지됩니다.
 - **Emit**: `core::TransformedResource` 목록을 바탕으로, 텍스트 변환된 파일(`files`)들은 디스크에 기록하고 단순 포함 파일(`extras`)들은 물리적으로 대상 디렉터리에 복사합니다.
 
 ## 빌드 프로세스에서의 역할
@@ -23,7 +23,7 @@
 
 1.  **의존성 검사**: `DependencyChecker`를 통해 리소스 간 의존성 무결성을 확인합니다.
 2.  **변환**: `transformer`를 이용해 각 리소스를 타겟 포맷으로 변환하여 `TransformedResource` 목록을 생성합니다.
-3.  **배포**: `emitter`를 이용해 변환된 결과물과 추가 파일(`extras`)을 최종 파일 시스템에 기록합니다.
+3.  **선택적 정리 및 배포**: `emitter.clean`으로 빌드 대상에 해당하는 기존 파일을 선택적으로 제거한 후, `emitter.emit`으로 변환된 결과물과 추가 파일(`extras`)을 파일 시스템에 기록합니다.
 
 ## 사용 예시
 
@@ -31,6 +31,6 @@
 use crate::builder::emitter::Emitter;
 
 let emitter = Emitter::new(output_dir);
-emitter.clean()?;
+emitter.clean(&transformed_resources)?; // 빌드 대상 리소스에 해당하는 파일만 선택적 삭제
 emitter.emit(&transformed_resources)?;
 ```

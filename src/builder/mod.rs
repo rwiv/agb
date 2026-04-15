@@ -68,7 +68,7 @@ impl Builder {
 
         info!("Emitting files to {}...", output_dir.display());
         let emitter = Emitter::new(output_dir);
-        emitter.clean()?;
+        emitter.clean(&transformed_resources)?;
         emitter.emit(&transformed_resources)?;
 
         info!("Build successful!");

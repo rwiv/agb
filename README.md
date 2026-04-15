@@ -49,6 +49,14 @@ resources:
 atb build
 ```
 
+`toolkit.yaml`에 명시된 리소스만 선택적으로 정리한 뒤 빌드합니다. 출력 디렉터리의 다른 파일은 유지됩니다.
+
+`--clean` 옵션을 사용하면 `commands/`, `agents/`, `skills/` 등 모든 출력 디렉터리를 통째로 삭제한 뒤 빌드합니다.
+
+```bash
+atb build --clean
+```
+
 ### 4. 동기화 (Project → Base)
 
 프로젝트 환경에서 수정된 내용을 원본 소스에 반영합니다.

@@ -15,6 +15,9 @@ pub enum Commands {
         /// Optional path to the config file
         #[arg(short, long)]
         config: Option<String>,
+        /// Remove all output directories and files before building
+        #[arg(long)]
+        clean: bool,
     },
     /// Sync changes from target back to source
     Sync {

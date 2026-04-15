@@ -31,6 +31,7 @@ resources:
     let cli = Cli {
         command: Commands::Build {
             config: Some(config_path.to_string_lossy().into_owned()),
+            clean: false,
         },
     };
 
@@ -68,6 +69,7 @@ resources:
     let build_cli = Cli {
         command: Commands::Build {
             config: Some(config_path.to_string_lossy().into_owned()),
+            clean: false,
         },
     };
     app.run(build_cli).unwrap();

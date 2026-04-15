@@ -25,6 +25,7 @@ impl Builder {
         registry: &Registry,
         source_dir: &Path,
         output_dir: &Path,
+        full_clean: bool,
     ) -> anyhow::Result<()> {
         // 의존성 검사
         let checker = DependencyChecker::new();
@@ -68,7 +69,11 @@ impl Builder {
 
         info!("Emitting files to {}...", output_dir.display());
         let emitter = Emitter::new(output_dir);
-        emitter.clean(&transformed_resources)?;
+        if full_clean {
+            emitter.clean_all()?;
+        } else {
+            emitter.clean(&transformed_resources)?;
+        }
         emitter.emit(&transformed_resources)?;
 
         info!("Build successful!");

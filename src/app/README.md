@@ -23,7 +23,7 @@
 
 사용자의 명령에 따라 적절한 모듈을 호출하는 오케스트레이터입니다.
 - **`run(cli)`**: CLI 입력을 받아 `AppContext`를 초기화하고 명령어를 분기합니다.
-- **`build(ctx)`**: `builder` 모듈을 호출하여 리소스 변환 및 파일 배포를 수행합니다.
+- **`build(ctx, full_clean)`**: `builder` 모듈을 호출하여 리소스 변환 및 파일 배포를 수행합니다. `full_clean`이 `true`이면(`--clean` 옵션) 출력 디렉터리 전체를 삭제한 뒤 빌드합니다.
 - **`sync(ctx)`**: `syncer` 모듈을 호출하여 타겟의 변경사항을 소스로 동기화합니다.
 
 ### 3. Config (`config.rs`)

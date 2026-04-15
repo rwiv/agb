@@ -26,19 +26,19 @@ impl App {
 
     pub fn run(&self, cli: Cli) -> anyhow::Result<()> {
         let config_file = match &cli.command {
-            Commands::Build { config } => config.as_deref().unwrap_or(CONFIG_FILE_NAME),
+            Commands::Build { config, .. } => config.as_deref().unwrap_or(CONFIG_FILE_NAME),
             Commands::Sync { config } => config.as_deref().unwrap_or(CONFIG_FILE_NAME),
         };
 
         let ctx = AppContext::init(config_file)?;
 
         match &cli.command {
-            Commands::Build { .. } => self.build(&ctx),
+            Commands::Build { clean, .. } => self.build(&ctx, *clean),
             Commands::Sync { .. } => self.sync(&ctx),
         }
     }
 
-    fn build(&self, ctx: &AppContext) -> anyhow::Result<()> {
+    fn build(&self, ctx: &AppContext, full_clean: bool) -> anyhow::Result<()> {
         let builder = Builder::new();
 
         info!("Transforming resources for target: {:?}...", ctx.config.target);
@@ -48,6 +48,7 @@ impl App {
             &ctx.registry,
             &ctx.source_dir,
             &ctx.output_dir,
+            full_clean,
         )?;
         info!("  - Target: {:?}", ctx.config.target);
         info!("  - Resources: {} total", ctx.registry.len());

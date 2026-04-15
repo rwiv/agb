@@ -1,5 +1,6 @@
-#[allow(unused_imports)]
-use crate::core::{AGENTS_MD, CLAUDE_MD, DIR_COMMANDS, DIR_SKILLS, GEMINI_MD, TransformedResource};
+use crate::core::{
+    AGENTS_MD, CLAUDE_MD, DIR_AGENTS, DIR_CODEX, DIR_COMMANDS, DIR_PROMPTS, DIR_SKILLS, GEMINI_MD, TransformedResource,
+};
 use crate::utils::fs::ensure_dir;
 use anyhow::{Context, Result};
 use std::fs;
@@ -14,6 +15,28 @@ impl Emitter {
         Self {
             output_path: output_path.into(),
         }
+    }
+
+    /// commands/, agents/, skills/ 등 모든 출력 디렉터리와 전역 파일을 전부 삭제합니다.
+    pub fn clean_all(&self) -> Result<()> {
+        let dirs = [DIR_CODEX, DIR_COMMANDS, DIR_PROMPTS, DIR_AGENTS, DIR_SKILLS];
+        let files = [GEMINI_MD, CLAUDE_MD, AGENTS_MD];
+
+        for dir in dirs {
+            let path = self.output_path.join(dir);
+            if path.exists() {
+                fs::remove_dir_all(&path).with_context(|| format!("Failed to remove directory: {:?}", path))?;
+            }
+        }
+
+        for file in files {
+            let path = self.output_path.join(file);
+            if path.exists() {
+                fs::remove_file(&path).with_context(|| format!("Failed to remove file: {:?}", path))?;
+            }
+        }
+
+        Ok(())
     }
 
     /// 빌드 대상 리소스에 해당하는 파일/디렉터리를 선택적으로 삭제합니다.

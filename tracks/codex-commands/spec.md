@@ -73,10 +73,11 @@ Codex 커맨드의 새 경로 `../.agents/skills/[name]/SKILL.md`는 `starts_wit
 
 ### 7. Emitter 타겟 정보 추가
 
-`clean_all()` 시 Codex 타겟이면 `../.agents/skills/` 디렉터리도 삭제해야 합니다.
+`clean_all()` 시 Codex 타겟이면 `../.agents/skills/` 디렉터리도 삭제해야 합니다. 단, Codex output-dir 내부의 `.codex/skills/`는 수동으로 관리하는 로컬 스킬을 보존하기 위해 삭제하지 않습니다.
 
 - `Emitter` 구조체에 `target: BuildTarget` 필드를 추가한다.
 - `Emitter::new()` 시그니처를 `new(output_path, target)`으로 변경한다.
+- `clean_all()`에서 Codex 타겟이면 `DIR_SKILLS`(`skills/`) 삭제를 제외하여 `.codex/skills/`를 보존한다.
 - `clean_all()`에서 Codex 타겟이면 `output_path.join(DIR_AGENTS_SKILLS)` 디렉터리를 추가 삭제한다.
 - `clean_all()`에서 의미 없는 `DIR_CODEX`(output-dir 자신) 삭제를 제거한다.
 - `clean_all()`에서 더 이상 사용되지 않는 `DIR_PROMPTS` 삭제를 제거한다.
@@ -125,6 +126,7 @@ Codex 커맨드의 새 경로 `../.agents/skills/[name]/SKILL.md`는 `starts_wit
 - `src/builder/emitter.rs` 신규 케이스 추가
   - `clean()`: `SKILL.md`로 끝나는 외부 경로에 대해 디렉터리 단위 삭제 검증
   - `clean_all()`: Codex 타겟이면 `../.agents/skills/` 디렉터리 삭제 검증
+  - `clean_all()`: Codex 타겟에서도 `.codex/skills/` 디렉터리를 보존함을 검증
 - `src/builder/mod.rs` 충돌 검증 단위 테스트 추가
   - 동일 이름의 command와 skill이 있을 때 에러 반환 검증
   - 이름 충돌이 없을 때 정상 진행 검증
@@ -137,5 +139,6 @@ Codex 커맨드의 새 경로 `../.agents/skills/[name]/SKILL.md`는 `starts_wit
 - [ ] Codex 빌드 시 동일 이름의 command와 skill이 존재하면 명확한 충돌 오류와 함께 종료된다.
 - [ ] Codex 빌드 시 `config.toml`이 `.codex/config.toml`에 생성된다 (`.codex/.codex/config.toml` 아님).
 - [ ] 잘못된 output-dir에서 `atb build` 실행 시 명확한 오류 메시지와 함께 종료된다.
+- [ ] `--clean` 옵션 사용 시 Codex 타겟에서 `.codex/skills/`가 보존된다.
 - [ ] `cargo test`가 모두 통과한다.
 - [ ] `cargo clippy -- -D warnings`가 오류 없이 통과한다.

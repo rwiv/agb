@@ -1,14 +1,18 @@
 use crate::core::{
-    AGENTS_MD, BuildTarget, CODEX_CONFIG_FILE_NAME, DIR_AGENTS, DIR_AGENTS_SKILLS, EXT_TOML, Resource, ResourceData,
-    ResourceType, SKILL_MD, TransformedFile,
+    AGENTS_MD, BuildTarget, CODEX_CONFIG_FILE_NAME, CODEX_OPENAI_POLICY_RELATIVE_PATH, DIR_AGENTS, DIR_AGENTS_SKILLS,
+    EXT_TOML, Resource, ResourceData, ResourceType, SKILL_MD, SkillData, TransformedFile,
 };
 use crate::transformer::Transformer;
 use crate::transformer::default::DefaultTransformer;
 use crate::utils::toml::json_to_toml;
 use anyhow::{Result, anyhow};
-use std::path::PathBuf;
+use serde_json::Value;
+use std::path::{Path, PathBuf};
 
 pub struct CodexTransformer;
+
+const DISABLE_MODEL_INVOCATION: &str = "disable-model-invocation";
+const OPENAI_POLICY_CONTENT: &str = "policy:\n  allow_implicit_invocation: false\n";
 
 impl Transformer for CodexTransformer {
     fn transform(&self, resource: &Resource) -> Result<TransformedFile> {
@@ -42,42 +46,26 @@ impl Transformer for CodexTransformer {
     }
 
     fn post_transform(&self, resources: &[&Resource]) -> Result<Vec<TransformedFile>> {
-        let mut agents_table = toml::Table::new();
+        let mut files = Vec::new();
 
-        for res in resources {
-            let Resource::Agent(data) = res else {
-                continue;
-            };
+        if let Some(config_file) = self.transform_agent_registry(resources)? {
+            files.push(config_file);
+        }
+        files.extend(self.transform_openai_policy_files(resources));
 
-            let mut agent_config = toml::Table::new();
+        Ok(files)
+    }
 
-            let description = data
-                .metadata
-                .get("description")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
+    fn generated_extra_ignore_paths(&self, resource: &Resource) -> Vec<PathBuf> {
+        let Resource::Skill(skill) = resource else {
+            return Vec::new();
+        };
 
-            agent_config.insert("description".to_string(), toml::Value::String(description));
-            agent_config.insert(
-                "config_file".to_string(),
-                toml::Value::String(format!("agents/{}{}", data.name, EXT_TOML)),
-            );
-
-            agents_table.insert(data.name.clone(), toml::Value::Table(agent_config));
+        if requires_openai_policy(&skill.base.metadata) && !has_source_openai_policy(skill) {
+            return vec![PathBuf::from(CODEX_OPENAI_POLICY_RELATIVE_PATH)];
         }
 
-        if agents_table.is_empty() {
-            return Ok(vec![]);
-        }
-
-        let mut root_table = toml::Table::new();
-        root_table.insert("agents".to_string(), toml::Value::Table(agents_table));
-
-        let content = toml::to_string_pretty(&root_table)?;
-        let path = PathBuf::from(CODEX_CONFIG_FILE_NAME);
-
-        Ok(vec![TransformedFile { path, content }])
+        Vec::new()
     }
 
     fn detransform(
@@ -144,6 +132,62 @@ impl Transformer for CodexTransformer {
 }
 
 impl CodexTransformer {
+    fn transform_agent_registry(&self, resources: &[&Resource]) -> Result<Option<TransformedFile>> {
+        let mut agents_table = toml::Table::new();
+
+        for res in resources {
+            let Resource::Agent(data) = res else {
+                continue;
+            };
+
+            let mut agent_config = toml::Table::new();
+
+            let description = data
+                .metadata
+                .get("description")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+
+            agent_config.insert("description".to_string(), toml::Value::String(description));
+            agent_config.insert(
+                "config_file".to_string(),
+                toml::Value::String(format!("agents/{}{}", data.name, EXT_TOML)),
+            );
+
+            agents_table.insert(data.name.clone(), toml::Value::Table(agent_config));
+        }
+
+        if agents_table.is_empty() {
+            return Ok(None);
+        }
+
+        let mut root_table = toml::Table::new();
+        root_table.insert("agents".to_string(), toml::Value::Table(agents_table));
+
+        let content = toml::to_string_pretty(&root_table)?;
+        let path = PathBuf::from(CODEX_CONFIG_FILE_NAME);
+
+        Ok(Some(TransformedFile { path, content }))
+    }
+
+    fn transform_openai_policy_files(&self, resources: &[&Resource]) -> Vec<TransformedFile> {
+        resources
+            .iter()
+            .filter_map(|resource| match resource {
+                Resource::Command(data) if requires_openai_policy(&data.metadata) => {
+                    Some(openai_policy_file(&data.name))
+                }
+                Resource::Skill(skill)
+                    if requires_openai_policy(&skill.base.metadata) && !has_source_openai_policy(skill) =>
+                {
+                    Some(openai_policy_file(&skill.base.name))
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
     fn transform_agent_to_toml(&self, data: &ResourceData) -> Result<TransformedFile> {
         // Metadata를 TOML Value로 변환 후 Table로 캐스팅
         let json_value = &data.metadata;
@@ -177,12 +221,64 @@ impl CodexTransformer {
     }
 }
 
+fn requires_openai_policy(metadata: &Value) -> bool {
+    metadata.get(DISABLE_MODEL_INVOCATION).and_then(|value| value.as_bool()) == Some(true)
+}
+
+fn has_source_openai_policy(skill: &SkillData) -> bool {
+    skill.extras.iter().any(|extra| {
+        extra
+            .source
+            .strip_prefix(&skill.base.source_path)
+            .map(|relative| relative == Path::new(CODEX_OPENAI_POLICY_RELATIVE_PATH))
+            .unwrap_or(false)
+    })
+}
+
+fn openai_policy_file(name: &str) -> TransformedFile {
+    TransformedFile {
+        path: PathBuf::from(DIR_AGENTS_SKILLS)
+            .join(name)
+            .join(CODEX_OPENAI_POLICY_RELATIVE_PATH),
+        content: OPENAI_POLICY_CONTENT.to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{ResourceData, SkillData};
+    use crate::core::{ExtraFile, ResourceData, SkillData};
     use serde_json::json;
     use toml::Table;
+
+    fn policy_path(name: &str) -> PathBuf {
+        PathBuf::from(DIR_AGENTS_SKILLS)
+            .join(name)
+            .join(CODEX_OPENAI_POLICY_RELATIVE_PATH)
+    }
+
+    fn policy_command(name: &str, metadata: serde_json::Value) -> Resource {
+        Resource::Command(ResourceData {
+            name: name.to_string(),
+            plugin: "test-plugin".to_string(),
+            content: String::new(),
+            metadata,
+            source_path: PathBuf::from(format!("src/{name}.md")),
+        })
+    }
+
+    fn policy_skill(name: &str, metadata: serde_json::Value, extras: Vec<ExtraFile>) -> Resource {
+        Resource::Skill(SkillData {
+            base: ResourceData {
+                name: name.to_string(),
+                plugin: "test-plugin".to_string(),
+                content: String::new(),
+                metadata,
+                source_path: PathBuf::from(format!("src/{name}")),
+            },
+            extras,
+        })
+    }
 
     #[test]
     fn test_codex_command_transformation() {
@@ -339,5 +435,154 @@ developer_instructions = "Agent Logic"
             a2.get("config_file").unwrap().as_str().unwrap(),
             "agents/test-agent-2.toml"
         );
+    }
+
+    #[test]
+    fn test_codex_post_transform_generates_openai_policy_for_command() {
+        let transformer = CodexTransformer;
+        let command = policy_command(
+            "policy-cmd",
+            json!({
+                "disable-model-invocation": true
+            }),
+        );
+
+        let result = transformer.post_transform(&[&command]).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, policy_path("policy-cmd"));
+        assert_eq!(result[0].content, OPENAI_POLICY_CONTENT);
+    }
+
+    #[test]
+    fn test_codex_post_transform_generates_openai_policy_for_skill_without_source_extra() {
+        let transformer = CodexTransformer;
+        let skill = policy_skill(
+            "policy-skill",
+            json!({
+                "disable-model-invocation": true
+            }),
+            Vec::new(),
+        );
+
+        let result = transformer.post_transform(&[&skill]).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, policy_path("policy-skill"));
+        assert_eq!(result[0].content, OPENAI_POLICY_CONTENT);
+    }
+
+    #[test]
+    fn test_codex_post_transform_skips_generated_policy_for_skill_with_source_extra() {
+        let transformer = CodexTransformer;
+        let skill_root = PathBuf::from("src/policy-skill");
+        let skill = Resource::Skill(SkillData {
+            base: ResourceData {
+                name: "policy-skill".to_string(),
+                plugin: "test-plugin".to_string(),
+                content: String::new(),
+                metadata: json!({
+                    "disable-model-invocation": true
+                }),
+                source_path: skill_root.clone(),
+            },
+            extras: vec![ExtraFile {
+                source: skill_root.join(CODEX_OPENAI_POLICY_RELATIVE_PATH),
+                target: policy_path("policy-skill"),
+            }],
+        });
+
+        let result = transformer.post_transform(&[&skill]).unwrap();
+
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_codex_post_transform_does_not_generate_policy_for_non_true_metadata() {
+        let transformer = CodexTransformer;
+        let cases = [
+            json!({}),
+            json!({ "disable-model-invocation": false }),
+            json!({ "disable-model-invocation": "true" }),
+            json!({ "disable-model-invocation": "false" }),
+            json!({ "disable-model-invocation": null }),
+        ];
+
+        for (index, metadata) in cases.into_iter().enumerate() {
+            let command = policy_command(&format!("policy-cmd-{index}"), metadata);
+            let result = transformer.post_transform(&[&command]).unwrap();
+            assert!(result.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_codex_post_transform_keeps_agent_registry_with_policy_files() {
+        let transformer = CodexTransformer;
+        let agent = Resource::Agent(ResourceData {
+            name: "test-agent".to_string(),
+            plugin: "test-plugin".to_string(),
+            content: String::new(),
+            metadata: json!({
+                "description": "Agent description"
+            }),
+            source_path: PathBuf::new(),
+        });
+        let command = policy_command(
+            "policy-cmd",
+            json!({
+                "disable-model-invocation": true
+            }),
+        );
+
+        let result = transformer.post_transform(&[&agent, &command]).unwrap();
+
+        assert_eq!(result.len(), 2);
+        assert!(
+            result
+                .iter()
+                .any(|file| file.path.as_path() == Path::new(CODEX_CONFIG_FILE_NAME))
+        );
+        assert!(result.iter().any(|file| file.path == policy_path("policy-cmd")));
+    }
+
+    #[test]
+    fn test_codex_generated_extra_ignore_paths_for_generated_skill_policy() {
+        let transformer = CodexTransformer;
+        let skill = policy_skill(
+            "policy-skill",
+            json!({
+                "disable-model-invocation": true
+            }),
+            Vec::new(),
+        );
+
+        let ignored_paths = transformer.generated_extra_ignore_paths(&skill);
+
+        assert_eq!(ignored_paths, vec![PathBuf::from(CODEX_OPENAI_POLICY_RELATIVE_PATH)]);
+    }
+
+    #[test]
+    fn test_codex_generated_extra_ignore_paths_empty_for_source_policy() {
+        let transformer = CodexTransformer;
+        let skill_root = PathBuf::from("src/policy-skill");
+        let skill = Resource::Skill(SkillData {
+            base: ResourceData {
+                name: "policy-skill".to_string(),
+                plugin: "test-plugin".to_string(),
+                content: String::new(),
+                metadata: json!({
+                    "disable-model-invocation": true
+                }),
+                source_path: skill_root.clone(),
+            },
+            extras: vec![ExtraFile {
+                source: skill_root.join(CODEX_OPENAI_POLICY_RELATIVE_PATH),
+                target: policy_path("policy-skill"),
+            }],
+        });
+
+        let ignored_paths = transformer.generated_extra_ignore_paths(&skill);
+
+        assert!(ignored_paths.is_empty());
     }
 }

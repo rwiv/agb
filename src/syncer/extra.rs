@@ -40,7 +40,17 @@ impl ExtraSyncer {
     /// 두 디렉토리 간의 파일 변경사항을 동기화합니다.
     /// 특정 파일(예: SKILL.md)은 Syncer의 공통 로직에서 처리되므로 Syncer의 제외 패턴을 통해 무시되어야 합니다.
     pub fn sync(&self, source_dir: &Path, target_dir: &Path) -> Result<()> {
-        for action in self.check_actions(source_dir, target_dir)? {
+        self.sync_with_ignored_paths(source_dir, target_dir, &[])
+    }
+
+    /// 지정한 relative path를 제외하고 두 디렉토리 간의 파일 변경사항을 동기화합니다.
+    pub fn sync_with_ignored_paths(
+        &self,
+        source_dir: &Path,
+        target_dir: &Path,
+        ignored_paths: &[PathBuf],
+    ) -> Result<()> {
+        for action in self.check_actions(source_dir, target_dir, ignored_paths)? {
             match action {
                 SyncAction::Add {
                     relative_path,
@@ -74,19 +84,24 @@ impl ExtraSyncer {
     }
 
     /// source_dir와 target_dir를 비교하여 소스를 업데이트하기 위한 액션 목록 생성
-    fn check_actions(&self, source_dir: &Path, target_dir: &Path) -> Result<Vec<SyncAction>> {
+    fn check_actions(
+        &self,
+        source_dir: &Path,
+        target_dir: &Path,
+        ignored_paths: &[PathBuf],
+    ) -> Result<Vec<SyncAction>> {
         let mut actions = Vec::new();
 
         // 1. target_dir 스캔하여 source_dir로 동기화 (Add/Update/PatchMarkdown)
         for entry in WalkDir::new(target_dir).into_iter().filter_map(|e| e.ok()) {
-            if let Some(action) = self.check_add_or_update(source_dir, target_dir, entry.path())? {
+            if let Some(action) = self.check_add_or_update(source_dir, target_dir, entry.path(), ignored_paths)? {
                 actions.push(action);
             }
         }
 
         // 2. source_dir 스캔하여 target_dir에 없는 파일 제거 (Delete)
         for entry in WalkDir::new(source_dir).into_iter().filter_map(|e| e.ok()) {
-            if let Some(action) = self.check_delete(source_dir, target_dir, entry.path())? {
+            if let Some(action) = self.check_delete(source_dir, target_dir, entry.path(), ignored_paths)? {
                 actions.push(action);
             }
         }
@@ -94,7 +109,13 @@ impl ExtraSyncer {
         Ok(actions)
     }
 
-    fn check_add_or_update(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
+    fn check_add_or_update(
+        &self,
+        source_dir: &Path,
+        target_dir: &Path,
+        path: &Path,
+        ignored_paths: &[PathBuf],
+    ) -> Result<Option<SyncAction>> {
         if !path.is_file() {
             return Ok(None);
         }
@@ -103,6 +124,10 @@ impl ExtraSyncer {
 
         // SKILL.md는 Syncer에서 직접 처리하므로 여기서는 무시
         if relative_path == Path::new(SKILL_MD) {
+            return Ok(None);
+        }
+
+        if is_ignored(relative_path, ignored_paths) {
             return Ok(None);
         }
 
@@ -136,7 +161,13 @@ impl ExtraSyncer {
         Ok(None)
     }
 
-    fn check_delete(&self, source_dir: &Path, target_dir: &Path, path: &Path) -> Result<Option<SyncAction>> {
+    fn check_delete(
+        &self,
+        source_dir: &Path,
+        target_dir: &Path,
+        path: &Path,
+        ignored_paths: &[PathBuf],
+    ) -> Result<Option<SyncAction>> {
         if !path.is_file() {
             return Ok(None);
         }
@@ -145,6 +176,10 @@ impl ExtraSyncer {
 
         // SKILL.md는 삭제 대상 아님
         if relative_path == Path::new(SKILL_MD) {
+            return Ok(None);
+        }
+
+        if is_ignored(relative_path, ignored_paths) {
             return Ok(None);
         }
 
@@ -164,6 +199,10 @@ impl ExtraSyncer {
 
         Ok(None)
     }
+}
+
+fn is_ignored(relative_path: &Path, ignored_paths: &[PathBuf]) -> bool {
+    ignored_paths.iter().any(|ignored| ignored == relative_path)
 }
 
 #[cfg(test)]
@@ -190,7 +229,7 @@ mod tests {
         fs::write(target_dir.join(SKILL_MD), "---name: test--- modified")?;
 
         let extra = ExtraSyncer::new(vec![]);
-        let actions = extra.check_actions(source_dir, target_dir)?;
+        let actions = extra.check_actions(source_dir, target_dir, &[])?;
 
         assert!(actions.contains(&SyncAction::Update {
             relative_path: PathBuf::from("existing.txt"),
@@ -213,6 +252,106 @@ mod tests {
         });
         assert!(!has_skill_md, "SKILL.md should be ignored by the planner");
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_planner_ignores_generated_extra_add() -> Result<()> {
+        let source_temp = tempdir()?;
+        let target_temp = tempdir()?;
+        let source_dir = source_temp.path();
+        let target_dir = target_temp.path();
+        let policy_path = PathBuf::from("agents/openai.yaml");
+
+        fs::create_dir_all(target_dir.join("agents"))?;
+        fs::write(target_dir.join(&policy_path), "generated")?;
+
+        let extra = ExtraSyncer::new(vec![]);
+        let actions = extra.check_actions(source_dir, target_dir, &[policy_path])?;
+
+        assert!(actions.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_planner_updates_source_extra_when_not_ignored() -> Result<()> {
+        let source_temp = tempdir()?;
+        let target_temp = tempdir()?;
+        let source_dir = source_temp.path();
+        let target_dir = target_temp.path();
+        let policy_path = PathBuf::from("agents/openai.yaml");
+
+        fs::create_dir_all(source_dir.join("agents"))?;
+        fs::create_dir_all(target_dir.join("agents"))?;
+        fs::write(source_dir.join(&policy_path), "source")?;
+        fs::write(target_dir.join(&policy_path), "target")?;
+
+        let extra = ExtraSyncer::new(vec![]);
+        let actions = extra.check_actions(source_dir, target_dir, &[])?;
+
+        assert!(actions.contains(&SyncAction::Update {
+            relative_path: policy_path.clone(),
+            target_path: target_dir.join(&policy_path),
+        }));
+        Ok(())
+    }
+
+    #[test]
+    fn test_planner_ignores_generated_extra_update() -> Result<()> {
+        let source_temp = tempdir()?;
+        let target_temp = tempdir()?;
+        let source_dir = source_temp.path();
+        let target_dir = target_temp.path();
+        let policy_path = PathBuf::from("agents/openai.yaml");
+
+        fs::create_dir_all(source_dir.join("agents"))?;
+        fs::create_dir_all(target_dir.join("agents"))?;
+        fs::write(source_dir.join(&policy_path), "source")?;
+        fs::write(target_dir.join(&policy_path), "target")?;
+
+        let extra = ExtraSyncer::new(vec![]);
+        let actions = extra.check_actions(source_dir, target_dir, &[policy_path])?;
+
+        assert!(actions.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_planner_ignores_generated_extra_delete() -> Result<()> {
+        let source_temp = tempdir()?;
+        let target_temp = tempdir()?;
+        let source_dir = source_temp.path();
+        let target_dir = target_temp.path();
+        let policy_path = PathBuf::from("agents/openai.yaml");
+
+        fs::create_dir_all(source_dir.join("agents"))?;
+        fs::write(source_dir.join(&policy_path), "source")?;
+
+        let extra = ExtraSyncer::new(vec![]);
+        let actions = extra.check_actions(source_dir, target_dir, &[policy_path])?;
+
+        assert!(actions.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_planner_deletes_source_extra_when_not_ignored() -> Result<()> {
+        let source_temp = tempdir()?;
+        let target_temp = tempdir()?;
+        let source_dir = source_temp.path();
+        let target_dir = target_temp.path();
+        let policy_path = PathBuf::from("agents/openai.yaml");
+
+        fs::create_dir_all(source_dir.join("agents"))?;
+        fs::write(source_dir.join(&policy_path), "source")?;
+
+        let extra = ExtraSyncer::new(vec![]);
+        let actions = extra.check_actions(source_dir, target_dir, &[])?;
+
+        assert!(actions.contains(&SyncAction::Delete {
+            relative_path: policy_path.clone(),
+            source_path: source_dir.join(&policy_path),
+        }));
         Ok(())
     }
 }

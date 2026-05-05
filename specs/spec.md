@@ -51,6 +51,11 @@
 - **Codex 멀티 에이전트**:
   - Codex 빌드 시 각 Agent는 output-dir 기준 `config.toml` 이라는 전역 에이전트 설정 레지스트리 파일에 자동으로 취합되어 등록됩니다.
   - 개별 `agents/*.toml` 파일에는 에이전트 지시문(`developer_instructions`)만 저장되며, 설명(`description`)은 output-dir 기준 `config.toml` 내부에 저장됩니다.
+- **Codex OpenAI 정책 파일**:
+  - Command 또는 Skill의 최종 메타데이터에 `disable-model-invocation: true`가 있으면 프로젝트 루트 기준 `.agents/skills/[name]/agents/openai.yaml`을 생성합니다.
+  - 생성되는 파일 내용은 `policy.allow_implicit_invocation: false`이며, 문자열 `"true"` 등 boolean `true`가 아닌 값은 생성 조건에 포함하지 않습니다.
+  - Skill source 디렉터리에 `agents/openai.yaml` extra가 이미 있으면 생성 파일로 덮지 않고 기존 extra 복사본을 사용합니다.
+  - Codex 빌드 대상 Skill의 source `agents/openai.yaml`이 `exclude` 패턴에 걸리면 source extra와 생성 파일을 구분할 수 없으므로 build/sync 초기화 단계에서 즉시 실패합니다.
 - **Gemini-cli 에이전트**:
   - Agent 빌드 시 원본 메타데이터에 `tools` 필드가 누락되어 있는 경우 `tools: ["*"]`가 자동으로 주입됩니다.
 
@@ -62,6 +67,7 @@
 - **설명 동기화**: `description` 필드를 업데이트합니다. YAML 파서를 사용하여 한 줄 또는 멀티라인(`|`) 설명을 모두 안전하게 처리하며, `serde_json`의 `preserve_order` 피처를 통해 프론트매터 내의 키 순서를 원본과 동일하게 유지합니다.
   - **참고 (Codex)**: Codex Agent의 경우 `description`이 개별 TOML이 아닌 output-dir 기준 `config.toml`에 위치하므로, 해당 파일을 파싱하여 원본 소스에 반영합니다.
 - **스킬 파일 동기화**: 해시(SHA-256) 비교를 통해 추가 파일(`extras`)을 동기화합니다. `exclude` 대상 및 필수 파일(`SKILL.md`)은 삭제되지 않습니다.
+- **생성된 Codex 정책 파일 제외**: Codex Skill에서 source에 없어서 생성된 `agents/openai.yaml`은 `atb sync` 때 source extra로 추가하지 않습니다. source에 원래 존재하던 `agents/openai.yaml`은 일반 extra 파일처럼 수정과 삭제를 동기화합니다.
 - **고정밀 무결성 보존 (High-Fidelity Preservation)**: 타겟의 변경 사항이 없을 경우, 원본 소스 파일의 마지막 개행 문자(Trailing Newline)를 포함한 모든 바이트를 100% 보존하여 `git diff` 노이즈를 방지합니다.
 
 ## 6. 예외 처리 전략

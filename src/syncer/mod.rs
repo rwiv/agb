@@ -79,7 +79,9 @@ impl Syncer {
             let target_skill_dir = target_path
                 .parent()
                 .ok_or_else(|| anyhow::anyhow!("Failed to get parent directory of {:?}", target_path))?;
-            self.extra.sync(&s.base.source_path, target_skill_dir)?;
+            let ignored_paths = transformer.generated_extra_ignore_paths(resource);
+            self.extra
+                .sync_with_ignored_paths(&s.base.source_path, target_skill_dir, &ignored_paths)?;
         }
 
         Ok(())

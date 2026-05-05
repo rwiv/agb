@@ -32,6 +32,7 @@
 
 - **해시 기반 비교**: SHA-256 해시를 비교하여 변경 여부를 판단합니다.
 - **필터링**: `core::FileFilter`를 활용하여 동기화 대상 파일을 선별합니다.
+- **생성 파일 제외**: Transformer가 제공하는 relative ignore path는 Add/Update/Delete 계산에서 제외합니다. Codex Skill에서 source에 없어서 생성된 `agents/openai.yaml`은 source로 역전파하지 않고, source에 원래 존재하던 동일 파일은 일반 extra 파일처럼 동기화합니다.
 
 ## 동기화 흐름
 

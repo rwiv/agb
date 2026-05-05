@@ -30,6 +30,7 @@
 
 - [ ] `Emitter` 구조체에 `target: BuildTarget` 필드 추가 (`src/builder/emitter.rs`)
 - [ ] `Emitter::new()` 시그니처 변경: `target` 인수 추가 (`src/builder/emitter.rs`)
+- [ ] `clean_all()`에서 Codex 타겟이면 `DIR_SKILLS` 삭제 제외하여 `.codex/skills/` 보존 (`src/builder/emitter.rs`)
 - [ ] `clean_all()`에서 Codex 타겟이면 `output_path.join(DIR_AGENTS_SKILLS)` 삭제 추가 (`src/builder/emitter.rs`)
 - [ ] `clean()` 분기 조건에 `|| first_file.path.ends_with(SKILL_MD)` 추가 (`src/builder/emitter.rs`)
 - [ ] `Builder::run()` 시그니처에 `target: BuildTarget` 추가 및 `Emitter::new()` 호출부 수정 (`src/builder/mod.rs`)

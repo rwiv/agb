@@ -1,5 +1,5 @@
 use crate::app::{Config, load_config};
-use crate::core::{CONFIG_FILE_NAME, ResourceType};
+use crate::core::{BuildTarget, CODEX_OPENAI_POLICY_RELATIVE_PATH, CONFIG_FILE_NAME, Resource, ResourceType};
 use crate::loader;
 use crate::loader::registry::Registry as LoaderRegistry;
 use crate::transformer::Transformer;
@@ -100,6 +100,10 @@ impl AppContext {
             anyhow::bail!(msg);
         }
 
+        if cfg.target == BuildTarget::Codex {
+            Self::validate_codex_openai_policy_not_excluded(&registry, &source_dir, &exclude_patterns)?;
+        }
+
         let transformer = TransformerFactory::create(&cfg.target);
 
         Ok(Self {
@@ -111,17 +115,81 @@ impl AppContext {
             exclude_patterns,
         })
     }
+
+    fn validate_codex_openai_policy_not_excluded(
+        registry: &LoaderRegistry,
+        source_dir: &Path,
+        exclude_patterns: &[Pattern],
+    ) -> anyhow::Result<()> {
+        for resource in registry.all_resources() {
+            let Resource::Skill(skill) = resource else {
+                continue;
+            };
+
+            let policy_path = skill.base.source_path.join(CODEX_OPENAI_POLICY_RELATIVE_PATH);
+
+            if !policy_path.is_file() {
+                continue;
+            }
+
+            let relative_path = policy_path.strip_prefix(source_dir).unwrap_or(&policy_path);
+            if let Some(pattern) = exclude_patterns
+                .iter()
+                .find(|pattern| pattern.matches_path(relative_path))
+            {
+                anyhow::bail!(
+                    "Codex skill '{}:{}' has source agents/openai.yaml, but it is excluded by pattern '{}': {}",
+                    skill.base.plugin,
+                    skill.base.name,
+                    pattern.as_str(),
+                    relative_path.display()
+                );
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use std::sync::{Mutex, OnceLock};
     use tempfile::tempdir;
 
     fn write_toolkit_yaml(dir: &Path, target: &str, source: &Path) {
         let content = format!("source: {}\ntarget: {}\nresources: {{}}\n", source.display(), target);
         std::fs::write(dir.join(CONFIG_FILE_NAME), content).unwrap();
+    }
+
+    fn write_codex_skill_config(dir: &Path, source: &Path, exclude: Option<&str>, skills: &[&str]) {
+        let exclude_section = exclude
+            .map(|pattern| format!("exclude:\n  - \"{}\"\n", pattern))
+            .unwrap_or_default();
+        let skills_section = skills
+            .iter()
+            .map(|skill| format!("    - {}\n", skill))
+            .collect::<String>();
+        let content = format!(
+            "source: {}\ntarget: codex\n{}resources:\n  skills:\n{}",
+            source.display(),
+            exclude_section,
+            skills_section
+        );
+        fs::write(dir.join(CONFIG_FILE_NAME), content).unwrap();
+    }
+
+    fn write_skill(source_dir: &Path, name: &str, with_policy: bool) {
+        let skill_dir = source_dir.join("plugin_a").join("skills").join(name);
+        fs::create_dir_all(&skill_dir).unwrap();
+        fs::write(skill_dir.join("SKILL.md"), "---\ndescription: test\n---\ncontent").unwrap();
+
+        if with_policy {
+            let policy_path = skill_dir.join(CODEX_OPENAI_POLICY_RELATIVE_PATH);
+            fs::create_dir_all(policy_path.parent().unwrap()).unwrap();
+            fs::write(policy_path, "policy:\n  allow_implicit_invocation: true\n").unwrap();
+        }
     }
 
     #[test]
@@ -179,5 +247,53 @@ mod tests {
         let ctx = result.unwrap();
         assert_eq!(ctx.config.target.as_str(), "codex");
         assert_eq!(ctx.output_dir.file_name().unwrap(), ".codex");
+    }
+
+    #[test]
+    fn test_init_fails_when_selected_codex_skill_policy_file_is_excluded() {
+        let dir = tempdir().unwrap();
+        let source_dir = dir.path().join("source");
+        let output_dir = dir.path().join(".codex");
+
+        fs::create_dir_all(&source_dir).unwrap();
+        fs::create_dir_all(&output_dir).unwrap();
+        write_skill(&source_dir, "selected_skill", true);
+        write_codex_skill_config(
+            &output_dir,
+            &source_dir,
+            Some("**/agents/openai.yaml"),
+            &["plugin_a:selected_skill"],
+        );
+
+        let err = match AppContext::init(output_dir.join(CONFIG_FILE_NAME).to_str().unwrap()) {
+            Ok(_) => panic!("expected excluded Codex policy file error"),
+            Err(err) => err.to_string(),
+        };
+
+        assert!(err.contains("plugin_a:selected_skill"));
+        assert!(err.contains("plugin_a/skills/selected_skill/agents/openai.yaml"));
+        assert!(err.contains("**/agents/openai.yaml"));
+    }
+
+    #[test]
+    fn test_init_ignores_excluded_policy_file_for_unselected_codex_skill() {
+        let dir = tempdir().unwrap();
+        let source_dir = dir.path().join("source");
+        let output_dir = dir.path().join(".codex");
+
+        fs::create_dir_all(&source_dir).unwrap();
+        fs::create_dir_all(&output_dir).unwrap();
+        write_skill(&source_dir, "selected_skill", false);
+        write_skill(&source_dir, "unselected_skill", true);
+        write_codex_skill_config(
+            &output_dir,
+            &source_dir,
+            Some("**/agents/openai.yaml"),
+            &["plugin_a:selected_skill"],
+        );
+
+        let ctx = AppContext::init(output_dir.join(CONFIG_FILE_NAME).to_str().unwrap()).unwrap();
+
+        assert_eq!(ctx.registry.len(), 1);
     }
 }

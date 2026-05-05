@@ -52,6 +52,7 @@ pub trait Transformer {
 - **Codex**:
   - **Commands**: `DefaultTransformer`와 유사하게 마크다운 형식을 유지하지만, `../.agents/skills/[name]/SKILL.md` 경로에 SKILL 포맷으로 생성됩니다.
   - **Skills**: Command와 동일한 `../.agents/skills/[name]/SKILL.md` 네임스페이스에 생성됩니다.
+  - **OpenAI 정책 파일**: Command 또는 Skill의 최종 메타데이터에 `disable-model-invocation: true`가 있으면 `../.agents/skills/[name]/agents/openai.yaml`을 생성합니다. Skill source에 같은 extra 파일이 있으면 생성하지 않고 source extra 복사를 사용합니다.
   - **Agents**: 개별 에이전트는 `agents/[name].toml` 로 생성되며, 본문은 `developer_instructions` 필드에 삽입됩니다. 이후 전체 에이전트 목록이 output-dir 기준 `config.toml` (설명 등 메타데이터 포함) 에 취합되어 자동 생성됩니다.
   - 전역 지침: `AGENTS.md` 생성.
 

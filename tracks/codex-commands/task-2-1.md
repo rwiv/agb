@@ -2,7 +2,11 @@
 
 ## Overview
 
-`Emitter`에 `BuildTarget` 정보를 추가하여 타겟별 clean 동작을 분기합니다. Codex 타겟이면 `clean_all()` 시 output-dir 외부의 `../.agents/skills/` 디렉터리를 추가 삭제합니다. 또한 `clean()` 분기 조건에 `ends_with(SKILL_MD)` 조건을 추가하여, Codex 커맨드/스킬 경로(`../.agents/skills/[name]/SKILL.md`)처럼 `starts_with(DIR_SKILLS)` 조건을 통과하지 못하는 SKILL.md 경로도 디렉터리 단위로 올바르게 삭제되도록 합니다. `Builder::run()`과 `App::build()`의 시그니처를 조정하여 타겟 정보를 `Emitter`까지 전달하며, `Builder::run()` 초반에 Codex 타겟 한정으로 Command/Skill 이름 충돌 검증을 추가합니다.
+`Emitter`에 `BuildTarget` 정보를 추가하여 타겟별 clean 동작을 분기합니다. Codex 타겟이면 `clean_all()` 시 output-dir 외부의 `../.agents/skills/` 디렉터리를 추가 삭제합니다.
+
+또한 `clean()` 분기 조건에 `ends_with(SKILL_MD)` 조건을 추가하여, Codex 커맨드/스킬 경로(`../.agents/skills/[name]/SKILL.md`)처럼 `starts_with(DIR_SKILLS)` 조건을 통과하지 못하는 SKILL.md 경로도 디렉터리 단위로 올바르게 삭제되도록 합니다.
+
+`Builder::run()`과 `App::build()`의 시그니처를 조정하여 타겟 정보를 `Emitter`까지 전달하며, `Builder::run()` 초반에 Codex 타겟 한정으로 Command/Skill 이름 충돌 검증을 추가합니다.
 
 ## File Scope
 
@@ -55,13 +59,17 @@ impl Emitter {
 
 ### Step 2: `clean_all()` 수정 (`src/builder/emitter.rs`)
 
-Codex 타겟이면 output-dir 외부의 `../.agents/skills/` 디렉터리를 추가 삭제합니다. `output_path.join(DIR_AGENTS_SKILLS)`는 `PathBuf` 레벨에서 `../` 경로 참조를 보존하므로 OS가 올바르게 절대경로로 해석합니다.
+Codex 타겟이면 output-dir 외부의 `../.agents/skills/` 디렉터리를 추가 삭제합니다. `output_path.join(DIR_AGENTS_SKILLS)`는 `PathBuf` 레벨에서 `../` 경로 참조를 보존하므로 OS가 올바르게 절대경로로 해석합니다. 또한 Codex 타겟에서는 `.codex/skills/`(`DIR_SKILLS`)를 삭제 대상에서 제외하여 수동으로 관리하는 로컬 스킬을 보존합니다.
 
 ```rust
 /// commands/, agents/, skills/ 등 모든 출력 디렉터리와 전역 파일을 전부 삭제합니다.
-/// Codex 타겟이면 output-dir 외부의 `../.agents/skills/` 디렉터리도 추가 삭제합니다.
+/// Codex 타겟이면 `.codex/skills/`를 보존하고, output-dir 외부의 `../.agents/skills/` 디렉터리도 추가 삭제합니다.
 pub fn clean_all(&self) -> Result<()> {
-    let dirs = [DIR_COMMANDS, DIR_AGENTS, DIR_SKILLS];
+    let dirs: &[&str] = if self.target == BuildTarget::Codex {
+        &[DIR_COMMANDS, DIR_AGENTS]
+    } else {
+        &[DIR_COMMANDS, DIR_AGENTS, DIR_SKILLS]
+    };
 
     for dir in dirs {
         let path = self.output_path.join(dir);
@@ -217,6 +225,12 @@ mod tests {
         // ...
     }
 
+    /// Codex 타겟의 clean_all() 호출 시 output-dir 내부의 .codex/skills/는 보존됨을 확인한다.
+    #[test]
+    fn test_clean_all_preserves_codex_local_skills_dir() -> Result<()> {
+        // ...
+    }
+
     /// SKILL.md로 끝나는 외부 경로(../.agents/skills/[name]/SKILL.md)가 부모 디렉터리 단위로 삭제됨을 확인한다.
     #[test]
     fn test_clean_removes_parent_dir_for_external_skill_path() -> Result<()> {
@@ -280,6 +294,7 @@ mod tests {
 - [ ] `cargo build`가 성공한다.
 - [ ] `cargo clippy -- -D warnings`가 오류 없이 통과한다.
 - [ ] Codex 타겟으로 `clean_all()` 호출 시 `../.agents/skills/` 디렉터리가 삭제된다.
+- [ ] Codex 타겟으로 `clean_all()` 호출 시 `.codex/skills/` 디렉터리는 보존된다.
 - [ ] `../.agents/skills/foo/SKILL.md` 경로를 가진 리소스에 대해 `clean()` 호출 시 `../.agents/skills/foo/` 디렉터리 전체가 삭제된다.
 - [ ] ClaudeCode 타겟으로 `clean_all()` 호출 시 `../.agents/skills/`가 삭제되지 않는다.
 - [ ] Codex 타겟에서 동일 이름의 command와 skill이 있으면 빌드가 충돌 오류와 함께 종료된다.

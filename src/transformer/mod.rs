@@ -23,6 +23,11 @@ pub trait Transformer {
         Ok(vec![])
     }
 
+    /// 빌드가 생성한 extra-like 파일 중 source로 역동기화하지 않을 상대 경로 목록을 반환합니다.
+    fn generated_extra_ignore_paths(&self, _resource: &Resource) -> Vec<PathBuf> {
+        Vec::new()
+    }
+
     /// 타겟 포맷의 파일 내용을 다시 ResourceData로 복원합니다.
     fn detransform(
         &self,

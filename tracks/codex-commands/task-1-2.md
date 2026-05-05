@@ -4,19 +4,23 @@
 
 `post_transform()`이 `PathBuf::from(DIR_CODEX).join(CODEX_CONFIG_FILE_NAME)`으로 경로를 구성하는데, `TransformedFile.path`는 output-dir 기준 상대경로여야 하므로 `DIR_CODEX`(".codex") prefix가 붙으면 실제 경로가 `.codex/.codex/config.toml`이 됩니다. 올바른 경로는 output-dir 바로 아래인 `.codex/config.toml`이므로 `DIR_CODEX` prefix를 제거합니다. `detransform()`의 Agent 분기와 `Emitter::clean_all()`에서도 동일한 잘못된 참조를 수정합니다.
 
-## Related Files
+## File Scope
 
 ### Target Files
 
-- `src/transformer/codex.rs`: 수정 — `post_transform()`, `detransform()` Agent 분기
-- `src/builder/emitter.rs`: 수정 — `clean_all()`에서 `DIR_CODEX` 제거
-- `src/transformer/README.md`: 수정 — `.codex/config.toml` 경로 설명 갱신
+| 파일 | 설명 |
+| --- | --- |
+| `src/transformer/codex.rs` | 수정 — `post_transform()`, `detransform()` Agent 분기 |
+| `src/builder/emitter.rs` | 수정 — `clean_all()`에서 `DIR_CODEX` 제거 |
+| `src/transformer/README.md` | 수정 — `.codex/config.toml` 경로 설명 갱신 |
 
 ### Reference Files
 
-- `src/transformer/codex.rs`: `post_transform()`, `detransform()` 현재 구현 확인
-- `src/builder/emitter.rs`: `clean_all()` 현재 구현 확인
-- `src/transformer/README.md`: 현재 `.codex/config.toml` 경로 언급 확인
+| 파일 | 설명 |
+| --- | --- |
+| `src/transformer/codex.rs` | `post_transform()`, `detransform()` 현재 구현 확인 |
+| `src/builder/emitter.rs` | `clean_all()` 현재 구현 확인 |
+| `src/transformer/README.md` | 현재 `.codex/config.toml` 경로 언급 확인 |
 
 ## Workflow
 
@@ -106,9 +110,9 @@ fn test_codex_post_transform() {
 
 ## Success Criteria
 
-- [x] `cargo test --lib transformer::codex` 테스트가 모두 통과한다.
-- [x] `cargo test --lib builder::emitter` 테스트가 모두 통과한다.
-- [x] `cargo clippy -- -D warnings`가 오류 없이 통과한다.
-- [x] `post_transform()` 반환 결과의 `path`가 `PathBuf::from("config.toml")`이다.
-- [x] `detransform()` Agent 분기에서 `config.toml` 읽기 경로가 `output_dir.join("config.toml")`이다.
-- [x] `src/transformer/README.md`에서 `.codex/config.toml` 언급이 올바른 경로로 갱신되었다.
+- [ ] `cargo test --lib transformer::codex` 테스트가 모두 통과한다.
+- [ ] `cargo test --lib builder::emitter` 테스트가 모두 통과한다.
+- [ ] `cargo clippy -- -D warnings`가 오류 없이 통과한다.
+- [ ] `post_transform()` 반환 결과의 `path`가 `PathBuf::from("config.toml")`이다.
+- [ ] `detransform()` Agent 분기에서 `config.toml` 읽기 경로가 `output_dir.join("config.toml")`이다.
+- [ ] `src/transformer/README.md`에서 `.codex/config.toml` 언급이 올바른 경로로 갱신되었다.

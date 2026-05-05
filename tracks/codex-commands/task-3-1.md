@@ -4,21 +4,25 @@
 
 `AppContext::init()`에서 `toolkit.yaml`이 위치한 디렉터리(output-dir) 이름이 타겟의 기대값과 일치하는지 검증합니다. 불일치 시 `anyhow::bail!`로 즉시 종료하여 잘못된 위치에서의 빌드를 방지합니다. `BuildTarget`에 `expected_output_dir()` 메서드를 추가하여 타겟별 기대 디렉터리명을 관리합니다.
 
-## Related Files
+## File Scope
 
 ### Target Files
 
-- `src/core/target.rs`: 수정 — `BuildTarget::expected_output_dir()` 메서드 및 단위 테스트 추가
-- `src/app/context.rs`: 수정 — output-dir 이름 검증 로직 추가 (AppContext 통합 테스트 포함)
-- `tests/e2e_build_test.rs`: 수정 — 모든 타겟 테스트를 dot-dir 내 `toolkit.yaml` 구조로 재편
-- `tests/e2e_codex_sync_test.rs`: 수정 — `.codex/toolkit.yaml` 구조로 재편
+| 파일 | 설명 |
+| --- | --- |
+| `src/core/target.rs` | 수정 — `BuildTarget::expected_output_dir()` 메서드 및 단위 테스트 추가 |
+| `src/app/context.rs` | 수정 — output-dir 이름 검증 로직 추가 (AppContext 통합 테스트 포함) |
+| `tests/e2e_build_test.rs` | 수정 — 모든 타겟 테스트를 dot-dir 내 `toolkit.yaml` 구조로 재편 |
+| `tests/e2e_codex_sync_test.rs` | 수정 — `.codex/toolkit.yaml` 구조로 재편 |
 
 ### Reference Files
 
-- `src/core/target.rs`: `BuildTarget` enum 및 기존 메서드(`as_str()`) 구현 확인
-- `src/app/context.rs`: `AppContext::init()` — `output_dir` 결정 및 `cfg` 로드 순서 확인
-- `tests/e2e_build_test.rs`: 현재 `toolkit.yaml` 위치 및 구조 확인
-- `tests/e2e_codex_sync_test.rs`: 현재 `toolkit.yaml` 위치 및 구조 확인
+| 파일 | 설명 |
+| --- | --- |
+| `src/core/target.rs` | `BuildTarget` enum 및 기존 메서드(`as_str()`) 구현 확인 |
+| `src/app/context.rs` | `AppContext::init()` — `output_dir` 결정 및 `cfg` 로드 순서 확인 |
+| `tests/e2e_build_test.rs` | 현재 `toolkit.yaml` 위치 및 구조 확인 |
+| `tests/e2e_codex_sync_test.rs` | 현재 `toolkit.yaml` 위치 및 구조 확인 |
 
 ## Workflow
 
@@ -169,12 +173,12 @@ Task 2.1에서 갱신한 `prompts/` → `.agents/skills/`, `.codex/config.toml` 
 
 ## Success Criteria
 
-- [x] `cargo test --lib core::target` 테스트가 모두 통과한다.
-- [x] `cargo test --lib app::context` 통합 테스트가 모두 통과한다.
-- [x] `cargo test --test e2e_build_test` 가 모두 통과한다.
-- [x] `cargo test --test e2e_codex_sync_test` 가 모두 통과한다.
-- [x] `cargo build`가 성공한다.
-- [x] `cargo clippy -- -D warnings`가 오류 없이 통과한다.
-- [x] `.codex/toolkit.yaml`에 `target: claude-code`가 설정된 경우, `AppContext::init()` 호출 시 `"output-dir 이름이 타겟 'claude-code'에 맞지 않습니다"` 오류와 함께 실패한다.
-- [x] `.codex/toolkit.yaml`에 `target: codex`가 설정된 경우, `AppContext::init()`이 정상적으로 계속 진행한다.
-- [x] `atb build`를 `.codex/` 내부에서 (기본값 `"toolkit.yaml"` 상대경로로) 실행했을 때 검증이 정상 동작한다.
+- [ ] `cargo test --lib core::target` 테스트가 모두 통과한다.
+- [ ] `cargo test --lib app::context` 통합 테스트가 모두 통과한다.
+- [ ] `cargo test --test e2e_build_test` 가 모두 통과한다.
+- [ ] `cargo test --test e2e_codex_sync_test` 가 모두 통과한다.
+- [ ] `cargo build`가 성공한다.
+- [ ] `cargo clippy -- -D warnings`가 오류 없이 통과한다.
+- [ ] `.codex/toolkit.yaml`에 `target: claude-code`가 설정된 경우, `AppContext::init()` 호출 시 `"output-dir 이름이 타겟 'claude-code'에 맞지 않습니다"` 오류와 함께 실패한다.
+- [ ] `.codex/toolkit.yaml`에 `target: codex`가 설정된 경우, `AppContext::init()`이 정상적으로 계속 진행한다.
+- [ ] `atb build`를 `.codex/` 내부에서 (기본값 `"toolkit.yaml"` 상대경로로) 실행했을 때 검증이 정상 동작한다.

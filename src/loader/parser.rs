@@ -1,6 +1,6 @@
 use crate::core::{
-    BuildTarget, DIR_AGENTS, DIR_COMMANDS, DIR_SKILLS, EXT_YAML, EXT_YML, ExtraFile, MetadataMap, Resource,
-    ResourceData, SkillData,
+    BuildTarget, DIR_AGENTS, DIR_AGENTS_SKILLS, DIR_COMMANDS, DIR_SKILLS, EXT_YAML, EXT_YML, ExtraFile, MetadataMap,
+    Resource, ResourceData, SkillData,
 };
 use crate::loader::ScannedResource;
 use crate::loader::merger::MetadataMerger;
@@ -74,11 +74,16 @@ impl ResourceParser {
                 // 스킬 루트(SKILL.md의 부모 디렉터리)를 기준으로 상대 경로 계산
                 let skill_root = md_path.as_ref().and_then(|p| p.parent()).unwrap();
 
+                let extras_base = if self.target == BuildTarget::Codex {
+                    DIR_AGENTS_SKILLS
+                } else {
+                    DIR_SKILLS
+                };
                 let skill_extras = extras
                     .into_iter()
                     .map(|source| {
                         let relative_path = source.strip_prefix(skill_root).unwrap_or(&source);
-                        let target = PathBuf::from(DIR_SKILLS).join(&scanned.name).join(relative_path);
+                        let target = PathBuf::from(extras_base).join(&scanned.name).join(relative_path);
                         ExtraFile { source, target }
                     })
                     .collect();

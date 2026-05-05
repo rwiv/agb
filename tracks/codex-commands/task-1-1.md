@@ -4,23 +4,29 @@
 
 Codex CLI의 신규 정책에 따라 커맨드와 스킬의 출력 경로를 모두 `../.agents/skills/[name]/SKILL.md`로 변경합니다. `DIR_PROMPTS` 상수를 삭제하고 `DIR_AGENTS_SKILLS` 상수를 추가하며, `transform()`과 `get_target_path()`의 Command·Skill 분기, `Emitter::clean_all()`에서의 `DIR_PROMPTS` 참조를 일괄 수정합니다. 변경 완료 후 `specs/spec.md`의 Codex 변환 규격 테이블을 갱신합니다.
 
-## Related Files
+## File Scope
 
 ### Target Files
 
-- `src/core/constants.rs`: 수정 — `DIR_PROMPTS` 삭제, `DIR_AGENTS_SKILLS` 추가
-- `src/transformer/codex.rs`: 수정 — `transform()`, `get_target_path()` Command·Skill 분기 및 관련 테스트
-- `src/builder/emitter.rs`: 수정 — `clean_all()`에서 `DIR_PROMPTS` 제거
-- `src/transformer/README.md`: 수정 — Codex Command·Skill 출력 경로 설명 갱신
-- `specs/spec.md`: 수정 — Codex 변환 규격 테이블 갱신
+| 파일 | 설명 |
+| --- | --- |
+| `src/core/constants.rs` | 수정 — `DIR_PROMPTS` 삭제, `DIR_AGENTS_SKILLS` 추가 |
+| `src/transformer/codex.rs` | 수정 — `transform()`, `get_target_path()` Command·Skill 분기 및 관련 테스트 |
+| `src/loader/parser.rs` | 수정 — Codex 타겟일 때 extras target base를 `DIR_AGENTS_SKILLS`로 변경 |
+| `src/builder/emitter.rs` | 수정 — `clean_all()`에서 `DIR_PROMPTS` 제거 |
+| `src/transformer/README.md` | 수정 — Codex Command·Skill 출력 경로 설명 갱신 |
+| `specs/spec.md` | 수정 — Codex 변환 규격 테이블 갱신 |
 
 ### Reference Files
 
-- `specs/spec.md`: 4절 타겟별 변환 사양 — 갱신 대상 확인
-- `src/core/constants.rs`: 상수 정의 현황 확인
-- `src/transformer/codex.rs`: 변환 로직 및 기존 테스트 확인
-- `src/builder/emitter.rs`: `clean_all()` 구현 확인
-- `src/transformer/README.md`: 현재 경로 설명 확인
+| 파일 | 설명 |
+| --- | --- |
+| `specs/spec.md` | 4절 타겟별 변환 사양 — 갱신 대상 확인 |
+| `src/core/constants.rs` | 상수 정의 현황 확인 |
+| `src/transformer/codex.rs` | 변환 로직 및 기존 테스트 확인 |
+| `src/loader/parser.rs` | `parse_resource()` Skill 분기의 extras target 경로 계산 확인 |
+| `src/builder/emitter.rs` | `clean_all()` 구현 확인 |
+| `src/transformer/README.md` | 현재 경로 설명 확인 |
 
 ## Workflow
 
@@ -92,9 +98,44 @@ impl Transformer for CodexTransformer {
     }
 ```
 
-### Step 4: 단위 테스트 수정 및 추가 (`src/transformer/codex.rs`)
+### Step 4: Skill extras target 경로 수정 (`src/loader/parser.rs`)
 
-`test_codex_command_transformation` 테스트의 경로 assertion을 변경하고, Skill 변환 경로 테스트를 추가합니다.
+`ResourceParser`는 스킬 로딩 시 extras의 `target` 경로를 항상 `DIR_SKILLS` 기준으로 구성한다. Codex 타겟에서는 SKILL.md가 `DIR_AGENTS_SKILLS`(`../.agents/skills/`) 하위로 출력되므로, extras도 같은 경로 아래 위치해야 한다.
+
+import에 `DIR_AGENTS_SKILLS`를 추가하고, Skill 분기에서 타겟을 분기한다.
+
+```rust
+// src/loader/parser.rs
+use crate::core::{
+    BuildTarget, DIR_AGENTS, DIR_AGENTS_SKILLS, DIR_COMMANDS, DIR_SKILLS, ...
+};
+
+DIR_SKILLS => {
+    let skill_root = md_path.as_ref().and_then(|p| p.parent()).unwrap();
+
+    let extras_base = if self.target == BuildTarget::Codex {
+        DIR_AGENTS_SKILLS
+    } else {
+        DIR_SKILLS
+    };
+    let skill_extras = extras
+        .into_iter()
+        .map(|source| {
+            let relative_path = source.strip_prefix(skill_root).unwrap_or(&source);
+            let target = PathBuf::from(extras_base).join(&scanned.name).join(relative_path);
+            ExtraFile { source, target }
+        })
+        .collect();
+
+    Ok(Resource::Skill(SkillData { base: data, extras: skill_extras }))
+}
+```
+
+Codex 타겟이면 extras target이 `../.agents/skills/[name]/[relative_path]`로 구성되어, Emitter가 `output_dir.join(extra.target)`으로 최종 경로를 조합할 때 `project_root/.agents/skills/[name]/[relative_path]`가 된다.
+
+### Step 5: 단위 테스트 수정 및 추가 (`src/transformer/codex.rs`)
+
+`test_codex_command_transformation` 테스트의 경로 assertion을 변경하고, Skill 변환 경로 테스트(`test_codex_skill_transformation`)를 추가합니다.
 
 ```rust
 #[test]
@@ -135,7 +176,7 @@ fn test_codex_skill_transformation() {
 }
 ```
 
-### Step 5: `clean_all()`에서 `DIR_PROMPTS` 제거 (`src/builder/emitter.rs`)
+### Step 6: `clean_all()`에서 `DIR_PROMPTS` 제거 (`src/builder/emitter.rs`)
 
 `DIR_PROMPTS`가 삭제된 상수이므로 import와 `dirs` 배열에서 제거합니다.
 
@@ -154,7 +195,7 @@ pub fn clean_all(&self) -> Result<()> {
 }
 ```
 
-### Step 6: `specs/spec.md` 갱신
+### Step 7: `specs/spec.md` 갱신
 
 `specs/spec.md` 4절 변환 규격 테이블의 Codex 커맨드·스킬 컬럼을 갱신합니다.
 
@@ -164,7 +205,7 @@ pub fn clean_all(&self) -> Result<()> {
 | **Codex** | `../.agents/skills/[name]/SKILL.md` (SKILL 포맷) | Commands: `../.agents/skills/[name]/SKILL.md`, Skills: `../.agents/skills/[name]/SKILL.md`, Agents: `agents/*.toml` | `AGENTS.md` |
 ```
 
-### Step 7: `src/transformer/README.md` 갱신
+### Step 8: `src/transformer/README.md` 갱신
 
 `src/transformer/README.md`에서 Codex Command·Skill 경로를 언급하는 부분을 신규 경로로 갱신합니다.
 
@@ -173,10 +214,11 @@ pub fn clean_all(&self) -> Result<()> {
 
 ## Success Criteria
 
-- [x] `cargo test --lib transformer::codex` 테스트가 모두 통과한다.
-- [x] `cargo build`가 `DIR_PROMPTS` 관련 컴파일 오류 없이 성공한다.
-- [x] `cargo clippy -- -D warnings`가 오류 없이 통과한다.
-- [x] Codex 타겟에서 Command가 `../.agents/skills/[name]/SKILL.md`로 변환된다.
-- [x] Codex 타겟에서 Skill이 `../.agents/skills/[name]/SKILL.md`로 변환된다 (`.codex/skills/` 아님).
-- [x] `specs/spec.md` Codex 커맨드·스킬 변환 컬럼이 `../.agents/skills/[name]/SKILL.md`로 갱신되었다.
-- [x] `src/transformer/README.md`에서 `prompts/` 및 `skills/` 경로 언급이 신규 경로로 갱신되었다.
+- [ ] `cargo test --lib transformer::codex` 테스트가 모두 통과한다.
+- [ ] `cargo build`가 `DIR_PROMPTS` 관련 컴파일 오류 없이 성공한다.
+- [ ] `cargo clippy -- -D warnings`가 오류 없이 통과한다.
+- [ ] Codex 타겟에서 Command가 `../.agents/skills/[name]/SKILL.md`로 변환된다.
+- [ ] Codex 타겟에서 Skill이 `../.agents/skills/[name]/SKILL.md`로 변환된다 (`.codex/skills/` 아님).
+- [ ] Codex 타겟에서 Skill의 extras(부속 파일)가 `../.agents/skills/[name]/[relative_path]`로 출력된다.
+- [ ] `specs/spec.md` Codex 커맨드·스킬 변환 컬럼이 `../.agents/skills/[name]/SKILL.md`로 갱신되었다.
+- [ ] `src/transformer/README.md`에서 `prompts/` 및 `skills/` 경로 언급이 신규 경로로 갱신되었다.
